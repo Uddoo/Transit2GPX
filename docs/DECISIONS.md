@@ -66,7 +66,7 @@
 
 ## D-009：两种导出语义
 
-**决定**：提供 journey 模式和 coverage 模式。前者保留行程结构，后者按 edge 去重，更适合 Fog of World 补雾。
+**决定**：提供 journey 模式和 coverage 模式。前者保留行程结构，后者按 edge 去重，更适合 Fog of World 等覆盖记录或热力图类应用补录轨迹。
 
 **代价**：coverage 模式必须重新分组连续 edge，不能把不相邻区间写进同一 `trkseg`。
 

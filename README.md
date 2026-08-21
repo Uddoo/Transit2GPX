@@ -1,8 +1,8 @@
 # Transit2Fog
 
-Transit2Fog 是一个本地优先的中国地铁与国铁轨迹工具：用户按真实乘坐区间选择或导入行程，应用解析对应线路几何、展示候选路径供确认，并导出可导入《世界迷雾》（Fog of World）的 WGS‑84 GPX 1.1 文件。
+Transit2Fog 是一个本地优先的中国地铁与国铁轨迹工具：用户按真实乘坐区间选择或导入行程，应用解析对应线路几何、展示候选路径供确认，并导出标准 WGS‑84 GPX 1.1 轨迹文件。
 
-中国铁路、高铁和动车扩展的 R0–R3 已完成。铁路能力组合用户提供的乘车事实、OpenStreetMap 铁路几何与 OpenRailRouting 候选路径；2026-08-21，用户确认铁路 GPX 已在 Fog of World 中手动导入成功，产品随即由 **Metro2Fog** 迁移为 **Transit2Fog**。
+导出的文件使用标准 `<trk>` / `<trkseg>` 轨迹结构，可用于任何支持导入 GPX 1.1 轨迹的地图、户外、旅行记录或轨迹管理应用。《世界迷雾》（Fog of World）只是兼容应用示例之一，并非唯一目标。地铁几何来自 CPTOND；铁路能力组合用户提供的乘车事实、OpenStreetMap 铁路几何与 OpenRailRouting 候选路径。
 
 ```text
 CPTOND 地铁数据
@@ -15,18 +15,8 @@ CPTOND 地铁数据
        ↓
 GPX 1.1（WGS‑84）
        ↓
-Fog of World
+支持 GPX 轨迹导入的应用
 ```
-
-## 当前状态
-
-设计基线与 M0–M7 纵向功能已经落盘：真实底图、CPTOND 导入、线路内/换乘候选、行程管理、CSV 审核、GPX 1.1 导出及发布运维均已有可运行实现。后端 lint/type/test、前端 lint/test/build 和桌面/窄屏 Playwright 核心流程已纳入统一检查。
-
-**v1.0 已完成验收**：Science Data Bank 的 46 城真实数据已完成整包导入，东莞普通线路与上海环线的地图、正反向候选和两种 GPX 已通过抽检；用户也已确认 V1.0 GPX 在实际安装的 Fog of World 中手动导入通过。完整第三方数据仍不会提交进仓库。验收证据见 [v1.0 验收审计](docs/V1_AUDIT.md)，产品边界见[已知限制](docs/KNOWN_LIMITATIONS.md)。
-
-**铁路轨迹 R0–R3 已完成代码、自动化与实机验收**。当前实现包括长三角和全国真实图、三套中国国铁 Profile、共享 Provider/行程模型、车站搜索和有序站序、最多三个可解释候选、人工确认、不可变铁路快照、统一 CSV、混合 GPX、版本比较、显式重算、原子切换与回滚。全国图包含 645,361 个节点、742,281 条边，18,490 个车站索引；8 条全国代表性线路已通过固定样本验证，铁路 GPX 也已通过 Fog of World 手动导入。设计、运维和验收证据见[国铁轨迹扩展设计](docs/RAILWAY.md)。
-
-本项目的当前完成基线是已验收的地铁 v1.0 加铁路 R0–R3，而不是只完成几何算法原型。
 
 ## 产品原则
 
@@ -34,6 +24,7 @@ Fog of World
 - 环线、支线、同名站、模糊匹配等歧义必须由用户确认。
 - 预览、保存和导出引用同一组不可变 `route_edge`，避免结果漂移。
 - 内部存储、GeoJSON 和 GPX 都使用 WGS‑84；米制运算使用局部投影。
+- 以标准 GPX 1.1 作为应用间的兼容边界，不依赖目标应用的私有格式或数据库。
 - 默认仅监听 `127.0.0.1`，乘车历史和导入文件不离开本机。
 - 原始数据必须带版本、校验和、许可与质量记录；有问题的线路不得进入可导出状态。
 
@@ -46,7 +37,7 @@ Fog of World
 - [关键设计决策](docs/DECISIONS.md)：已确定方案、理由与代价。
 - [视觉与交互设计系统](docs/DESIGN_SYSTEM.md)：概念图、tokens、组件和响应式规则。
 - [开发与运行](docs/DEVELOPMENT.md)：安装、开发、生产启动和质量检查。
-- [交付路线图](docs/ROADMAP.md)：实施阶段、测试矩阵与 v1.0 完成标准。
+- [交付路线图](docs/ROADMAP.md)：当前进度、实施阶段、测试矩阵与完成标准。
 - [已知限制](docs/KNOWN_LIMITATIONS.md)：当前验收缺口和发布前待办。
 - [v1.0 验收审计](docs/V1_AUDIT.md)：逐条完成状态、测试证据与最后外部阻断项。
 - [Fog of World 实机验收](docs/FOG_ACCEPTANCE.md)：两份真实数据 GPX 的安全导入步骤、通过标准与结果记录模板。
@@ -73,7 +64,7 @@ make setup
 | 来源 | 适合场景 | 导入时应看到的主文件 |
 |---|---|---|
 | [CPTOND-2025 v2](https://doi.org/10.6084/m9.figshare.29377427) | 官方完整基线，CC BY 4.0 | `metro_routes.shp`、`metro_stops.shp` |
-| [Science Data Bank 46 城时序数据](https://doi.org/10.57760/sciencedb.33335) | Figshare 下载受限时的已验收替代源，CC BY-NC-SA 4.0 | `metro_routes.shp`、`metro_routes_segment_timeline.shp`、`metro_stations_timeline.shp` |
+| [Science Data Bank 46 城时序数据](https://doi.org/10.57760/sciencedb.33335) | Figshare 下载受限时的兼容替代源，CC BY-NC-SA 4.0 | `metro_routes.shp`、`metro_routes_segment_timeline.shp`、`metro_stations_timeline.shp` |
 
 不要只复制 `.shp`。每组 Shapefile 必须同时保留同名的 `.shx`、`.dbf`、`.prj`；文件可以位于所选目录的任意子层级。
 
@@ -93,7 +84,7 @@ make dev
 1. 打开“添加行程”，选择城市、线路、起点和终点。
 2. 预览候选；环线、换乘或模糊结果需要人工确认。
 3. 保存后打开“导出”，先用少量行程生成 journey GPX 抽检，再按需生成 coverage GPX。
-4. 将 GPX 导入 Fog of World，确认轨迹没有错误直线或明显跳点。
+4. 将 GPX 导入目标轨迹应用，确认轨迹没有错误直线或明显跳点；例如可使用《世界迷雾》。
 
 生产模式使用 `make start`，由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](docs/DEVELOPMENT.md)。
 
@@ -103,7 +94,7 @@ make dev
 
 ### 1. 先选择图范围
 
-| 方案 | 固定数据 | 当前验收 | 建议资源 | 适合场景 |
+| 方案 | 固定数据 | 验证集合 | 建议资源 | 适合场景 |
 |---|---|---|---|---|
 | 长三角轻量图 | 上海、江苏、浙江、安徽合并 PBF，参考成品约 223 MB | 4 条跨省/高普速线路 | 至少 3 GB 可用磁盘、4 GB 可用内存 | 首次体验、开发调试 |
 | 全国完整图 | 中国 PBF 约 1.58 GB，graph 约 187 MB | 8 条全国代表线路 | 至少 5 GB 可用磁盘、4 GB 可用内存 | 全国行程、正式使用 |
@@ -177,7 +168,8 @@ make doctor-rail
 - 国铁几何：Geofabrik 提供的 OpenStreetMap 中国或省级 PBF，按 ODbL 1.0 使用并保留 `© OpenStreetMap contributors` 署名。
 - 铁路路径引擎：固定提交的 OpenRailRouting/GraphHopper fork；运行时图版本、自定义中国国铁 Profile 和 PBF checksum 共同构成身份。
 - GPX：导出遵循 Topografix GPX 1.1，坐标基准为 WGS‑84。
-- Fog of World：官网说明支持导入 GPX/KML 轨迹。
+- GPX 兼容性：目标应用需要支持 GPX 1.1 的 `<trk>` / `<trkseg>` 轨迹；点数限制、简化规则和重复轨迹处理以各应用为准。
+- Fog of World：兼容应用示例；官网说明支持导入 GPX/KML 轨迹。
 
 原始 CPTOND 数据不直接提交到仓库。应用应提供可复现的导入流程，并在界面和导出元数据中保留数据署名。
 
@@ -191,4 +183,4 @@ make doctor-rail
 - [Geofabrik 中国 OSM 下载](https://download.geofabrik.de/asia/china.html)
 - [OpenStreetMap copyright 与 ODbL](https://www.openstreetmap.org/copyright)
 - [GPX 1.1 Schema](https://www.topografix.com/gpx/1/1/)
-- [Fog of World 官网](https://fogofworld.app/)
+- [兼容应用示例：Fog of World](https://fogofworld.app/)

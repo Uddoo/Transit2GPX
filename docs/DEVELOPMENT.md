@@ -268,14 +268,16 @@ uv run --project backend python scripts/restore.py /absolute/path/transit2fog-ba
 
 恢复流程会检查 ZIP 内容、checksum 和 SQLite `integrity_check`，并在替换前于数据库旁生成 `*.pre-restore-*.bak` 安全副本。不要在确认新数据库正常前删除该副本。
 
-## 导入 Fog of World
+## 导入 GPX 兼容应用
 
 1. 在“导出”页选择 journey 或 coverage 模式、行程范围与点间距。
 2. 确认预览没有阻断错误后生成 `.gpx`。
-3. 将文件传到安装《世界迷雾》的设备，并通过应用当前版本提供的 GPX/KML 导入入口选择该文件。
+3. 将文件传到目标设备，并通过目标应用的 GPX 轨迹导入入口选择该文件。
 4. 首次导入建议先用少量行程抽检线路位置和分段，再导入完整 coverage 文件。
 
-Transit2Fog 不伪造时间、高程或速度；若《世界迷雾》版本的菜单名称发生变化，请以其[官方说明](https://fogofworld.app/)为准。
+Transit2Fog 输出 WGS‑84 GPX 1.1 `<trk>` / `<trkseg>`，不伪造时间、高程或速度。原则上任何支持这一轨迹结构的应用都可导入；点数上限、自动简化、重复轨迹处理和菜单名称以目标应用说明为准。
+
+Fog of World 是已完成实机验证的兼容应用之一；若其菜单名称发生变化，请以其[官方说明](https://fogofworld.app/)为准。
 本项目的两份真实数据验收 GPX、安全准备、逐项通过标准和结果模板见 [`docs/FOG_ACCEPTANCE.md`](FOG_ACCEPTANCE.md)。
 铁路验收文件与抽查步骤见 [`docs/RAIL_FOG_ACCEPTANCE.md`](RAIL_FOG_ACCEPTANCE.md)。
 
