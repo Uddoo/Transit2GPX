@@ -1,0 +1,63 @@
+graphhopper:
+  datareader.file: ""
+  graph.location: graph-cache
+
+  profiles:
+    - name: china_high_speed
+      turn_costs:
+        vehicle_types: [train]
+        u_turn_costs: 600
+        enable_uturn_times: true
+      custom_model_files: [rail.json, china_high_speed.json, preferred_direction.json]
+    - name: china_emu
+      turn_costs:
+        vehicle_types: [train]
+        u_turn_costs: 900
+        enable_uturn_times: true
+      custom_model_files: [rail.json, china_emu.json, preferred_direction.json]
+    - name: china_conventional
+      turn_costs:
+        vehicle_types: [train]
+        u_turn_costs: 1200
+        enable_uturn_times: true
+      custom_model_files: [rail.json, china_conventional.json, preferred_direction.json]
+
+  profiles_ch:
+    - profile: china_high_speed
+    - profile: china_emu
+    - profile: china_conventional
+  profiles_lm: []
+
+  custom_models.directory: custom_models
+  graph.encoded_values: gauge,voltage,electrified,frequency,road_environment,max_speed,rail_access,rail_average_speed,railway_class,railway_service,preferred_direction,osm_way_id
+  prepare.min_network_size: 10
+  prepare.subnetworks.threads: 1
+  routing.max_visited_nodes: 1000000
+  routing.timeout_ms: 30000
+  routing.non_ch.max_waypoint_distance: 2000000
+  import.osm.ignored_highways: footway,construction,cycleway,path,steps
+  graph.dataaccess.default_type: RAM_STORE
+  datareader.preferred_language: zh
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 127.0.0.1
+      max_request_header_size: 50k
+  request_log:
+    appenders: []
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: 127.0.0.1
+
+logging:
+  level: INFO
+  appenders:
+    - type: console
+      time_zone: Asia/Shanghai
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  loggers:
+    "com.graphhopper.osm_warnings":
+      level: WARN

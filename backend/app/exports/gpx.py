@@ -21,13 +21,19 @@ from app.db.models import (
     Journey,
     JourneyLeg,
     JourneyLegEdge,
+    RailDatasetVersion,
+    RailJourneyEdgeSnapshot,
     RouteEdge,
     RouteVariant,
 )
 
 GPX_NAMESPACE = "http://www.topografix.com/GPX/1/1"
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
+TRANSIT2FOG_RAIL_NAMESPACE = "https://transit2fog.local/gpx/rail/1"
 _GEOD = Geod(ellps="WGS84")
+_METRO_GPX_DESCRIPTION = (
+    "Locally generated from CPTOND route edges; no synthetic time or elevation."
+)
 
 
 class ExportValidationError(ValueError):
@@ -38,6 +44,7 @@ class ExportValidationError(ValueError):
 class ExportOptions:
     mode: Literal["journeys", "coverage"]
     max_segment_length_m: int | None
+    rail_max_segment_length_m: int | None = 200
     journey_ids: tuple[int, ...] = ()
     city_id: int | None = None
     line_id: int | None = None
@@ -48,9 +55,10 @@ class ExportOptions:
 @dataclass(frozen=True, slots=True)
 class ExportEdge:
     edge_id: int
+    coverage_key: str
     reversed: bool
-    from_station_id: int
-    to_station_id: int
+    from_station_id: int | None
+    to_station_id: int | None
     distance_m: float
     coordinates: tuple[tuple[float, float], ...]
 
@@ -60,7 +68,12 @@ class ExportLeg:
     journey_id: int
     journey_code: str
     leg_no: int
+    transport_mode: Literal["metro", "rail"]
     dataset_version_id: int
+    graph_version: str | None
+    profile_version: str | None
+    candidate_digest: str
+    source_geometry_sha256: str | None
     edges: tuple[ExportEdge, ...]
 
 
@@ -77,17 +90,17 @@ class ExportPlan:
 
     @property
     def unique_edge_count(self) -> int:
-        return len({edge.edge_id for leg in self.legs for edge in leg.edges})
+        return len({edge.coverage_key for leg in self.legs for edge in leg.edges})
 
     @property
     def distance_m(self) -> float:
         if self.options.mode == "coverage":
-            seen: set[int] = set()
+            seen: set[str] = set()
             total = 0.0
             for leg in self.legs:
                 for edge in leg.edges:
-                    if edge.edge_id not in seen:
-                        seen.add(edge.edge_id)
+                    if edge.coverage_key not in seen:
+                        seen.add(edge.coverage_key)
                         total += edge.distance_m
             return total
         return sum(edge.distance_m for leg in self.legs for edge in leg.edges)
@@ -101,6 +114,24 @@ def _edge_coordinates(
         raise ExportValidationError(f"区间 {edge.id} 的几何无效")
     coordinates = tuple((float(lon), float(lat)) for lon, lat in geometry.coords)
     return coordinates[::-1] if reversed_edge else coordinates
+
+
+def _snapshot_coordinates(
+    snapshot: RailJourneyEdgeSnapshot,
+) -> tuple[tuple[float, float], ...]:
+    geometry = wkb.loads(snapshot.geometry_wkb)
+    if not isinstance(geometry, LineString) or len(geometry.coords) < 2:
+        raise ExportValidationError(f"铁路快照 {snapshot.id} 的几何无效")
+    if hashlib.sha256(snapshot.geometry_wkb).hexdigest() != snapshot.geometry_sha256:
+        raise ExportValidationError(f"铁路快照 {snapshot.id} 的几何校验和不匹配")
+    return tuple((float(lon), float(lat)) for lon, lat in geometry.coords)
+
+
+def _geometry_sha256(coordinates: tuple[tuple[float, float], ...]) -> str:
+    payload = [list(coordinate) for coordinate in coordinates]
+    return hashlib.sha256(
+        json.dumps(payload, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
@@ -135,6 +166,67 @@ def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
             .order_by(JourneyLeg.leg_no)
         ).all()
         for leg in journey_legs:
+            if leg.transport_mode == "rail":
+                if options.city_id is not None or options.line_id is not None:
+                    continue
+                if leg.resolution_status != "resolved":
+                    raise ExportValidationError(f"行程 {journey.journey_code} 尚未解析")
+                snapshot_rows = db.execute(
+                    select(RailJourneyEdgeSnapshot, RailDatasetVersion)
+                    .join(
+                        RailDatasetVersion,
+                        RailDatasetVersion.id
+                        == RailJourneyEdgeSnapshot.rail_dataset_version_id,
+                    )
+                    .where(RailJourneyEdgeSnapshot.journey_leg_id == leg.id)
+                    .order_by(RailJourneyEdgeSnapshot.order_no)
+                ).all()
+                if not snapshot_rows:
+                    raise ExportValidationError(
+                        f"行程 {journey.journey_code} 没有铁路几何快照"
+                    )
+                rail_dataset_ids = {dataset.id for _, dataset in snapshot_rows}
+                if len(rail_dataset_ids) != 1:
+                    raise ExportValidationError(
+                        f"行程 {journey.journey_code} 混用了多个铁路图版本"
+                    )
+                rail_dataset = snapshot_rows[0][1]
+                rail_edges = tuple(
+                    ExportEdge(
+                        edge_id=snapshot.id,
+                        coverage_key=(
+                            f"rail:{rail_dataset.id}:{snapshot.osm_way_id}:"
+                            f"{snapshot.geometry_sha256}"
+                        ),
+                        reversed=snapshot.reversed,
+                        from_station_id=None,
+                        to_station_id=None,
+                        distance_m=snapshot.distance_m,
+                        coordinates=_snapshot_coordinates(snapshot),
+                    )
+                    for snapshot, _ in snapshot_rows
+                )
+                legs.append(
+                    ExportLeg(
+                        journey_id=journey.id,
+                        journey_code=journey.journey_code,
+                        leg_no=leg.leg_no,
+                        transport_mode="rail",
+                        dataset_version_id=rail_dataset.id,
+                        graph_version=rail_dataset.graph_version,
+                        profile_version=rail_dataset.profile_version,
+                        candidate_digest=leg.candidate_digest,
+                        source_geometry_sha256=_geometry_sha256(
+                            _join_edges(rail_edges)
+                        ),
+                        edges=rail_edges,
+                    )
+                )
+                continue
+            if leg.transport_mode != "metro" or leg.dataset_version_id is None:
+                raise ExportValidationError(
+                    f"行程 {journey.journey_code} 的交通方式无效"
+                )
             if options.city_id is not None and leg.city_id != options.city_id:
                 continue
             if options.line_id is not None and leg.line_id != options.line_id:
@@ -159,6 +251,7 @@ def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
                 export_edges_list.append(
                     ExportEdge(
                         edge_id=edge.id,
+                        coverage_key=f"metro:{leg.dataset_version_id}:{edge.id}",
                         reversed=link.reversed,
                         from_station_id=(
                             edge.to_station_id
@@ -180,7 +273,12 @@ def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
                     journey_id=journey.id,
                     journey_code=journey.journey_code,
                     leg_no=leg.leg_no,
+                    transport_mode="metro",
                     dataset_version_id=leg.dataset_version_id,
+                    graph_version=None,
+                    profile_version=None,
+                    candidate_digest=leg.candidate_digest,
+                    source_geometry_sha256=None,
                     edges=export_edges,
                 )
             )
@@ -188,6 +286,7 @@ def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
         "options": {
             "mode": options.mode,
             "max_segment_length_m": options.max_segment_length_m,
+            "rail_max_segment_length_m": options.rail_max_segment_length_m,
             "journey_ids": options.journey_ids,
             "city_id": options.city_id,
             "line_id": options.line_id,
@@ -205,8 +304,16 @@ def create_export_plan(db: Session, options: ExportOptions) -> ExportPlan:
             [
                 leg.journey_id,
                 leg.leg_no,
+                leg.transport_mode,
                 leg.dataset_version_id,
-                [[edge.edge_id, edge.reversed] for edge in leg.edges],
+                leg.graph_version,
+                leg.profile_version,
+                leg.candidate_digest,
+                leg.source_geometry_sha256,
+                [
+                    [edge.edge_id, edge.coverage_key, edge.reversed]
+                    for edge in leg.edges
+                ],
             ]
             for leg in legs
         ],
@@ -289,62 +396,128 @@ def validate_gpx(content: bytes) -> None:
 def track_segments(
     plan: ExportPlan,
 ) -> list[tuple[str, list[tuple[tuple[float, float], ...]]]]:
-    spacing = plan.options.max_segment_length_m
     if plan.options.mode == "journeys":
         tracks: list[tuple[str, list[tuple[tuple[float, float], ...]]]] = []
         for journey in plan.journeys:
             journey_legs = [leg for leg in plan.legs if leg.journey_id == journey.id]
             segments = [
-                _densify(_join_edges(leg.edges), spacing) for leg in journey_legs
+                _densify(
+                    _join_edges(leg.edges),
+                    (
+                        plan.options.rail_max_segment_length_m
+                        if leg.transport_mode == "rail"
+                        else plan.options.max_segment_length_m
+                    ),
+                )
+                for leg in journey_legs
             ]
             tracks.append((journey.journey_code, segments))
         return tracks
 
-    seen: set[int] = set()
-    coverage_edge_groups: list[list[ExportEdge]] = []
+    seen: set[str] = set()
+    coverage_edge_groups: list[tuple[Literal["metro", "rail"], list[ExportEdge]]] = []
     for leg in plan.legs:
         current_group: list[ExportEdge] = []
         for edge in leg.edges:
-            if edge.edge_id in seen:
+            if edge.coverage_key in seen:
                 if current_group:
-                    coverage_edge_groups.append(current_group)
+                    coverage_edge_groups.append((leg.transport_mode, current_group))
                     current_group = []
                 continue
-            seen.add(edge.edge_id)
-            if (
-                current_group
-                and current_group[-1].to_station_id != edge.from_station_id
-            ):
-                coverage_edge_groups.append(current_group)
-                current_group = []
+            seen.add(edge.coverage_key)
+            if current_group:
+                _, _, gap_m = _GEOD.inv(
+                    *current_group[-1].coordinates[-1], *edge.coordinates[0]
+                )
+                if gap_m > 5:
+                    coverage_edge_groups.append((leg.transport_mode, current_group))
+                    current_group = []
             current_group.append(edge)
         if current_group:
-            coverage_edge_groups.append(current_group)
+            coverage_edge_groups.append((leg.transport_mode, current_group))
     coverage_segments = [
-        _densify(_join_edges(tuple(group)), spacing) for group in coverage_edge_groups
+        _densify(
+            _join_edges(tuple(group)),
+            (
+                plan.options.rail_max_segment_length_m
+                if transport_mode == "rail"
+                else plan.options.max_segment_length_m
+            ),
+        )
+        for transport_mode, group in coverage_edge_groups
     ]
-    return [("Metro2Fog coverage", coverage_segments)] if coverage_segments else []
+    return [("Transit2Fog coverage", coverage_segments)] if coverage_segments else []
 
 
 def render_gpx(plan: ExportPlan) -> bytes:
-    nsmap = cast(dict[str, str], {None: GPX_NAMESPACE, "xsi": XSI_NAMESPACE})
+    nsmap = cast(
+        dict[str, str],
+        {
+            None: GPX_NAMESPACE,
+            "xsi": XSI_NAMESPACE,
+            "t2f-rail": TRANSIT2FOG_RAIL_NAMESPACE,
+        },
+    )
     root = etree.Element(
         f"{{{GPX_NAMESPACE}}}gpx",
         nsmap=nsmap,
         version="1.1",
-        creator="Metro2Fog",
+        creator="Transit2Fog",
     )
     root.set(
         f"{{{XSI_NAMESPACE}}}schemaLocation",
         f"{GPX_NAMESPACE} https://www.topografix.com/GPX/1/1/gpx.xsd",
     )
     metadata = etree.SubElement(root, f"{{{GPX_NAMESPACE}}}metadata")
-    etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}name").text = "Metro2Fog export"
-    etree.SubElement(
-        metadata, f"{{{GPX_NAMESPACE}}}desc"
-    ).text = (
-        "Locally generated from CPTOND route edges; no synthetic time or elevation."
+    etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}name").text = "Transit2Fog export"
+    has_rail = any(leg.transport_mode == "rail" for leg in plan.legs)
+    rail_graph_versions = sorted(
+        {
+            leg.graph_version
+            for leg in plan.legs
+            if leg.transport_mode == "rail" and leg.graph_version is not None
+        }
     )
+    rail_profile_versions = sorted(
+        {
+            leg.profile_version
+            for leg in plan.legs
+            if leg.transport_mode == "rail" and leg.profile_version is not None
+        }
+    )
+    description = (
+        "Locally generated from saved CPTOND metro edges and immutable "
+        "OpenStreetMap railway snapshots; no synthetic time or elevation. "
+        f"Rail graph versions: {', '.join(rail_graph_versions)}; "
+        f"profile versions: {', '.join(rail_profile_versions)}."
+        if has_rail
+        else _METRO_GPX_DESCRIPTION
+    )
+    etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}desc").text = description
+    if has_rail:
+        link = etree.SubElement(
+            metadata,
+            f"{{{GPX_NAMESPACE}}}link",
+            href="https://www.openstreetmap.org/copyright",
+        )
+        etree.SubElement(
+            link, f"{{{GPX_NAMESPACE}}}text"
+        ).text = "© OpenStreetMap contributors"
+        extensions = etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}extensions")
+        for leg in plan.legs:
+            if leg.transport_mode != "rail" or leg.source_geometry_sha256 is None:
+                continue
+            etree.SubElement(
+                extensions,
+                f"{{{TRANSIT2FOG_RAIL_NAMESPACE}}}snapshot",
+                journeyId=str(leg.journey_id),
+                legNo=str(leg.leg_no),
+                railDatasetVersionId=str(leg.dataset_version_id),
+                graphVersion=leg.graph_version or "unknown",
+                profileVersion=leg.profile_version or "unknown",
+                candidateDigest=leg.candidate_digest,
+                sourceGeometrySha256=leg.source_geometry_sha256,
+            )
     for name, segments in track_segments(plan):
         if not segments:
             continue

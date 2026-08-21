@@ -1,0 +1,78 @@
+{
+  "graph_version": "china-20260815-r3.1",
+  "max_query_latency_ms": 5000,
+  "routes": [
+    {
+      "name": "北京南—上海虹桥",
+      "profile": "china_high_speed",
+      "points": [
+        { "station": "北京南", "lat": 39.8634831, "lon": 116.3723994 },
+        { "station": "上海虹桥", "lat": 31.1959782, "lon": 121.3162004 }
+      ],
+      "distance_km": { "min": 1200, "max": 1450 }
+    },
+    {
+      "name": "广州南—深圳北",
+      "profile": "china_emu",
+      "points": [
+        { "station": "广州南", "lat": 22.9914143, "lon": 113.2640375 },
+        { "station": "深圳北", "lat": 22.6120365, "lon": 114.0239469 }
+      ],
+      "distance_km": { "min": 80, "max": 140 }
+    },
+    {
+      "name": "成都东—西安北",
+      "profile": "china_emu",
+      "points": [
+        { "station": "成都东", "lat": 30.6312977, "lon": 104.1389215 },
+        { "station": "西安北", "lat": 34.3776675, "lon": 108.9340253 }
+      ],
+      "distance_km": { "min": 580, "max": 740 }
+    },
+    {
+      "name": "北京朝阳—哈尔滨西",
+      "profile": "china_high_speed",
+      "points": [
+        { "station": "北京朝阳", "lat": 39.9433162, "lon": 116.5024181 },
+        { "station": "哈尔滨西", "lat": 45.7051442, "lon": 126.5723242 }
+      ],
+      "distance_km": { "min": 1080, "max": 1350 }
+    },
+    {
+      "name": "郑州东—武汉",
+      "profile": "china_high_speed",
+      "points": [
+        { "station": "郑州东", "lat": 34.7601939, "lon": 113.7732527 },
+        { "station": "武汉", "lat": 30.6098504, "lon": 114.4189431 }
+      ],
+      "distance_km": { "min": 430, "max": 560 }
+    },
+    {
+      "name": "上海虹桥—昆明南",
+      "profile": "china_high_speed",
+      "points": [
+        { "station": "上海虹桥", "lat": 31.1959782, "lon": 121.3162004 },
+        { "station": "昆明南", "lat": 24.8733628, "lon": 102.8603804 }
+      ],
+      "distance_km": { "min": 2000, "max": 2500 }
+    },
+    {
+      "name": "西宁—拉萨",
+      "profile": "china_conventional",
+      "points": [
+        { "station": "西宁", "lat": 36.6207609, "lon": 101.8130390 },
+        { "station": "拉萨", "lat": 29.6258623, "lon": 91.0687424 }
+      ],
+      "distance_km": { "min": 1700, "max": 2150 }
+    },
+    {
+      "name": "乌鲁木齐—西宁",
+      "profile": "china_conventional",
+      "points": [
+        { "station": "乌鲁木齐", "lat": 43.8394124, "lon": 87.5262049 },
+        { "station": "西宁", "lat": 36.6207609, "lon": 101.8130390 }
+      ],
+      "distance_km": { "min": 1400, "max": 1900 }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "dataset": "yangtze-20260815",
+  "source_name": "OpenStreetMap/Geofabrik",
+  "source_page": "https://download.geofabrik.de/asia/china.html",
+  "source_timestamp": "2026-08-15T22:41:00Z",
+  "extract_region": "Shanghai+Jiangsu+Zhejiang+Anhui",
+  "license": "ODbL-1.0",
+  "output_name": "yangtze-20260815.osm.pbf",
+  "files": [
+    {
+      "name": "shanghai-260815.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/china/shanghai-260815.osm.pbf",
+      "md5": "9ed2b72dd2fd08bef4b137c68095ff62"
+    },
+    {
+      "name": "jiangsu-260815.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/china/jiangsu-260815.osm.pbf",
+      "md5": "5c280726844c596c077b34bddee0fb13"
+    },
+    {
+      "name": "zhejiang-260815.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/china/zhejiang-260815.osm.pbf",
+      "md5": "f0a37de2da547174ccb5ad77aecca823"
+    },
+    {
+      "name": "anhui-260815.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/china/anhui-260815.osm.pbf",
+      "md5": "3287826933388ff575746a82c44ba592"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "dataset": "china-20260815",
+  "graph_version": "china-20260815-r3.1",
+  "built_at": "2026-08-21T08:03:01.395210+00:00",
+  "platform": "Darwin arm64",
+  "java_runtime": "Eclipse Temurin 21.0.11+10 LTS",
+  "pbf_size_bytes": 1579509099,
+  "pbf_sha256": "04144ecfdcc46160a897700aed5717332fe50bdc6181b3865e57f0a2c9e34469",
+  "graph_size_bytes": 186698828,
+  "node_count": 645361,
+  "edge_count": 742281,
+  "zero_distance_edge_count": 4,
+  "build_elapsed_seconds": 165.55,
+  "maximum_resident_set_bytes": 1456046080,
+  "profiles": {
+    "china_high_speed": {
+      "shortcut_count": 798307,
+      "preparation_seconds": 26
+    },
+    "china_emu": {
+      "shortcut_count": 808817,
+      "preparation_seconds": 38
+    },
+    "china_conventional": {
+      "shortcut_count": 815891,
+      "preparation_seconds": 48
+    }
+  }
+}

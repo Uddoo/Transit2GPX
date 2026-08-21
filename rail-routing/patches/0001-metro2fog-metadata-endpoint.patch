@@ -1,0 +1,45 @@
+diff --git a/src/main/java/de/geofabrik/railway_routing/http/Metro2FogMetadataResource.java b/src/main/java/de/geofabrik/railway_routing/http/Metro2FogMetadataResource.java
+new file mode 100644
+index 0000000..82270fa
+--- /dev/null
++++ b/src/main/java/de/geofabrik/railway_routing/http/Metro2FogMetadataResource.java
+@@ -0,0 +1,31 @@
++package de.geofabrik.railway_routing.http;
++
++import java.util.LinkedHashMap;
++import java.util.Map;
++
++import jakarta.ws.rs.GET;
++import jakarta.ws.rs.Path;
++import jakarta.ws.rs.Produces;
++import jakarta.ws.rs.core.MediaType;
++
++@Path("/metro2fog/metadata")
++@Produces(MediaType.APPLICATION_JSON)
++public final class Metro2FogMetadataResource {
++    @GET
++    public Map<String, String> metadata() {
++        Map<String, String> values = new LinkedHashMap<>();
++        values.put("graph_version", property("metro2fog.graph.version"));
++        values.put("pbf_sha256", property("metro2fog.pbf.sha256"));
++        values.put("profile_version", property("metro2fog.profile.version"));
++        values.put("openrailrouting_commit", property("metro2fog.openrailrouting.commit"));
++        return values;
++    }
++
++    private static String property(String name) {
++        String value = System.getProperty(name, "").trim();
++        if (value.isEmpty()) {
++            throw new IllegalStateException("Missing required sidecar identity property: " + name);
++        }
++        return value;
++    }
++}
+diff --git a/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java b/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
+index a33fe87..a57f263 100644
+--- a/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
++++ b/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
+@@ -38,2 +38,3 @@ public final class RailwayRoutingApplication extends Application<RailwayRoutingS
+         environment.jersey().register(new RootResource());
++        environment.jersey().register(new Metro2FogMetadataResource());
+         environment.servlets().addFilter("cors", CORSFilter.class).addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), false, "*");

@@ -5,8 +5,25 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.models import ImportBatch, ImportRow, Journey, Station
+from app.core.config import get_settings
+from app.db.models import (
+    ImportBatch,
+    ImportRow,
+    Journey,
+    RailDatasetVersion,
+    RailJourneyEdgeSnapshot,
+    RailJourneyLegDetail,
+    RailStation,
+    Station,
+)
 from app.matching.names import normalize_station_name, pinyin_keys
+from app.rail.sidecar import (
+    EXPECTED_RAIL_PROFILES,
+    RailAttributeRange,
+    RailRoutePath,
+    RailSidecarInfo,
+    RailWayRange,
+)
 
 
 def test_csv_review_and_transaction_commit(client: TestClient, db: Session) -> None:
@@ -103,6 +120,128 @@ def test_csv_commits_two_leg_transfer_as_one_journey(
     assert listing["total"] == 1
     assert len(listing["items"][0]["legs"]) == 2
     assert listing["items"][0]["note"] == "=1+1"
+
+
+def test_unified_csv_commits_metro_and_rail_as_one_mixed_journey(
+    client: TestClient,
+    db: Session,
+    monkeypatch,  # type: ignore[no-untyped-def]
+) -> None:
+    seed_linear_network(db)
+    dataset = RailDatasetVersion(
+        source_name="OpenStreetMap/Geofabrik",
+        source_url="https://download.geofabrik.de/asia/china.html",
+        source_timestamp="2026-08-20",
+        pbf_checksum="f" * 64,
+        extract_region="test",
+        graph_version="csv-rail-test",
+        profile_version="2026-08-21-r0.1",
+        openrailrouting_version="c8d4ef1",
+        graphhopper_version="11.0-osm-reader-callbacks",
+        license="ODbL-1.0",
+        status="ready",
+        quality_flags_json=[],
+    )
+    db.add(dataset)
+    db.flush()
+    for osm_id, name, lon, lat in (
+        (8001, "上海虹桥", 121.327, 31.195),
+        (8002, "杭州东", 120.212, 30.29),
+    ):
+        full, initials = pinyin_keys(name)
+        db.add(
+            RailStation(
+                rail_dataset_version_id=dataset.id,
+                osm_type="node",
+                osm_id=osm_id,
+                name_cn=name,
+                name_en=None,
+                normalized_name=normalize_station_name(name),
+                pinyin_full=full,
+                pinyin_initials=initials,
+                station_code=None,
+                city_name=None,
+                province_name=None,
+                lon=lon,
+                lat=lat,
+                match_status="ready",
+                quality_flags_json=[],
+            )
+        )
+    db.commit()
+    settings = get_settings()
+    monkeypatch.setattr(settings, "rail_enabled", True)
+    monkeypatch.setattr(settings, "rail_graph_version", dataset.graph_version)
+    monkeypatch.setattr(
+        "app.rail.resolver.fetch_sidecar_info",
+        lambda _url, _timeout: RailSidecarInfo(
+            version="11.0",
+            profiles=frozenset(EXPECTED_RAIL_PROFILES),
+            bbox=(69.0, 18.0, 135.0, 54.0),
+            import_date="2026-08-21T00:00:00Z",
+            data_date="2026-08-20T00:00:00Z",
+            graph_version=dataset.graph_version,
+            pbf_sha256=dataset.pbf_checksum,
+            profile_version=dataset.profile_version,
+            openrailrouting_commit=dataset.openrailrouting_version,
+        ),
+    )
+
+    def fake_route(
+        _base_url: str,
+        _timeout_seconds: float,
+        *,
+        points: tuple[tuple[float, float], ...],
+        profile: str,
+    ) -> RailRoutePath:
+        del points
+        return RailRoutePath(
+            profile=profile,
+            distance_m=159_000,
+            duration_ms=3_600_000,
+            coordinates=((121.327, 31.195), (121.0, 31.0), (120.212, 30.29)),
+            way_ranges=(RailWayRange(0, 2, 9901),),
+            attribute_ranges=(
+                RailAttributeRange("max_speed", 0, 2, 250.0),
+                RailAttributeRange("rail_average_speed", 0, 2, 270.0),
+                RailAttributeRange("railway_class", 0, 2, "rail"),
+                RailAttributeRange("railway_service", 0, 2, "none"),
+                RailAttributeRange("electrified", 0, 2, "contact_line"),
+            ),
+        )
+
+    monkeypatch.setattr("app.rail.resolver.fetch_sidecar_route", fake_route)
+    content = (
+        "journey_id,leg_no,mode,travel_date,train_no,train_type,city,line,"
+        "from_station,to_station,via_stations,route_hint,direction,note\n"
+        "mixed,1,metro,2026-08-20,,,上海,测试线,甲站,丙站,,,,混合行程\n"
+        "mixed,2,rail,2026-08-20, g1 ,G,,,上海虹桥,杭州东,,,,混合行程\n"
+    )
+    upload = client.post(
+        "/api/v1/import-batches",
+        files={"file": ("mixed.csv", content.encode(), "text/csv")},
+    )
+
+    assert upload.status_code == 201
+    assert upload.json()["resolved_rows"] == 2
+    batch_id = upload.json()["id"]
+    commit = client.post(
+        f"/api/v1/import-batches/{batch_id}/commit", json={"strategy": "all"}
+    )
+
+    assert commit.status_code == 200
+    listing = client.get("/api/v1/journeys").json()
+    assert listing["total"] == 1
+    assert [leg["transport_mode"] for leg in listing["items"][0]["legs"]] == [
+        "metro",
+        "rail",
+    ]
+    assert db.scalar(select(func.count()).select_from(RailJourneyEdgeSnapshot)) == 1
+    rail_detail = db.scalar(select(RailJourneyLegDetail))
+    assert rail_detail is not None
+    assert rail_detail.train_no == "G1"
+    assert rail_detail.timetable_provider == "csv"
+    assert rail_detail.scoring_version == "2026-08-21-r0.2"
 
 
 def test_csv_commit_failure_rolls_back_every_new_journey(

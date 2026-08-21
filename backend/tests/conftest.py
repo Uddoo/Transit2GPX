@@ -14,9 +14,9 @@ from app.core.config import get_settings
 @pytest.fixture(scope="session")
 def client(tmp_path_factory: pytest.TempPathFactory) -> Generator[TestClient]:
     runtime_dir = tmp_path_factory.mktemp("runtime")
-    os.environ["METRO2FOG_ENVIRONMENT"] = "test"
-    os.environ["METRO2FOG_DATA_DIR"] = str(runtime_dir)
-    os.environ["METRO2FOG_DATABASE_URL"] = f"sqlite:///{runtime_dir / 'test.sqlite3'}"
+    os.environ["TRANSIT2FOG_ENVIRONMENT"] = "test"
+    os.environ["TRANSIT2FOG_DATA_DIR"] = str(runtime_dir)
+    os.environ["TRANSIT2FOG_DATABASE_URL"] = f"sqlite:///{runtime_dir / 'test.sqlite3'}"
     get_settings.cache_clear()
 
     # Imported after the test settings are installed because the first engine
@@ -32,17 +32,19 @@ def client(tmp_path_factory: pytest.TempPathFactory) -> Generator[TestClient]:
 @pytest.fixture
 def db(client: TestClient) -> Generator[Session]:
     del client
-    from app.db.models import DatasetVersion, ImportBatch, Journey
+    from app.db.models import DatasetVersion, ImportBatch, Journey, RailDatasetVersion
     from app.db.session import SessionLocal
 
     with SessionLocal() as session:
         session.execute(delete(ImportBatch))
         session.execute(delete(Journey))
+        session.execute(delete(RailDatasetVersion))
         session.execute(delete(DatasetVersion))
         session.commit()
         yield session
         session.rollback()
         session.execute(delete(ImportBatch))
         session.execute(delete(Journey))
+        session.execute(delete(RailDatasetVersion))
         session.execute(delete(DatasetVersion))
         session.commit()

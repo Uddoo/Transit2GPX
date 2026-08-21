@@ -17,7 +17,8 @@ def test_production_logging_is_rotating_and_idempotent(tmp_path) -> None:  # typ
         handler
         for handler in logger.handlers
         if isinstance(handler, RotatingFileHandler)
-        and handler.baseFilename == str((tmp_path / "logs" / "metro2fog.log").resolve())
+        and handler.baseFilename
+        == str((tmp_path / "logs" / "transit2fog.log").resolve())
     ]
     assert len(handlers) == 1
     handler = handlers[0]
@@ -26,7 +27,7 @@ def test_production_logging_is_rotating_and_idempotent(tmp_path) -> None:  # typ
 
     logger.info("import task 42 failed with synthetic_error")
     handler.flush()
-    content = (tmp_path / "logs" / "metro2fog.log").read_text(encoding="utf-8")
+    content = (tmp_path / "logs" / "transit2fog.log").read_text(encoding="utf-8")
     assert "import task 42 failed with synthetic_error" in content
 
     logger.removeHandler(handler)

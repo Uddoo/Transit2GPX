@@ -25,7 +25,7 @@ def database_path() -> Path:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create a Metro2Fog local backup")
+    parser = argparse.ArgumentParser(description="Create a Transit2Fog local backup")
     parser.add_argument("output", type=Path, help="Output .zip path")
     args = parser.parse_args()
     source = database_path()
@@ -33,8 +33,8 @@ def main() -> None:
         raise SystemExit(f"数据库不存在：{source}")
     output = args.output.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="metro2fog-backup-") as temp_dir:
-        snapshot = Path(temp_dir) / "metro2fog.sqlite3"
+    with tempfile.TemporaryDirectory(prefix="transit2fog-backup-") as temp_dir:
+        snapshot = Path(temp_dir) / "transit2fog.sqlite3"
         with (
             sqlite3.connect(source) as source_db,
             sqlite3.connect(snapshot) as target_db,
@@ -42,13 +42,13 @@ def main() -> None:
             source_db.backup(target_db)
         checksum = hashlib.sha256(snapshot.read_bytes()).hexdigest()
         manifest = {
-            "format": "metro2fog-backup-v1",
+            "format": "transit2fog-backup-v1",
             "app_version": __version__,
             "created_at": datetime.now(UTC).isoformat(),
             "database_sha256": checksum,
         }
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.write(snapshot, "metro2fog.sqlite3")
+            archive.write(snapshot, "transit2fog.sqlite3")
             archive.writestr(
                 "manifest.json",
                 json.dumps(manifest, ensure_ascii=False, indent=2),

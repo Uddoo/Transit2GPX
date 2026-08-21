@@ -94,3 +94,66 @@
 
 - https://operations.osmfoundation.org/policies/tiles/
 - https://leafletjs.com/reference.html#tilelayer
+
+## D-013：以 Provider 扩展交通模式，共享 journey 聚合
+
+**决定**：地铁和铁路共用 `journey`、CSV 审核、候选确认与导出外壳；`journey_leg.transport_mode` 选择 MetroProvider 或 RailwayProvider。铁路只增加 leg 明细、站序和 edge snapshot，不创建平行的顶层 `train_journey`。
+
+**理由**：日期、备注、事务、列表、筛选和导出生命周期属于同一种用户行程；复制聚合会形成两套不一致的产品逻辑。
+
+**代价**：现有地铁外键需要演进为按 mode 条件校验的可空关系，迁移和类型联合比新增孤立表更严格。
+
+## D-014：铁路使用可选的 OpenRailRouting loopback sidecar
+
+**决定**：OSM 铁路图和路径搜索交给 OpenRailRouting/GraphHopper；FastAPI 通过内部 client 调用，只对前端暴露统一 API。sidecar 仅监听 loopback，metro-only 模式不依赖它启动。
+
+**理由**：OpenRailRouting 已提供铁路类型、轨距、电气化、站场线、运行方向和掉头成本等能力，从零维护全国铁路图搜索风险更高。
+
+**代价**：铁路模式增加 Java、图缓存、内存/磁盘和进程监督成本；区域基准完成前不承诺全国最低配置。
+
+## D-015：OSM 是铁路几何主源，时刻表事实来自用户
+
+**决定**：铁路基础设施几何使用版本化 Geofabrik/OSM PBF；首版时刻表只实现 ManualTimetableProvider 和 CsvTimetableProvider。不内置 12306 爬虫，也不把高德结果缓存为离线铁路数据库或永久 GPX。
+
+**理由**：OSM/Geofabrik 适合离线版本化并允许铁路路径计算；车次和运行日期属于另一类事实，缺少明确授权的数据源时应由用户提供并确认。
+
+**代价**：用户需要输入日期、上下车站和尽可能完整的有序经停站；只有起终点的记录会产生更多候选。
+
+## D-016：铁路保存不可变几何快照，不依赖图内部 ID
+
+**决定**：铁路候选确认时保存完整 WGS‑84 几何、数据/图/Profile 版本、可用的 OSM 引用、方向、连续分组和几何摘要。GraphHopper 内部 edge ID 仅用于短期诊断。
+
+**理由**：内部 edge ID 会随建图变化。只有几何快照能保证预览、历史查看和 GPX 在升级后仍一致。
+
+**代价**：铁路行程占用更多 SQLite 空间；跨数据版本的 coverage 去重需要显式策略，首版只保证同版本稳定。
+
+## D-017：铁路候选必须经过地图确认
+
+**决定**：有序经停站是硬约束，车次类型、线路提示和 OSM route 关系只影响评分。每次最多展示三个候选；高置信候选可以默认高亮，但铁路首版仍要求用户确认，低于阈值的候选不得提交。
+
+**理由**：同一对车站可走高速、既有线或不同联络线，车次类别不能唯一证明轨道；OSM 的中国列车关系也不完整。
+
+**代价**：铁路录入比地铁多一步审核，需要清楚展示评分构成和数据缺口。
+
+## D-018：产品名在铁路纵向切片验收后迁移
+
+**决定**：铁路 POC、单条行程、GPX 实机导入和 metro-only 回归通过后，产品由 `Metro2Fog` 集中迁移为 `Transit2Fog`。新安装使用 Transit2Fog 的仓库、包名、数据库目录、环境变量和 GPX creator；现有 `METRO2FOG_*` 配置、`metro2fog.sqlite3`、备份和铁路图元数据继续兼容读取。
+
+**理由**：提前全局改名会制造文档、包、迁移、备份和已发布仓库之间的不一致，而用户尚不能使用铁路能力。
+
+**代价**：兼容层需长期区分当前名称与旧名称，并以测试保护旧数据升级路径。
+
+## D-019：铁路数据遵守 ODbL 署名与分发边界
+
+**决定**：地图与铁路路径界面显示 `© OpenStreetMap contributors` 并链接 OSM copyright；PBF、graph cache 和全国铁路派生库不提交默认代码仓库。公开分发衍生数据库前必须完成 ODbL 审查并随数据提供许可/来源说明。
+
+**理由**：OSMF 要求公开使用的地图、路由能力和数据库向用户展示 OpenStreetMap 署名，并对数据库/衍生数据库提供许可信息。
+
+**代价**：应用需要独立的数据署名页面和 GPX metadata；打包数据的发布流程不能只按软件许可证处理。
+
+**来源**：
+
+- https://www.openstreetmap.org/copyright
+- https://osmfoundation.org/wiki/Licence/Attribution_Guidelines
+- https://download.geofabrik.de/asia/china.html
+- https://github.com/geofabrik/OpenRailRouting

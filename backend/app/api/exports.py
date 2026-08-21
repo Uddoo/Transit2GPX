@@ -23,6 +23,7 @@ router = APIRouter(prefix="/exports", tags=["exports"])
 class ExportRequest(BaseModel):
     mode: Literal["journeys", "coverage"] = "coverage"
     max_segment_length_m: Literal[15, 25, 50] | None = 25
+    rail_max_segment_length_m: Literal[100, 200, 500] | None = 200
     journey_ids: list[int] = Field(default_factory=list, max_length=5000)
     city_id: int | None = Field(default=None, gt=0)
     line_id: int | None = Field(default=None, gt=0)
@@ -43,6 +44,8 @@ class ExportPreviewResponse(BaseModel):
     track_count: int
     segment_count: int
     dataset_version_ids: list[int]
+    rail_dataset_version_ids: list[int]
+    rail_graph_versions: list[str]
     blocking_errors: list[str]
     warnings: list[str]
 
@@ -61,6 +64,7 @@ def _options(request: ExportRequest) -> ExportOptions:
     return ExportOptions(
         mode=request.mode,
         max_segment_length_m=request.max_segment_length_m,
+        rail_max_segment_length_m=request.rail_max_segment_length_m,
         journey_ids=tuple(sorted(set(request.journey_ids))),
         city_id=request.city_id,
         line_id=request.line_id,
@@ -85,6 +89,16 @@ def preview_export(
         ) from exc
     tracks = track_segments(plan)
     segment_count = sum(len(segments) for _, segments in tracks)
+    rail_legs = [leg for leg in plan.legs if leg.transport_mode == "rail"]
+    rail_dataset_ids = sorted({leg.dataset_version_id for leg in rail_legs})
+    rail_graph_versions = sorted(
+        {leg.graph_version for leg in rail_legs if leg.graph_version is not None}
+    )
+    warnings = (
+        ["铁路轨迹来源：© OpenStreetMap contributors（ODbL）"] if rail_legs else []
+    )
+    if len(rail_dataset_ids) > 1:
+        warnings.append("包含多个铁路数据版本；coverage 仅在各版本内部去重。")
     return ExportPreviewResponse(
         preview_token=plan.token,
         journey_count=len(plan.journeys),
@@ -93,9 +107,17 @@ def preview_export(
         distance_m=plan.distance_m,
         track_count=len(tracks),
         segment_count=segment_count,
-        dataset_version_ids=sorted({leg.dataset_version_id for leg in plan.legs}),
+        dataset_version_ids=sorted(
+            {
+                leg.dataset_version_id
+                for leg in plan.legs
+                if leg.transport_mode == "metro"
+            }
+        ),
+        rail_dataset_version_ids=rail_dataset_ids,
+        rail_graph_versions=rail_graph_versions,
         blocking_errors=[] if plan.journeys else ["没有符合条件的已保存行程"],
-        warnings=[],
+        warnings=warnings,
     )
 
 
@@ -126,7 +148,7 @@ def download_gpx(
             message="GPX 生成前校验未通过。",
             details={"errors": [str(exc)]},
         ) from exc
-    filename = f"metro2fog_{date.today().isoformat()}.gpx"
+    filename = f"transit2fog_{date.today().isoformat()}.gpx"
     return Response(
         content=content,
         media_type="application/gpx+xml",
