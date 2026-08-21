@@ -9,10 +9,11 @@
 ## 首次安装
 
 ```bash
+make doctor
 make setup
 ```
 
-该命令会：
+`make doctor` 会检查 macOS、Node.js、npm 和 `uv` 版本，不下载依赖或修改数据。`make setup` 会：
 
 1. 根据 `backend/uv.lock` 创建 Python 环境。
 2. 根据 `frontend/package-lock.json` 安装前端依赖。
@@ -139,31 +140,78 @@ make validate-real-data CPTOND_DIR=/absolute/path/to/extracted-dataset
 
 ## 构建与运行铁路图
 
-铁路能力额外需要 Java；当前可复现基线使用 Java 21。sidecar、PBF 和 graph 都是可选本地资源，缺失时地铁流程仍可运行。
+铁路能力额外需要 Java 17+；当前可复现基线使用 Java 21。sidecar、PBF 和 graph 都是可选本地资源，缺失时地铁流程仍可运行。系统 Maven 不是必需项，bootstrap 脚本会下载固定版本并校验 SHA-512。
+
+先运行附加检查：
+
+```bash
+make doctor-rail
+```
+
+诊断会检查 Git、curl、tar、Java、Python osmium 和磁盘空间；构建产物尚不存在只会显示后续操作提醒。
+
+### 资源与范围选择
+
+| 图范围 | 固定 PBF | 固定样本 | 验收机观测 | 建议准备 |
+|---|---|---|---|---|
+| 长三角 | 上海、江苏、浙江、安徽合并，参考成品约 223 MB | 4 条 | 用于区域连通性和 Profile POC | 至少 3 GB 可用磁盘、4 GB 可用内存 |
+| 全国 | 中国 PBF 约 1.58 GB | 8 条 | graph 约 187 MB；建图约 166 秒；峰值 RSS 约 1.46 GB | 至少 5 GB 可用磁盘、4 GB 可用内存 |
+
+这些数字用于选择首次体验路径，不是所有 Java、OSM 版本和机器的最低配置承诺。长三角图适合快速开发验证，只能计算该区域内的路径；全国图用于正式录入跨区域行程。
+
+### 长三角轻量路径
+
+首次准备数据和图：
 
 ```bash
 make rail-bootstrap
 make rail-yangtze-data
 make rail-yangtze-graph
+```
+
+随后使用两个终端：
+
+```bash
+# 终端 A：保持 sidecar 运行
+make rail-yangtze-start
+
+# 终端 B：首次运行时验证、激活并启动应用
+make rail-yangtze-activate
+make dev-rail
+```
+
+### 全国完整路径
+
+首次准备数据和图：
+
+```bash
+make rail-bootstrap
 make rail-china-data
 make rail-china-graph
 ```
 
-在一个终端启动与图 metadata checksum 一致的 sidecar，在另一个终端运行固定样本并激活：
+随后使用两个终端：
 
 ```bash
-./scripts/rail_start.sh china-20260815-r3.1 /absolute/path/china-20260815.osm.pbf
-make rail-china-validate
+# 终端 A：保持 sidecar 运行
+make rail-china-start
+
+# 终端 B：首次运行时验证、激活并启动应用
 make rail-china-activate
-```
-
-图与 sidecar 就绪后，可直接启动同时包含地铁和铁路能力的开发环境：
-
-```bash
 make dev-rail
 ```
 
-普通 `make dev` 仍保持铁路可选并默认关闭；铁路录入页会保留乘车事实输入，并明确提示车站搜索和路径预览为何暂不可用。
+`rail-yangtze-activate` 和 `rail-china-activate` 会先运行对应的固定样本验证，再原子更新 `active` selector。已经激活同一图版本时，终端 B 可跳过 activate，直接运行 `make dev-rail`。普通 `make dev` 仍默认关闭铁路；铁路录入页会保留乘车事实输入，并明确提示车站搜索和路径预览为何暂不可用。
+
+如果复用旧验收目录或自定义存储位置，请在 sidecar 与应用两个终端导出相同配置后再运行命令：
+
+```bash
+export RAIL_WORK_DIR=/absolute/path/to/rail-work
+export RAIL_GRAPH_ROOT=/absolute/path/to/graphs
+make doctor-rail
+```
+
+`RAIL_WORK_DIR` 控制下载工具、sidecar JAR 和默认 graph 工作目录；`RAIL_GRAPH_ROOT` 单独指定不可变图与 `active`/`previous` selector 所在目录。
 
 FastAPI 使用以下配置读取原子 selector：
 
@@ -174,7 +222,7 @@ TRANSIT2FOG_RAIL_GRAPH_ROOT=/absolute/path/to/graphs
 TRANSIT2FOG_RAIL_SIDECAR_URL=http://127.0.0.1:8989
 ```
 
-切换异常时执行 `make rail-rollback`，然后以 `active` 重启 sidecar。激活脚本会拒绝不匹配的验证报告，resolver 也会在算路前复核 graph/PBF/Profile/commit 身份。更完整的构建和资源基线见 [`rail-routing/README.md`](../rail-routing/README.md)。
+切换异常时执行 `make rail-rollback`，然后重启与 `active` 指向版本一致的 sidecar。激活脚本会拒绝不匹配的验证报告，resolver 也会在算路前复核 graph/PBF/Profile/commit 身份。更完整的构建和资源基线见 [`rail-routing/README.md`](../rail-routing/README.md)。
 
 ## 数据库迁移
 
@@ -220,14 +268,16 @@ uv run --project backend python scripts/restore.py /absolute/path/transit2fog-ba
 
 恢复流程会检查 ZIP 内容、checksum 和 SQLite `integrity_check`，并在替换前于数据库旁生成 `*.pre-restore-*.bak` 安全副本。不要在确认新数据库正常前删除该副本。
 
-## 导入 Fog of World
+## 导入 GPX 兼容应用
 
 1. 在“导出”页选择 journey 或 coverage 模式、行程范围与点间距。
 2. 确认预览没有阻断错误后生成 `.gpx`。
-3. 将文件传到安装《世界迷雾》的设备，并通过应用当前版本提供的 GPX/KML 导入入口选择该文件。
+3. 将文件传到目标设备，并通过目标应用的 GPX 轨迹导入入口选择该文件。
 4. 首次导入建议先用少量行程抽检线路位置和分段，再导入完整 coverage 文件。
 
-Transit2Fog 不伪造时间、高程或速度；若《世界迷雾》版本的菜单名称发生变化，请以其[官方说明](https://fogofworld.app/)为准。
+Transit2Fog 输出 WGS‑84 GPX 1.1 `<trk>` / `<trkseg>`，不伪造时间、高程或速度。原则上任何支持这一轨迹结构的应用都可导入；点数上限、自动简化、重复轨迹处理和菜单名称以目标应用说明为准。
+
+Fog of World 是已完成实机验证的兼容应用之一；若其菜单名称发生变化，请以其[官方说明](https://fogofworld.app/)为准。
 本项目的两份真实数据验收 GPX、安全准备、逐项通过标准和结果模板见 [`docs/FOG_ACCEPTANCE.md`](FOG_ACCEPTANCE.md)。
 铁路验收文件与抽查步骤见 [`docs/RAIL_FOG_ACCEPTANCE.md`](RAIL_FOG_ACCEPTANCE.md)。
 

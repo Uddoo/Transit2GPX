@@ -1,6 +1,12 @@
-.PHONY: setup dev dev-rail build start check backend-check frontend-check test e2e db-upgrade backup validate-real-data rail-bootstrap rail-fixture rail-fixture-start rail-fixture-smoke rail-yangtze-data rail-yangtze-graph rail-yangtze-validate rail-china-data rail-china-graph rail-china-validate rail-china-activate rail-rollback clean
+.PHONY: doctor doctor-rail setup dev dev-rail build start check backend-check frontend-check test e2e db-upgrade backup validate-real-data rail-bootstrap rail-fixture rail-fixture-start rail-fixture-smoke rail-yangtze-data rail-yangtze-graph rail-yangtze-start rail-yangtze-validate rail-yangtze-activate rail-china-data rail-china-graph rail-china-start rail-china-validate rail-china-activate rail-rollback clean
 
 RAIL_GRAPH_ROOT ?= $(CURDIR)/data/rail-routing/graphs
+
+doctor:
+	./scripts/doctor.sh
+
+doctor-rail:
+	./scripts/doctor.sh --rail
 
 setup:
 	uv sync --project backend --dev
@@ -74,10 +80,20 @@ rail-yangtze-graph: rail-bootstrap rail-yangtze-data
 	RAIL_EXTRACT_REGION=Shanghai+Jiangsu+Zhejiang+Anhui \
 	./scripts/rail_build_graph.sh "$(CURDIR)/data/rail-routing/regions/yangtze-20260815/yangtze-20260815.osm.pbf" yangtze-20260815-r0.1
 
+rail-yangtze-start:
+	RAIL_GRAPH_ROOT="$(RAIL_GRAPH_ROOT)" \
+	./scripts/rail_start.sh yangtze-20260815-r0.1 \
+		"$(CURDIR)/data/rail-routing/regions/yangtze-20260815/yangtze-20260815.osm.pbf"
+
 rail-yangtze-validate:
 	uv run --project backend python scripts/rail_validate_routes.py \
 		rail-routing/data/yangtze-acceptance-routes.json \
 		--output data/rail-routing/regions/yangtze-20260815/route-validation.json
+
+rail-yangtze-activate: rail-yangtze-validate
+	uv run --project backend python scripts/rail_activate_graph.py \
+		--graph-root "$(RAIL_GRAPH_ROOT)" activate yangtze-20260815-r0.1 \
+		--validation-report data/rail-routing/regions/yangtze-20260815/route-validation.json
 
 rail-china-data:
 	uv run --project backend python scripts/rail_prepare_region.py rail-routing/data/china-20260815.json data/rail-routing/regions
@@ -87,6 +103,11 @@ rail-china-graph: rail-bootstrap rail-china-data
 	RAIL_SOURCE_TIMESTAMP=2026-08-15T22:38:00Z \
 	RAIL_EXTRACT_REGION=China \
 	./scripts/rail_build_graph.sh "$(CURDIR)/data/rail-routing/regions/china-20260815/china-20260815.osm.pbf" china-20260815-r3.1
+
+rail-china-start:
+	RAIL_GRAPH_ROOT="$(RAIL_GRAPH_ROOT)" \
+	./scripts/rail_start.sh china-20260815-r3.1 \
+		"$(CURDIR)/data/rail-routing/regions/china-20260815/china-20260815.osm.pbf"
 
 rail-china-validate:
 	uv run --project backend python scripts/rail_validate_routes.py \
