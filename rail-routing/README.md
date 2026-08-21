@@ -16,12 +16,18 @@ downloaded into the ignored work directory and verified with SHA-512.
 Set `RAIL_JAVA_HOME` when the system default Java is not the version intended
 for a reproducible build; Java 21 is the currently verified runtime.
 
+Run the preflight check before downloading or building anything:
+
+```sh
+make doctor-rail
+```
+
 ```sh
 make rail-bootstrap
 make rail-fixture
 ```
 
-Start the fixture sidecar in one terminal:
+Start the fixture sidecar in terminal A:
 
 ```sh
 make rail-fixture-start
@@ -37,15 +43,19 @@ make rail-fixture-smoke
 
 The pinned regional manifest downloads and verifies the 2026-08-15 Shanghai,
 Jiangsu, Zhejiang, and Anhui Geofabrik extracts before atomically merging them.
-Build and start the immutable graph, then run the four-route acceptance set:
+Build the immutable graph, then use two terminals to start, validate, activate,
+and run Transit2Fog:
 
 ```sh
 make rail-yangtze-data
 make rail-yangtze-graph
-RAIL_WORK_DIR="$PWD/data/rail-routing" \
-  ./scripts/rail_start.sh yangtze-20260815-r0.1 \
-  "$PWD/data/rail-routing/regions/yangtze-20260815/yangtze-20260815.osm.pbf"
-make rail-yangtze-validate
+
+# Terminal A
+make rail-yangtze-start
+
+# Terminal B
+make rail-yangtze-activate
+make dev-rail
 ```
 
 The validator rejects missing China profiles, invalid WGS-84 geometry,
@@ -70,16 +80,18 @@ OpenRailRouting exits successfully.
 
 The pinned China manifest, immutable build metadata, and eight-route acceptance
 set are tracked under `rail-routing/data/`. Large PBF, graph, database, and
-validation outputs remain ignored:
+validation outputs remain ignored. Build first, then use two terminals:
 
 ```sh
 make rail-china-data
 make rail-china-graph
-RAIL_WORK_DIR="$PWD/data/rail-routing" \
-  ./scripts/rail_start.sh china-20260815-r3.1 \
-  "$PWD/data/rail-routing/regions/china-20260815/china-20260815.osm.pbf"
-make rail-china-validate
+
+# Terminal A
+make rail-china-start
+
+# Terminal B
 make rail-china-activate
+make dev-rail
 ```
 
 Activation refuses a report whose graph/PBF/Profile/commit identity differs

@@ -53,18 +53,122 @@ Fog of World
 - [Fog of World 铁路实机验收](docs/RAIL_FOG_ACCEPTANCE.md)：北京南—上海虹桥全国铁路 GPX 的固定哈希、抽查步骤与关闭条件。
 - [数据与第三方署名](ATTRIBUTION.md)：CPTOND、Science Data Bank、OpenStreetMap、Geofabrik 与 OpenRailRouting 的署名边界。
 
-## 快速开始
+## 10 分钟地铁上手
+
+这条路径面向第一次使用项目的人；“10 分钟”不包含第三方数据和依赖的网络下载时间。当前首个支持平台是 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。
+
+### 1. 检查并安装环境
 
 ```bash
+make doctor
 make setup
+```
+
+`make doctor` 只检查环境，不下载或修改数据；`make setup` 根据锁文件安装 Python 和前端依赖。
+
+### 2. 获取一份地铁数据
+
+任选一个来源，下载后完整解压到仓库外目录：
+
+| 来源 | 适合场景 | 导入时应看到的主文件 |
+|---|---|---|
+| [CPTOND-2025 v2](https://doi.org/10.6084/m9.figshare.29377427) | 官方完整基线，CC BY 4.0 | `metro_routes.shp`、`metro_stops.shp` |
+| [Science Data Bank 46 城时序数据](https://doi.org/10.57760/sciencedb.33335) | Figshare 下载受限时的已验收替代源，CC BY-NC-SA 4.0 | `metro_routes.shp`、`metro_routes_segment_timeline.shp`、`metro_stations_timeline.shp` |
+
+不要只复制 `.shp`。每组 Shapefile 必须同时保留同名的 `.shx`、`.dbf`、`.prj`；文件可以位于所选目录的任意子层级。
+
+### 3. 启动并导入
+
+```bash
 make dev
 ```
 
-开发界面位于 `http://127.0.0.1:5173`。生产模式使用 `make start`，由单一 FastAPI 服务托管 API 和前端。
+1. 打开 `http://127.0.0.1:5173/settings/data`。
+2. 在“地铁数据”中填写解压目录的绝对路径，点击“导入数据目录”。
+3. 等待状态变为“真实地铁数据已就绪”，并确认阻断线路数量符合预期。
+4. 如果导入失败，先检查 Shapefile sidecar、CRS 和页面中的质量报告。
 
-首次启动后打开“数据与设置”，输入解压后的地铁数据目录绝对路径并开始导入。应用接受全国级 `metro_routes.shp` + `metro_stops.shp`、成对的城市级 CPTOND 文件，也接受 Science Data Bank 的 `metro_routes.shp` + `metro_routes_segment_timeline.shp` + `metro_stations_timeline.shp`；每个 Shapefile 必须保留 `.shx`、`.dbf`、`.prj` 等 sidecar 文件。
+### 4. 创建行程并导出 GPX
 
-行程页地图使用 OpenStreetMap 作为真实地理底图，地铁线路和站点则只来自本机已通过质量门禁的 CPTOND 数据。在线底图可在环境变量中关闭或替换为自托管瓦片服务。
+1. 打开“添加行程”，选择城市、线路、起点和终点。
+2. 预览候选；环线、换乘或模糊结果需要人工确认。
+3. 保存后打开“导出”，先用少量行程生成 journey GPX 抽检，再按需生成 coverage GPX。
+4. 将 GPX 导入 Fog of World，确认轨迹没有错误直线或明显跳点。
+
+生产模式使用 `make start`，由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](docs/DEVELOPMENT.md)。
+
+## 铁路最短可用路径
+
+铁路数据下载已经脚本化，但首次使用还需要构建 OpenRailRouting sidecar 和本地图。Java 17+ 可以运行，Java 21 是当前验证基线；系统 Maven 不是必需项，脚本会下载并校验固定版本。
+
+### 1. 先选择图范围
+
+| 方案 | 固定数据 | 当前验收 | 建议资源 | 适合场景 |
+|---|---|---|---|---|
+| 长三角轻量图 | 上海、江苏、浙江、安徽合并 PBF，参考成品约 223 MB | 4 条跨省/高普速线路 | 至少 3 GB 可用磁盘、4 GB 可用内存 | 首次体验、开发调试 |
+| 全国完整图 | 中国 PBF 约 1.58 GB，graph 约 187 MB | 8 条全国代表线路 | 至少 5 GB 可用磁盘、4 GB 可用内存 | 全国行程、正式使用 |
+
+全国图在验收机器上建图约 166 秒、峰值 RSS 约 1.46 GB；首次 bootstrap 还会下载并编译固定版本依赖，实际耗时取决于网络和机器。以上是保守准备建议，不是跨平台最低配置承诺。
+
+### 2. 首次准备
+
+先检查核心和铁路环境：
+
+```bash
+make setup
+make doctor-rail
+make rail-bootstrap
+```
+
+选择长三角轻量图：
+
+```bash
+make rail-yangtze-data
+make rail-yangtze-graph
+```
+
+或者选择全国完整图：
+
+```bash
+make rail-china-data
+make rail-china-graph
+```
+
+下载支持断点续传，并按仓库固定 manifest 校验摘要；PBF、graph 和构建产物都保存在被忽略的 `data/` 目录。
+
+### 3. 用两个终端启动
+
+长三角路径：
+
+```bash
+# 终端 A：保持 sidecar 运行
+make rail-yangtze-start
+
+# 终端 B：首次运行时验证并激活，然后启动应用
+make rail-yangtze-activate
+make dev-rail
+```
+
+全国路径只需替换命令名：
+
+```bash
+# 终端 A
+make rail-china-start
+
+# 终端 B
+make rail-china-activate
+make dev-rail
+```
+
+`*-activate` 会先运行对应的固定样本验证，再原子切换 `active`。已经验证并激活过同一图版本时，终端 B 可直接运行 `make dev-rail`。应用位于 `http://127.0.0.1:5173`；sidecar 只监听 `127.0.0.1:8989`，不要直接暴露给局域网。完整的版本锁定、区域图、自定义 PBF 和回滚说明见 [`rail-routing/README.md`](rail-routing/README.md)。
+
+如果已有图位于旧验收目录或其他自定义位置，请在两个终端先设置相同路径，再运行上述命令；`make doctor-rail` 会显示它实际检查到的 JAR 和 `active` 图：
+
+```bash
+export RAIL_WORK_DIR=/absolute/path/to/rail-work
+export RAIL_GRAPH_ROOT=/absolute/path/to/graphs
+make doctor-rail
+```
 
 ## 数据与标准基线
 
