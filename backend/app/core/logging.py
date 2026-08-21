@@ -15,7 +15,7 @@ def configure_logging(settings: Settings) -> None:
         return
     log_directory = settings.data_dir / "logs"
     log_directory.mkdir(parents=True, exist_ok=True)
-    log_path = (log_directory / "metro2fog.log").resolve()
+    log_path = (log_directory / "transit2fog.log").resolve()
     for handler in app_logger.handlers:
         if isinstance(handler, RotatingFileHandler) and handler.baseFilename == str(
             log_path

@@ -21,6 +21,29 @@ const statusLabels: Record<string, string> = {
   committed: "已提交",
 };
 
+const METRO_REPAIR_FIELDS = [
+  "mode",
+  "travel_date",
+  "city",
+  "line",
+  "from_station",
+  "to_station",
+  "direction",
+  "via_stations",
+  "note",
+] as const;
+const RAIL_REPAIR_FIELDS = [
+  "mode",
+  "travel_date",
+  "train_no",
+  "train_type",
+  "from_station",
+  "to_station",
+  "via_stations",
+  "route_hint",
+  "note",
+] as const;
+
 export function CsvImportPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -140,16 +163,17 @@ export function CsvImportPage() {
           ) : null}
           <div className="table-scroll" tabIndex={0} aria-label="CSV 行审核表格，可横向滚动">
             <table className="review-table">
-              <thead><tr>{["行", "行程", "城市", "线路", "起点", "终点", "状态", "操作"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
+              <thead><tr>{["行", "行程", "方式", "城市 / 车次", "线路 / 提示", "起点", "终点", "状态", "操作"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
               <tbody>
                 {rows.data?.items.map((row) => (
                   <tr key={row.id} data-status={row.resolution_status === "needs_review" ? "review" : row.resolution_status}>
                     <td>{row.row_no}</td>
                     <td>{row.normalized.journey_id || "单行"}</td>
-                    <td>{row.normalized.city}</td>
-                    <td>{row.normalized.line}</td>
-                    <td>{row.normalized.start_station}</td>
-                    <td>{row.normalized.end_station}</td>
+                    <td>{row.normalized.mode === "rail" ? "铁路" : "地铁"}</td>
+                    <td>{row.normalized.mode === "rail" ? (row.normalized.train_no || row.normalized.train_type) : row.normalized.city}</td>
+                    <td>{row.normalized.mode === "rail" ? row.normalized.route_hint : row.normalized.line}</td>
+                    <td>{row.normalized.from_station}</td>
+                    <td>{row.normalized.to_station}</td>
                     <td>
                       <span className={`status-text status-text--${row.resolution_status === "needs_review" ? "review" : row.resolution_status}`}>
                         {statusLabels[row.resolution_status] ?? row.resolution_status}
@@ -165,7 +189,9 @@ export function CsvImportPage() {
                         >
                           <option value="">选择候选</option>
                           {row.candidates.map((candidate) => (
-                            <option key={candidate.candidate_id} value={candidate.candidate_id}>{candidate.direction_name} · {(candidate.distance_m / 1000).toFixed(1)} km</option>
+                            <option key={candidate.candidate_id} value={candidate.candidate_id}>
+                              {candidate.mode === "rail" ? candidate.routing_profile : candidate.direction_name} · {(candidate.distance_m / 1000).toFixed(1)} km
+                            </option>
                           ))}
                         </select>
                       ) : null}
@@ -225,7 +251,7 @@ export function CsvImportPage() {
               updateRow.mutate({
                 rowId: editing.id,
                 input: Object.fromEntries(
-                  ["city", "line", "start_station", "end_station", "direction", "via_station", "traveled_at", "note"].map((key) => {
+                  (editing.normalized.mode === "rail" ? RAIL_REPAIR_FIELDS : METRO_REPAIR_FIELDS).map((key) => {
                     const value = form.get(key);
                     return [key, typeof value === "string" ? value : ""];
                   }),
@@ -234,8 +260,8 @@ export function CsvImportPage() {
             }}
           >
             <h2 id="csv-row-editor-title">修复第 {editing.row_no} 行</h2>
-            {(["city", "line", "start_station", "end_station", "direction", "via_station", "traveled_at", "note"] as const).map((field) => (
-              <label className="field" key={field}><span className="field__label">{field}</span><input autoFocus={field === "city"} defaultValue={editing.normalized[field] ?? ""} name={field} /></label>
+            {(editing.normalized.mode === "rail" ? RAIL_REPAIR_FIELDS : METRO_REPAIR_FIELDS).map((field, index) => (
+              <label className="field" key={field}><span className="field__label">{field}</span><input autoFocus={index === 0} defaultValue={editing.normalized[field] ?? ""} name={field} /></label>
             ))}
             <div className="row-editor__actions">
               <button className="button button--secondary" onClick={() => setEditing(undefined)} type="button">取消</button>

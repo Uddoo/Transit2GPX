@@ -11,9 +11,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 cd "$project_dir/backend"
-METRO2FOG_ENVIRONMENT=development uv run python -m app &
+TRANSIT2FOG_ENVIRONMENT=development uv run python -m app &
 backend_pid=$!
 
 cd "$project_dir/frontend"
 npm run dev
-

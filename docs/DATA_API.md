@@ -1,5 +1,7 @@
 # 数据与 API 契约
 
+本文件描述已经实现的 Transit2Fog v1.0 地铁契约和 R0–R3 铁路契约。完整铁路设计、运行约束和验收状态见 [`RAILWAY.md`](RAILWAY.md)。
+
 ## 1. 数据源策略
 
 v1.0 的规范数据源是 CPTOND-2025。导入器以线路和站点数据重建带 route variant 语义的站间 edge；发布的 segments 只用于交叉校验和显式兜底，因为它不应被假定始终保留稳定的线路、方向和支线语义。
@@ -111,6 +113,43 @@ import_row
 - row：`resolved | needs_review | unresolved | ignored | committed`
 - leg：`resolved | needs_review | invalidated`
 
+### 3.4 铁路扩展模型（已实现）
+
+铁路与地铁共用 `journey`，不另建平行的 `train_journey`。`journey_leg` 增加 `transport_mode = metro | rail`；现有地铁外键按 mode 变为条件必填，铁路明细使用：
+
+```text
+rail_dataset_version
+  id, source_name, source_url, source_timestamp, pbf_checksum,
+  extract_region, graph_version, profile_version, imported_at,
+  license, status, quality_flags_json
+
+rail_station
+  id, rail_dataset_version_id, osm_type, osm_id,
+  name_cn, name_en, normalized_name, pinyin_full, pinyin_initials,
+  station_code, city_name, province_name, lon, lat,
+  match_status, quality_flags_json
+
+rail_station_alias
+  id, station_id, alias, normalized_alias, alias_type, source
+
+rail_journey_leg_detail
+  journey_leg_id, travel_date, train_no, train_type,
+  route_hint, confidence, resolution_status, selected_candidate_digest
+
+rail_journey_stop
+  id, journey_leg_id, stop_sequence, station_id, raw_station_name,
+  arrival_time, departure_time, is_boarding, is_alighting,
+  match_method, match_confidence, locked_by_user
+
+rail_journey_edge_snapshot
+  journey_leg_id, order_no, rail_dataset_version_id,
+  provider_edge_ref, osm_way_id, from_osm_node_id, to_osm_node_id,
+  reversed, continuity_group, distance_m, geometry_wkb,
+  geometry_sha256, quality_flags_json
+```
+
+每个 leg 必须恰好引用一类路径事实：`metro` 使用 `journey_leg_edge → route_edge`，`rail` 使用 `rail_journey_edge_snapshot`。铁路历史数据不依赖 GraphHopper 内部 edge ID；预览、再次打开和导出使用确认时保存的完整几何快照。
+
 ## 4. CSV 契约
 
 ```csv
@@ -134,6 +173,22 @@ journey_id,leg_no,city,line,start_station,end_station,traveled_at,direction,via_
 | `note` | 可选 | 长度受限的纯文本 |
 
 编码只接受 UTF-8 与 UTF-8-SIG。未知列可保留在 `raw_json` 但给出警告；缺少必填列是 batch 级错误。公式单元格按文本处理，导出 CSV 时需要防止表格公式注入。
+
+### 4.1 铁路扩展 CSV（已实现）
+
+统一 CSV 继续保持“一行一个 leg”，增加 `mode`、车次和站序字段：
+
+```csv
+journey_id,leg_no,mode,travel_date,train_no,train_type,city,line,from_station,to_station,via_stations,route_hint,direction,note
+20260820-01,1,rail,2026-08-20,GXXXX,G,,,上海虹桥,杭州东,嘉兴南|桐乡,沪昆高速铁路,,
+20260822-01,1,metro,2026-08-22,,,上海,1号线,人民广场,徐家汇,,,,
+```
+
+- 缺少 `mode` 的旧文件按 `metro` 处理。
+- `rail` 行的 `travel_date`、`from_station`、`to_station` 必填，`train_no` 建议填写。
+- `via_stations` 是用 `|` 分隔的有序约束；读取时兼容旧字段 `via_station`。
+- 只有车次而没有日期时不得自动提交；只有起终点时必须返回 `needs_review`。
+- `metro` 行继续要求 city/line；`rail` 行不把车次类别当作线路名称。
 
 ## 5. REST API
 
@@ -275,16 +330,78 @@ POST /api/v1/exports/gpx
 
 预览返回行程数、edge 数、去重数、总距离、轨迹/segment 数、数据版本集合、阻断错误和警告。只有相同请求的预览摘要仍有效时才生成下载。
 
+### 5.7 铁路扩展 API（已实现）
+
+铁路数据与站点：
+
+```http
+GET  /api/v1/rail/data/status
+POST /api/v1/rail/data/imports
+GET  /api/v1/rail/data/imports/{import_id}
+GET  /api/v1/rail/data/compare?from_graph_version=...&to_graph_version=...
+GET  /api/v1/rail/stations/search?q=...
+POST /api/v1/journeys/{journey_id}/rail-recompute/preview
+POST /api/v1/journeys/{journey_id}/rail-recompute
+```
+
+`POST /api/v1/paths/preview` 演进为按 `mode` 判别的请求联合类型。缺少 mode 的现有请求按 `metro` 处理，以保持 v1.0 客户端兼容：
+
+```json
+{
+  "mode": "rail",
+  "travel_date": "2026-08-20",
+  "train_no": "GXXXX",
+  "train_type": "G",
+  "start_station_id": 101,
+  "end_station_id": 205,
+  "via_station_ids": [130, 144],
+  "route_hint": "沪昆高速铁路"
+}
+```
+
+铁路候选除通用字段外返回：
+
+```json
+{
+  "rail_dataset_version_id": 7,
+  "graph_version": "china-20260815-r3.1",
+  "profile_version": "2026-08-21-r0.1",
+  "scoring_version": "2026-08-21-r0.2",
+  "routing_profile": "china_high_speed",
+  "distance_m": 160400,
+  "duration_ms": 3600000,
+  "station_ids": [101, 130, 144, 205],
+  "score": 0.93,
+  "score_details": [],
+  "geometry": {"type": "LineString", "coordinates": []},
+  "way_ranges": [{"start_index": 0, "end_index": 42, "osm_way_id": 123}],
+  "warnings": [],
+  "can_commit": true
+}
+```
+
+`candidate_id` 与 digest 仍由服务端生成。digest 覆盖 mode、用户事实、数据/图/Profile 版本、有序来源引用和几何摘要；`POST /journeys` 不接受前端自带任意铁路几何。
+
+版本比较按 `(osm_type, osm_id)` 对齐车站，返回新增、移除、属性变化、不变车站和引用原图快照的受影响行程数。铁路重算分为预览与确认两步；确认请求必须为每个铁路 leg 提交一个仍有效且可提交的候选。服务端创建新 journey，复制混合行程中的地铁 leg，并保存目标图的全新铁路快照；原 journey 和原 snapshot 不做原地修改。
+
 ## 6. GPX 契约
 
-- 根元素为 GPX 1.1 命名空间，`creator="Metro2Fog"`。
+- 根元素为 GPX 1.1 命名空间，`creator="Transit2Fog"`。
 - 普通模式：每个 journey 一个 `trk`，每个 leg 一个 `trkseg`。
 - 覆盖模式：相同 edge 只出现一次；只把端点一致且拓扑连续的 edge 放入同一 `trkseg`。
 - 坐标保留足够精度（建议 7 位小数），相邻重复点去重。
 - 加密在米制 CRS 中完成，再转回 WGS‑84。
 - 默认不含 `<time>`、虚构海拔或速度。
 - 生成后依次执行 XSD、坐标范围、每段至少两个不同点和跳跃距离检查。
-- 响应使用安全文件名，例如 `metro2fog_2026-08-20.gpx`。
+- 响应使用安全文件名，例如 `transit2fog_2026-08-20.gpx`。
+
+铁路和混合行程扩展：
+
+- 地铁默认最大点间距仍为 25 米；铁路默认 200 米，可选 100 米、500 米或原始折点。
+- 混合行程按 leg 的 `transport_mode` 分别加密，不能把一个全局点间距强加给所有模式。
+- 铁路 metadata 包含 `© OpenStreetMap contributors`、OSM 数据时间、graph/Profile 版本和用户确认状态。
+- 铁路 coverage 去重第一版限定在同一数据/图版本；跨版本几何差异显示警告，不静默合并。
+- 新导出统一使用 `creator="Transit2Fog"` 和 `transit2fog_YYYY-MM-DD.gpx`；旧 GPX 无需改写。
 
 ## 7. 数据版本与迁移
 
@@ -292,3 +409,5 @@ POST /api/v1/exports/gpx
 - 原始输入 checksum 或 importer 算法变化会创建新 `dataset_version`。
 - 旧行程保持可导出，只要引用的旧 edge 仍保留且质量未被撤销。
 - “迁移到新数据”先生成差异报告，用户确认后创建新的 leg-edge 关系；不原地覆盖。
+- 铁路图在版本化目录中构建并通过固定行程回归后原子切换；旧 `rail_journey_edge_snapshot` 不依赖旧 sidecar 仍可导出。
+- Graph/Profile 版本变化即使 PBF checksum 未变，也会创建新的铁路数据版本或候选版本。

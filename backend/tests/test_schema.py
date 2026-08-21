@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import date
+from hashlib import sha256
 from pathlib import Path
 
+import pytest
 from factories import seed_linear_network
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from shapely.geometry import LineString
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.models import StationAlias
+from app.db.models import (
+    Journey,
+    JourneyLeg,
+    RailDatasetVersion,
+    RailJourneyEdgeSnapshot,
+    RailJourneyLegDetail,
+    RailJourneyStop,
+    RailStation,
+    StationAlias,
+)
 from app.matching.names import normalize_station_name
 
 
@@ -46,6 +60,12 @@ def test_first_run_creates_complete_domain_schema(client: TestClient) -> None:
         "journey",
         "journey_leg",
         "journey_leg_edge",
+        "rail_dataset_version",
+        "rail_station",
+        "rail_station_alias",
+        "rail_journey_leg_detail",
+        "rail_journey_stop",
+        "rail_journey_edge_snapshot",
         "import_batch",
         "import_row",
     } <= table_names
@@ -122,3 +142,151 @@ def test_station_api_uses_fts_aliases_and_route_order(
     )
     assert unsafe_query.status_code == 200
     assert unsafe_query.json() == []
+
+
+def test_rail_leg_uses_shared_journey_and_immutable_snapshot(db: Session) -> None:
+    dataset = RailDatasetVersion(
+        source_name="OpenStreetMap/Geofabrik",
+        source_url="https://download.geofabrik.de/asia/china.html",
+        source_timestamp="2026-08-20",
+        pbf_checksum="b" * 64,
+        extract_region="test",
+        graph_version="test-rail-20260820",
+        profile_version="2026-08-21-r0.1",
+        openrailrouting_version="c8d4ef1",
+        graphhopper_version="11.0-osm-reader-callbacks",
+        license="ODbL-1.0",
+        status="ready",
+        quality_flags_json=[],
+    )
+    db.add(dataset)
+    db.flush()
+    stations: list[RailStation] = []
+    for osm_id, name, lon in (
+        (1001, "上海虹桥", 121.327),
+        (1002, "杭州东", 120.212),
+    ):
+        station = RailStation(
+            rail_dataset_version_id=dataset.id,
+            osm_type="node",
+            osm_id=osm_id,
+            name_cn=name,
+            name_en=None,
+            normalized_name=normalize_station_name(name),
+            pinyin_full=None,
+            pinyin_initials=None,
+            station_code=None,
+            city_name=None,
+            province_name=None,
+            lon=lon,
+            lat=30.9,
+            match_status="ready",
+            quality_flags_json=[],
+        )
+        db.add(station)
+        db.flush()
+        stations.append(station)
+    journey = Journey(
+        journey_code="rail-schema-test",
+        traveled_at=date(2026, 8, 20),
+        source_type="manual",
+        note=None,
+    )
+    db.add(journey)
+    db.flush()
+    digest = f"sha256:{'c' * 64}"
+    leg = JourneyLeg(
+        journey_id=journey.id,
+        leg_no=1,
+        transport_mode="rail",
+        dataset_version_id=None,
+        city_id=None,
+        line_id=None,
+        route_variant_id=None,
+        start_station_id=None,
+        end_station_id=None,
+        direction=None,
+        resolution_status="resolved",
+        resolution_message=None,
+        candidate_digest=digest,
+    )
+    db.add(leg)
+    db.flush()
+    db.add(
+        RailJourneyLegDetail(
+            journey_leg_id=leg.id,
+            travel_date=date(2026, 8, 20),
+            train_no="G1",
+            train_type="G",
+            timetable_provider="manual",
+            routing_profile="china_high_speed",
+            scoring_version="2026-08-21-r0.2",
+            route_hint="沪昆高速铁路",
+            confidence=0.95,
+            score_details_json=[{"code": "ordered_stations", "score": 1.0}],
+            warnings_json=[],
+            selected_candidate_digest=digest,
+        )
+    )
+    for sequence, station in enumerate(stations, start=1):
+        db.add(
+            RailJourneyStop(
+                journey_leg_id=leg.id,
+                stop_sequence=sequence,
+                station_id=station.id,
+                raw_station_name=station.name_cn,
+                arrival_time=None,
+                departure_time=None,
+                is_boarding=sequence == 1,
+                is_alighting=sequence == 2,
+                match_method="user_confirmed",
+                match_confidence=1.0,
+                locked_by_user=True,
+            )
+        )
+    geometry = LineString([(121.327, 30.9), (120.212, 30.9)])
+    db.add(
+        RailJourneyEdgeSnapshot(
+            journey_leg_id=leg.id,
+            order_no=1,
+            rail_dataset_version_id=dataset.id,
+            provider_edge_ref="fixture:1",
+            osm_way_id=2001,
+            from_osm_node_id=1001,
+            to_osm_node_id=1002,
+            reversed=False,
+            continuity_group=1,
+            distance_m=170_000,
+            geometry_wkb=geometry.wkb,
+            geometry_sha256=sha256(geometry.wkb).hexdigest(),
+            min_lon=geometry.bounds[0],
+            min_lat=geometry.bounds[1],
+            max_lon=geometry.bounds[2],
+            max_lat=geometry.bounds[3],
+            quality_flags_json=[],
+        )
+    )
+    db.commit()
+
+    assert db.scalar(select(func.count()).select_from(RailJourneyEdgeSnapshot)) == 1
+    assert leg.transport_mode == "rail"
+
+    invalid_leg = JourneyLeg(
+        journey_id=journey.id,
+        leg_no=2,
+        transport_mode="bus",
+        dataset_version_id=None,
+        city_id=None,
+        line_id=None,
+        route_variant_id=None,
+        start_station_id=None,
+        end_station_id=None,
+        direction=None,
+        resolution_status="resolved",
+        resolution_message=None,
+        candidate_digest=digest,
+    )
+    db.add(invalid_leg)
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()

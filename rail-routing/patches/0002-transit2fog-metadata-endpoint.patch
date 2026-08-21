@@ -1,0 +1,50 @@
+diff --git a/src/main/java/de/geofabrik/railway_routing/http/Transit2FogMetadataResource.java b/src/main/java/de/geofabrik/railway_routing/http/Transit2FogMetadataResource.java
+new file mode 100644
+index 0000000..b851405
+--- /dev/null
++++ b/src/main/java/de/geofabrik/railway_routing/http/Transit2FogMetadataResource.java
+@@ -0,0 +1,35 @@
++package de.geofabrik.railway_routing.http;
++
++import java.util.LinkedHashMap;
++import java.util.Map;
++
++import jakarta.ws.rs.GET;
++import jakarta.ws.rs.Path;
++import jakarta.ws.rs.Produces;
++import jakarta.ws.rs.core.MediaType;
++
++@Path("/transit2fog/metadata")
++@Produces(MediaType.APPLICATION_JSON)
++public final class Transit2FogMetadataResource {
++    @GET
++    public Map<String, String> metadata() {
++        Map<String, String> values = new LinkedHashMap<>();
++        values.put("graph_version", property("graph.version"));
++        values.put("pbf_sha256", property("pbf.sha256"));
++        values.put("profile_version", property("profile.version"));
++        values.put("openrailrouting_commit", property("openrailrouting.commit"));
++        return values;
++    }
++
++    private static String property(String suffix) {
++        String currentName = "transit2fog." + suffix;
++        String value = System.getProperty(currentName, "").trim();
++        if (value.isEmpty()) {
++            value = System.getProperty("metro2fog." + suffix, "").trim();
++        }
++        if (value.isEmpty()) {
++            throw new IllegalStateException("Missing required sidecar identity property: " + currentName);
++        }
++        return value;
++    }
++}
+diff --git a/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java b/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
+index a57f263..a26f247 100644
+--- a/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
++++ b/src/main/java/de/geofabrik/railway_routing/http/RailwayRoutingApplication.java
+@@ -38,3 +38,4 @@ public final class RailwayRoutingApplication extends Application<RailwayRoutingS
+         environment.jersey().register(new RootResource());
+         environment.jersey().register(new Metro2FogMetadataResource());
++        environment.jersey().register(new Transit2FogMetadataResource());
+         environment.servlets().addFilter("cors", CORSFilter.class).addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), false, "*");

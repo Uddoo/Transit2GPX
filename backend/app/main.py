@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings)
     app = FastAPI(
-        title="Metro2Fog API",
+        title="Transit2Fog API",
         version=__version__,
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,

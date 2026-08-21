@@ -5,8 +5,10 @@ import {
   fetchCities,
   fetchLines,
   fetchStations,
+  fetchRailDataStatus,
   createJourney,
   previewPath,
+  previewRailPath,
   searchStations,
 } from "../../api/client";
 
@@ -64,6 +66,20 @@ export function useStationSearch({
 
 export function usePathPreview() {
   return useMutation({ mutationFn: previewPath });
+}
+
+export function useRailDataStatus() {
+  return useQuery({
+    queryKey: ["rail-data-status"],
+    queryFn: ({ signal }) => fetchRailDataStatus(signal),
+    staleTime: 30_000,
+    refetchInterval: (query) =>
+      query.state.data?.status === "importing" ? 1_000 : false,
+  });
+}
+
+export function useRailPathPreview() {
+  return useMutation({ mutationFn: previewRailPath });
 }
 
 export function useCreateJourney() {

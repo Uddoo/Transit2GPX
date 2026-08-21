@@ -1,0 +1,16 @@
+{
+  "dataset": "china-20260815",
+  "source_name": "OpenStreetMap/Geofabrik",
+  "source_page": "https://download.geofabrik.de/asia/china.html",
+  "source_timestamp": "2026-08-15T22:38:00Z",
+  "extract_region": "China",
+  "license": "ODbL-1.0",
+  "output_name": "china-20260815.osm.pbf",
+  "files": [
+    {
+      "name": "china-260815.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/china-260815.osm.pbf",
+      "md5": "8feb7ce2fc5bb0668f7cfa9128c7f2c7"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import { downloadBlob } from "../../utils/download";
 export function ExportPage() {
   const [mode, setMode] = useState<ExportOptions["mode"]>("coverage");
   const [spacing, setSpacing] = useState<"15" | "25" | "50" | "original">("25");
+  const [railSpacing, setRailSpacing] = useState<"100" | "200" | "500" | "original">("200");
   const [preview, setPreview] = useState<ExportPreview>();
   const [cityId, setCityId] = useState<number>();
   const [lineId, setLineId] = useState<number>();
@@ -30,6 +31,7 @@ export function ExportPage() {
         new Map(
           (journeys.data?.items ?? [])
             .flatMap((journey) => journey.legs)
+            .filter((leg) => leg.transport_mode === "metro")
             .map((leg) => [leg.city_id, leg.city_name]),
         ),
       ),
@@ -41,6 +43,7 @@ export function ExportPage() {
         new Map(
           (journeys.data?.items ?? [])
             .flatMap((journey) => journey.legs)
+            .filter((leg) => leg.transport_mode === "metro")
             .filter((leg) => cityId === undefined || leg.city_id === cityId)
             .map((leg) => [leg.line_id, leg.line_name]),
         ),
@@ -52,13 +55,15 @@ export function ExportPage() {
       mode,
       max_segment_length_m:
         spacing === "original" ? null : (Number(spacing) as 15 | 25 | 50),
+      rail_max_segment_length_m:
+        railSpacing === "original" ? null : (Number(railSpacing) as 100 | 200 | 500),
       journey_ids: scope === "selected" ? selectedJourneyIds : [],
       city_id: cityId ?? null,
       line_id: lineId ?? null,
       traveled_from: traveledFrom || null,
       traveled_to: traveledTo || null,
     }),
-    [cityId, lineId, mode, scope, selectedJourneyIds, spacing, traveledFrom, traveledTo],
+    [cityId, lineId, mode, railSpacing, scope, selectedJourneyIds, spacing, traveledFrom, traveledTo],
   );
   const previewMutation = useMutation({
     mutationFn: previewExport,
@@ -97,7 +102,8 @@ export function ExportPage() {
           <div><dt>区间</dt><dd>{preview?.edge_count ?? 0} 段</dd></div>
           <div><dt>去重后区间</dt><dd>{preview?.unique_edge_count ?? 0} 段</dd></div>
           <div><dt>总距离</dt><dd>{((preview?.distance_m ?? 0) / 1000).toFixed(1)} km</dd></div>
-          <div><dt>数据版本</dt><dd>{preview?.dataset_version_ids.join(", ") || "尚无行程"}</dd></div>
+          <div><dt>地铁数据版本</dt><dd>{preview?.dataset_version_ids.join(", ") || "无"}</dd></div>
+          <div><dt>铁路图版本</dt><dd>{preview?.rail_graph_versions.join(", ") || "无"}</dd></div>
         </dl>
       </div>
       <fieldset className="export-filters">
@@ -148,10 +154,19 @@ export function ExportPage() {
         ) : null}
       </fieldset>
       <fieldset className="choice-group choice-group--horizontal">
-        <legend>点间距（采样间隔）</legend>
+        <legend>地铁点间距（采样间隔）</legend>
         {(["15", "25", "50", "original"] as const).map((value) => (
           <label key={value}>
             <input checked={spacing === value} onChange={() => setSpacing(value)} type="radio" />
+            {value === "original" ? "原始折点" : `${value}m`}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className="choice-group choice-group--horizontal">
+        <legend>铁路点间距（采样间隔）</legend>
+        {(["100", "200", "500", "original"] as const).map((value) => (
+          <label key={value}>
+            <input checked={railSpacing === value} onChange={() => setRailSpacing(value)} type="radio" />
             {value === "original" ? "原始折点" : `${value}m`}
           </label>
         ))}
@@ -164,6 +179,9 @@ export function ExportPage() {
       ) : null}
       {preview?.blocking_errors.map((error) => (
         <p className="form-message form-message--error" key={error}>{error}</p>
+      ))}
+      {preview?.warnings.map((warning) => (
+        <p className="form-message" key={warning}>{warning}</p>
       ))}
       <button
         className="button button--primary export-page__action"

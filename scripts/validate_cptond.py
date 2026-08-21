@@ -31,15 +31,15 @@ def main() -> None:
 
     temporary = None
     if args.runtime is None:
-        temporary = tempfile.TemporaryDirectory(prefix="metro2fog-real-validation-")
+        temporary = tempfile.TemporaryDirectory(prefix="transit2fog-real-validation-")
         runtime = Path(temporary.name)
     else:
         runtime = args.runtime.expanduser().resolve()
         runtime.mkdir(parents=True, exist_ok=True)
     database = runtime / "validation.sqlite3"
-    os.environ["METRO2FOG_ENVIRONMENT"] = "test"
-    os.environ["METRO2FOG_DATA_DIR"] = str(runtime)
-    os.environ["METRO2FOG_DATABASE_URL"] = f"sqlite:///{database}"
+    os.environ["TRANSIT2FOG_ENVIRONMENT"] = "test"
+    os.environ["TRANSIT2FOG_DATA_DIR"] = str(runtime)
+    os.environ["TRANSIT2FOG_DATABASE_URL"] = f"sqlite:///{database}"
 
     from app.db.base import Base
     from app.db.models import City, DatasetVersion, Line, RouteVariant

@@ -5,7 +5,7 @@ import io
 from collections import defaultdict
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal, TypeVar, cast
 
 from fastapi import APIRouter, Depends, File, Query, Response, UploadFile
 from pydantic import BaseModel, Field
@@ -13,6 +13,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.api.journeys import RailJourneyLegCreate, _save_rail_leg
 from app.core.errors import APIError
 from app.db.models import (
     City,
@@ -22,6 +23,7 @@ from app.db.models import (
     JourneyLeg,
     JourneyLegEdge,
     Line,
+    RailStation,
     Station,
 )
 from app.db.session import get_db
@@ -29,20 +31,39 @@ from app.matching.names import (
     normalize_city_name,
     normalize_line_name,
 )
+from app.matching.rail_stations import search_ready_rail_stations
 from app.matching.stations import exact_line_station_matches
-from app.routing.resolver import ResolvedCandidate, resolve_line_path
+from app.providers import CSV_TIMETABLE_PROVIDER, METRO_PROVIDER, RAILWAY_PROVIDER
+from app.rail.resolver import (
+    RailPathCandidate,
+    RailResolutionError,
+    RailTrainType,
+)
+from app.routing.resolver import ResolvedCandidate
 
 router = APIRouter(prefix="/import-batches", tags=["csv-import"])
 
-REQUIRED_COLUMNS = {"city", "line", "start_station", "end_station"}
-KNOWN_COLUMNS = REQUIRED_COLUMNS | {
+KNOWN_COLUMNS = {
     "journey_id",
     "leg_no",
+    "mode",
+    "travel_date",
+    "train_no",
+    "train_type",
+    "city",
+    "line",
+    "from_station",
+    "to_station",
+    "via_stations",
+    "route_hint",
+    "start_station",
+    "end_station",
     "traveled_at",
     "direction",
     "via_station",
     "note",
 }
+_TRAIN_TYPES = {"G", "C", "D", "S", "Z", "T", "K", "Y", "OTHER"}
 MAX_FILE_BYTES = 5 * 1024 * 1024
 MAX_ROWS = 10_000
 T = TypeVar("T")
@@ -71,6 +92,8 @@ class ImportRowResponse(BaseModel):
     matched_line_id: int | None
     matched_start_station_id: int | None
     matched_end_station_id: int | None
+    matched_rail_start_station_id: int | None
+    matched_rail_end_station_id: int | None
     selected_candidate_id: str | None
     candidates: list[dict[str, Any]]
     error_code: str | None
@@ -91,6 +114,14 @@ class ImportRowPatch(BaseModel):
     via_station: str | None = Field(default=None, max_length=500)
     traveled_at: str | None = Field(default=None, max_length=20)
     note: str | None = Field(default=None, max_length=2000)
+    mode: Literal["metro", "rail"] | None = None
+    travel_date: str | None = Field(default=None, max_length=20)
+    train_no: str | None = Field(default=None, max_length=80)
+    train_type: str | None = Field(default=None, max_length=20)
+    from_station: str | None = Field(default=None, max_length=240)
+    to_station: str | None = Field(default=None, max_length=240)
+    via_stations: str | None = Field(default=None, max_length=2000)
+    route_hint: str | None = Field(default=None, max_length=500)
     selected_candidate_id: str | None = Field(default=None, max_length=160)
     ignored: bool | None = None
 
@@ -125,6 +156,8 @@ def _row_response(row: ImportRow) -> ImportRowResponse:
         matched_line_id=row.matched_line_id,
         matched_start_station_id=row.matched_start_station_id,
         matched_end_station_id=row.matched_end_station_id,
+        matched_rail_start_station_id=row.matched_rail_start_station_id,
+        matched_rail_end_station_id=row.matched_rail_end_station_id,
         selected_candidate_id=row.selected_candidate_id,
         candidates=row.candidate_json,
         error_code=row.error_code,
@@ -134,6 +167,7 @@ def _row_response(row: ImportRow) -> ImportRowResponse:
 
 def _candidate_json(candidate: ResolvedCandidate) -> dict[str, Any]:
     return {
+        "mode": "metro",
         "candidate_id": candidate.candidate_id,
         "digest": candidate.digest,
         "dataset_version_id": candidate.dataset_version_id,
@@ -148,8 +182,147 @@ def _candidate_json(candidate: ResolvedCandidate) -> dict[str, Any]:
     }
 
 
+def _rail_candidate_json(candidate: RailPathCandidate) -> dict[str, Any]:
+    return {
+        "mode": "rail",
+        "candidate_id": candidate.candidate_id,
+        "digest": candidate.digest,
+        "rail_dataset_version_id": candidate.rail_dataset_version_id,
+        "graph_version": candidate.graph_version,
+        "profile_version": candidate.profile_version,
+        "scoring_version": candidate.scoring_version,
+        "routing_profile": candidate.routing_profile,
+        "direction_name": candidate.routing_profile,
+        "distance_m": candidate.distance_m,
+        "duration_ms": candidate.duration_ms,
+        "station_ids": list(candidate.station_ids),
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [list(point) for point in candidate.coordinates],
+        },
+        "way_ranges": [
+            {
+                "start_index": item.start_index,
+                "end_index": item.end_index,
+                "osm_way_id": item.osm_way_id,
+            }
+            for item in candidate.way_ranges
+        ],
+        "score": candidate.score,
+        "score_details": list(candidate.score_details),
+        "warnings": list(candidate.warnings),
+        "can_commit": candidate.can_commit,
+    }
+
+
 def _single_match(items: Sequence[T]) -> T | None:
     return items[0] if len(items) == 1 else None
+
+
+def _normalized_csv_values(cleaned: dict[str, str]) -> dict[str, str]:
+    mode = (cleaned.get("mode") or "metro").lower()
+    travel_date = cleaned.get("travel_date") or cleaned.get("traveled_at", "")
+    from_station = cleaned.get("from_station") or cleaned.get("start_station", "")
+    to_station = cleaned.get("to_station") or cleaned.get("end_station", "")
+    via_stations = cleaned.get("via_stations") or cleaned.get("via_station", "")
+    normalized = {key: cleaned.get(key, "") for key in KNOWN_COLUMNS}
+    normalized.update(
+        {
+            "mode": mode,
+            "travel_date": travel_date,
+            "traveled_at": travel_date,
+            "from_station": from_station,
+            "start_station": from_station,
+            "to_station": to_station,
+            "end_station": to_station,
+            "via_stations": via_stations,
+            "via_station": via_stations,
+        }
+    )
+    return normalized
+
+
+def _exact_rail_station(db: Session, value: str) -> RailStation | None:
+    matches = search_ready_rail_stations(db, value=value, limit=100)
+    exact = [match.station for match in matches if match.score == 100]
+    return _single_match(exact)
+
+
+def _rail_train_type(values: dict[str, Any]) -> RailTrainType | None:
+    raw_type = str(values.get("train_type", "")).strip().upper()
+    train_no = str(values.get("train_no", "")).strip().upper()
+    inferred = train_no[:1] if train_no[:1] in _TRAIN_TYPES else "OTHER"
+    train_type = raw_type or inferred
+    if train_type not in _TRAIN_TYPES:
+        return None
+    return cast(RailTrainType, train_type)
+
+
+def _resolve_rail_row(db: Session, row: ImportRow, travel_date: str) -> None:
+    values = row.normalized_json
+    if not travel_date:
+        row.resolution_status = "unresolved"
+        row.error_code = "rail_date_required"
+        row.error_message = "铁路行程必须填写 travel_date。"
+        return
+    train_type = _rail_train_type(values)
+    if train_type is None:
+        row.resolution_status = "unresolved"
+        row.error_code = "rail_train_type_invalid"
+        row.error_message = "train_type 必须是 G/C/D/S/Z/T/K/Y/OTHER。"
+        return
+    values = {**values, "train_type": train_type}
+    row.normalized_json = values
+    start_name = str(values.get("from_station", ""))
+    end_name = str(values.get("to_station", ""))
+    start = _exact_rail_station(db, start_name)
+    end = _exact_rail_station(db, end_name)
+    if start is None or end is None or start.id == end.id:
+        row.resolution_status = "unresolved"
+        row.error_code = "rail_station_not_unique"
+        row.error_message = "铁路起终点未找到、存在同名候选或两者相同。"
+        return
+    row.matched_rail_start_station_id = start.id
+    row.matched_rail_end_station_id = end.id
+    via_ids: list[int] = []
+    for via_name in str(values.get("via_stations", "")).split("|"):
+        if not via_name.strip():
+            continue
+        via = _exact_rail_station(db, via_name)
+        if via is None:
+            row.resolution_status = "unresolved"
+            row.error_code = "rail_via_station_not_unique"
+            row.error_message = f"铁路途经站“{via_name}”未找到或不唯一。"
+            return
+        via_ids.append(via.id)
+    try:
+        facts = CSV_TIMETABLE_PROVIDER.create_facts(
+            travel_date=date.fromisoformat(travel_date),
+            train_no=str(values.get("train_no", "")).strip() or None,
+            train_type=train_type,
+            start_station_id=start.id,
+            end_station_id=end.id,
+            via_station_ids=via_ids,
+            route_hint=str(values.get("route_hint", "")).strip() or None,
+        )
+        resolution = RAILWAY_PROVIDER.resolve(db, facts)
+    except RailResolutionError as error:
+        row.resolution_status = "unresolved"
+        row.error_code = error.code
+        row.error_message = str(error)
+        return
+    row.candidate_json = [
+        _rail_candidate_json(candidate) for candidate in resolution.candidates
+    ]
+    row.resolution_status = resolution.status
+    if resolution.status == "resolved":
+        row.selected_candidate_id = resolution.candidates[0].candidate_id
+    elif resolution.status == "needs_review":
+        row.error_code = "rail_path_needs_review"
+        row.error_message = "找到多个铁路候选或带质量警告，请人工确认。"
+    else:
+        row.error_code = "rail_path_unresolved"
+        row.error_message = "没有找到依次通过全部有序车站的铁路路径。"
 
 
 def _resolve_row(db: Session, row: ImportRow) -> None:
@@ -158,12 +331,20 @@ def _resolve_row(db: Session, row: ImportRow) -> None:
     row.matched_line_id = None
     row.matched_start_station_id = None
     row.matched_end_station_id = None
+    row.matched_rail_start_station_id = None
+    row.matched_rail_end_station_id = None
     row.selected_candidate_id = None
     row.candidate_json = []
     row.error_code = None
     row.error_message = None
 
-    traveled_at = str(values.get("traveled_at", "")).strip()
+    mode = str(values.get("mode", "metro")).strip().lower() or "metro"
+    if mode not in {"metro", "rail"}:
+        row.resolution_status = "unresolved"
+        row.error_code = "transport_mode_invalid"
+        row.error_message = "mode 必须是 metro 或 rail。"
+        return
+    traveled_at = str(values.get("travel_date", "")).strip()
     if traveled_at:
         try:
             date.fromisoformat(traveled_at)
@@ -183,6 +364,16 @@ def _resolve_row(db: Session, row: ImportRow) -> None:
             row.error_code = "invalid_leg_no"
             row.error_message = "leg_no 必须是正整数。"
             return
+
+    if mode == "rail":
+        _resolve_rail_row(db, row, traveled_at)
+        return
+
+    if not all(str(values.get(field, "")).strip() for field in ("city", "line")):
+        row.resolution_status = "unresolved"
+        row.error_code = "metro_fields_missing"
+        row.error_message = "地铁行必须填写 city 与 line。"
+        return
 
     city_key = normalize_city_name(str(values.get("city", "")))
     cities = [
@@ -256,7 +447,7 @@ def _resolve_row(db: Session, row: ImportRow) -> None:
             return
         via_ids.append(via.id)
 
-    resolution = resolve_line_path(
+    resolution = METRO_PROVIDER.resolve_line(
         db,
         line_id=line.id,
         start_station_id=start.id,
@@ -304,15 +495,18 @@ def _require_batch(db: Session, batch_id: int) -> ImportBatch:
 @router.get("/template.csv")
 def csv_template() -> Response:
     content = (
-        "journey_id,leg_no,city,line,start_station,end_station,traveled_at,"
-        "direction,via_station,note\r\n"
-        "20260820-01,1,上海,2号线,虹桥火车站,人民广场,2026-08-20,,,\r\n"
+        "journey_id,leg_no,mode,travel_date,train_no,train_type,city,line,"
+        "from_station,to_station,via_stations,route_hint,direction,note\r\n"
+        "20260820-01,1,rail,2026-08-20,G1,G,,,上海虹桥,杭州东,"
+        "嘉兴南|桐乡,沪昆高速铁路,,铁路示例\r\n"
+        "20260822-01,1,metro,2026-08-22,,,上海,1号线,人民广场,"
+        "徐家汇,,,,地铁示例\r\n"
     )
     return Response(
         content="\ufeff" + content,
         media_type="text/csv; charset=utf-8",
         headers={
-            "Content-Disposition": 'attachment; filename="metro2fog_template.csv"'
+            "Content-Disposition": 'attachment; filename="transit2fog_template.csv"'
         },
     )
 
@@ -339,7 +533,11 @@ async def create_import_batch(
         ) from exc
     reader = csv.DictReader(io.StringIO(text, newline=""))
     columns = {column.strip() for column in (reader.fieldnames or []) if column}
-    missing = sorted(REQUIRED_COLUMNS - columns)
+    missing: list[str] = []
+    if not ({"from_station", "start_station"} & columns):
+        missing.append("from_station")
+    if not ({"to_station", "end_station"} & columns):
+        missing.append("to_station")
     if missing:
         raise APIError(
             status_code=422,
@@ -373,7 +571,7 @@ async def create_import_batch(
                     details={"row_no": row_no},
                 )
             cleaned = {key.strip(): (value or "").strip() for key, value in raw.items()}
-            normalized = {key: cleaned.get(key, "") for key in KNOWN_COLUMNS}
+            normalized = _normalized_csv_values(cleaned)
             row = ImportRow(
                 batch_id=batch.id,
                 row_no=row_no,
@@ -458,8 +656,16 @@ def patch_import_row(
     else:
         values = dict(row.normalized_json)
         for field in (
+            "mode",
+            "travel_date",
+            "train_no",
+            "train_type",
             "city",
             "line",
+            "from_station",
+            "to_station",
+            "via_stations",
+            "route_hint",
             "start_station",
             "end_station",
             "direction",
@@ -470,7 +676,15 @@ def patch_import_row(
             value = getattr(request, field)
             if field in request.model_fields_set and value is not None:
                 values[field] = value.strip()
-        row.normalized_json = values
+        if "start_station" in request.model_fields_set:
+            values["from_station"] = values["start_station"]
+        if "end_station" in request.model_fields_set:
+            values["to_station"] = values["end_station"]
+        if "via_station" in request.model_fields_set:
+            values["via_stations"] = values["via_station"]
+        if "traveled_at" in request.model_fields_set:
+            values["travel_date"] = values["traveled_at"]
+        row.normalized_json = _normalized_csv_values(values)
         _resolve_row(db, row)
         if request.selected_candidate_id:
             candidate = next(
@@ -486,6 +700,12 @@ def patch_import_row(
                     status_code=409,
                     code="candidate_expired",
                     message="所选候选已失效，请重新审核。",
+                )
+            if candidate.get("can_commit") is False:
+                raise APIError(
+                    status_code=409,
+                    code="candidate_below_threshold",
+                    message="所选铁路候选低于提交阈值，请补充有序站点后重算。",
                 )
             row.selected_candidate_id = request.selected_candidate_id
             row.resolution_status = "resolved"
@@ -522,7 +742,7 @@ def resolve_import_batch(
     return _batch_response(batch)
 
 
-def _selected_candidate(db: Session, row: ImportRow) -> ResolvedCandidate:
+def _selected_metro_candidate(db: Session, row: ImportRow) -> ResolvedCandidate:
     if (
         row.matched_line_id is None
         or row.matched_start_station_id is None
@@ -550,7 +770,7 @@ def _selected_candidate(db: Session, row: ImportRow) -> ResolvedCandidate:
                 message=f"第 {row.row_no} 行途经站已失效。",
             )
         via_station_ids.append(via.id)
-    resolution = resolve_line_path(
+    resolution = METRO_PROVIDER.resolve_line(
         db,
         line_id=row.matched_line_id,
         start_station_id=row.matched_start_station_id,
@@ -565,6 +785,97 @@ def _selected_candidate(db: Session, row: ImportRow) -> ResolvedCandidate:
         status_code=409,
         code="candidate_expired",
         message=f"第 {row.row_no} 行候选已过期。",
+    )
+
+
+def _selected_rail_candidate(
+    db: Session, row: ImportRow
+) -> tuple[RailJourneyLegCreate, RailPathCandidate]:
+    if (
+        row.matched_rail_start_station_id is None
+        or row.matched_rail_end_station_id is None
+        or row.selected_candidate_id is None
+    ):
+        raise APIError(
+            status_code=409,
+            code="row_not_resolved",
+            message=f"第 {row.row_no} 行铁路站点尚未解析。",
+        )
+    selected_item = next(
+        (
+            item
+            for item in row.candidate_json
+            if item.get("candidate_id") == row.selected_candidate_id
+        ),
+        None,
+    )
+    if selected_item is None or selected_item.get("can_commit") is False:
+        raise APIError(
+            status_code=409,
+            code="candidate_expired",
+            message=f"第 {row.row_no} 行铁路候选不可提交或已经过期。",
+        )
+    values = row.normalized_json
+    travel_date = str(values.get("travel_date", "")).strip()
+    train_type = _rail_train_type(values)
+    if not travel_date or train_type is None:
+        raise APIError(
+            status_code=409,
+            code="row_not_resolved",
+            message=f"第 {row.row_no} 行铁路日期或车型缺失。",
+        )
+    via_ids: list[int] = []
+    for via_name in str(values.get("via_stations", "")).split("|"):
+        if not via_name.strip():
+            continue
+        via = _exact_rail_station(db, via_name)
+        if via is None:
+            raise APIError(
+                status_code=409,
+                code="row_not_resolved",
+                message=f"第 {row.row_no} 行铁路途经站已失效。",
+            )
+        via_ids.append(via.id)
+    facts = CSV_TIMETABLE_PROVIDER.create_facts(
+        travel_date=date.fromisoformat(travel_date),
+        train_no=str(values.get("train_no", "")).strip() or None,
+        train_type=train_type,
+        start_station_id=row.matched_rail_start_station_id,
+        end_station_id=row.matched_rail_end_station_id,
+        via_station_ids=via_ids,
+        route_hint=str(values.get("route_hint", "")).strip() or None,
+    )
+    leg_input = RailJourneyLegCreate(
+        mode="rail",
+        travel_date=facts.travel_date,
+        train_no=facts.train_no,
+        train_type=facts.train_type,
+        start_station_id=facts.start_station_id,
+        end_station_id=facts.end_station_id,
+        via_station_ids=list(facts.via_station_ids),
+        route_hint=facts.route_hint,
+        candidate_id=row.selected_candidate_id,
+        candidate_digest=str(selected_item.get("digest", "")),
+    )
+    try:
+        resolution = RAILWAY_PROVIDER.resolve(db, facts)
+    except RailResolutionError as error:
+        raise APIError(
+            status_code=409,
+            code=error.code,
+            message=f"第 {row.row_no} 行铁路候选重算失败：{error}",
+        ) from error
+    for candidate in resolution.candidates:
+        if (
+            candidate.candidate_id == leg_input.candidate_id
+            and candidate.digest == leg_input.candidate_digest
+            and candidate.can_commit
+        ):
+            return leg_input, candidate
+    raise APIError(
+        status_code=409,
+        code="candidate_expired",
+        message=f"第 {row.row_no} 行铁路候选已经变化，请重新审核。",
     )
 
 
@@ -605,7 +916,13 @@ def commit_import_batch(
             code="batch_has_no_resolved_rows",
             message="没有可提交的已解析行。",
         )
-    candidates = {row.id: _selected_candidate(db, row) for row in resolved}
+    metro_candidates: dict[int, ResolvedCandidate] = {}
+    rail_candidates: dict[int, tuple[RailJourneyLegCreate, RailPathCandidate]] = {}
+    for row in resolved:
+        if row.normalized_json.get("mode") == "rail":
+            rail_candidates[row.id] = _selected_rail_candidate(db, row)
+        else:
+            metro_candidates[row.id] = _selected_metro_candidate(db, row)
     groups: dict[str, list[ImportRow]] = defaultdict(list)
     for row in resolved:
         key = (
@@ -653,7 +970,19 @@ def commit_import_batch(
             db.add(journey)
             db.flush()
             for leg_no, row in enumerate(ordered, start=1):
-                candidate = candidates[row.id]
+                if row.normalized_json.get("mode") == "rail":
+                    leg_input, rail_candidate = rail_candidates[row.id]
+                    _save_rail_leg(
+                        db,
+                        journey_id=journey.id,
+                        leg_no=leg_no,
+                        leg_input=leg_input,
+                        candidate=rail_candidate,
+                        timetable_provider="csv",
+                    )
+                    row.resolution_status = "committed"
+                    continue
+                candidate = metro_candidates[row.id]
                 if (
                     row.matched_city_id is None
                     or row.matched_line_id is None

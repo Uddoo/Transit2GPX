@@ -4,7 +4,7 @@
 
 ## 目的
 
-这是 Metro2Fog v1.0 在第三方应用中的外部兼容验收记录。Fog of World 官方页面当前明确支持导入 GPX/KML，并声明同时支持 WGS-84 与中国 GCJ-02。Metro2Fog 输出 WGS-84 GPX 1.1，不在导出时擅自转换为 GCJ-02。该验收已于 2026-08-21 由用户确认通过。
+这是原 Metro2Fog v1.0（现 Transit2Fog）在第三方应用中的外部兼容验收记录。Fog of World 官方页面当前明确支持导入 GPX/KML，并声明同时支持 WGS-84 与中国 GCJ-02。Transit2Fog 输出 WGS-84 GPX 1.1，不在导出时擅自转换为 GCJ-02。该验收已于 2026-08-21 由用户确认通过。
 
 - 官方功能说明：<https://fogofworld.app/zh-hans/>
 - 官方隐私与云端导入目录说明：<https://fogofworld.app/en/privacy_policy>
@@ -67,7 +67,7 @@
 
 - 验收日期：2026-08-21。
 - 结果：V1.0 GPX 手动导入 Fog of World 通过。
-- 证据来源：用户在当前 Metro2Fog 完成任务中明确反馈实机验证通过，并确认 goal 可标记为完成。
+- 证据来源：用户在当前 Transit2Fog 完成任务中明确反馈实机验证通过，并确认 goal 可标记为完成。
 - 结论：关闭 v1.0 的 Fog of World 外部验收项。
 
 后续数据版本或 Fog of World 版本升级时，可继续使用下方模板执行回归抽检：

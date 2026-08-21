@@ -1,0 +1,13 @@
+{
+  "distance_influence": 0,
+  "priority": [
+    { "if": "railway_service == YARD || railway_service == SPUR", "multiply_by": "0" },
+    { "else_if": "railway_service == SIDING || railway_service == CROSSOVER", "multiply_by": "0.15" },
+    { "else_if": "electrified == NO || electrified == RAIL", "multiply_by": "0.1" },
+    { "else_if": "rail_average_speed < 120", "multiply_by": "0.35" },
+    { "else_if": "rail_average_speed < 180", "multiply_by": "0.7" }
+  ],
+  "speed": [
+    { "if": "true", "limit_to": "350" }
+  ]
+}

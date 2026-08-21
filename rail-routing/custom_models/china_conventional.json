@@ -1,0 +1,11 @@
+{
+  "distance_influence": 0,
+  "priority": [
+    { "if": "railway_service == YARD || railway_service == SPUR", "multiply_by": "0" },
+    { "else_if": "railway_service == SIDING || railway_service == CROSSOVER", "multiply_by": "0.25" },
+    { "else_if": "rail_average_speed > 180", "multiply_by": "0.65" }
+  ],
+  "speed": [
+    { "if": "true", "limit_to": "160" }
+  ]
+}

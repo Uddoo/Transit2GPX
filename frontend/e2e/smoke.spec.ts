@@ -13,7 +13,10 @@ const journey = {
     {
       id: 70,
       leg_no: 1,
+      transport_mode: "metro",
       dataset_version_id: 1,
+      rail_dataset_version_id: null,
+      graph_version: null,
       city_id: 1,
       city_name: "上海",
       line_id: 2,
@@ -29,6 +32,49 @@ const journey = {
       edge_ids: [501],
       reversed_edges: [false],
       distance_m: 18_342.7,
+    },
+  ],
+};
+
+const railJourney = {
+  ...journey,
+  id: 8,
+  journey_code: "R-20260820-001",
+  distance_m: 159_000,
+  legs: [
+    {
+      id: 80,
+      leg_no: 1,
+      transport_mode: "rail",
+      dataset_version_id: null,
+      rail_dataset_version_id: 9,
+      graph_version: "yangtze-20260815-r0.1",
+      city_id: null,
+      city_name: null,
+      line_id: null,
+      line_name: null,
+      route_variant_id: null,
+      start_station_id: 801,
+      start_station_name: "上海虹桥",
+      end_station_id: 802,
+      end_station_name: "杭州东",
+      travel_date: "2026-08-20",
+      train_no: "G1",
+      train_type: "G",
+      timetable_provider: "manual",
+      routing_profile: "china_high_speed",
+      scoring_version: "2026-08-21-r0.2",
+      route_hint: null,
+      score_details: [],
+      warnings: [],
+      via_station_ids: [],
+      osm_way_ids: [9901],
+      direction: "china_high_speed",
+      resolution_status: "resolved",
+      candidate_digest: `sha256:${"b".repeat(64)}`,
+      edge_ids: [901],
+      reversed_edges: [false],
+      distance_m: 159_000,
     },
   ],
 };
@@ -61,6 +107,33 @@ const candidate = {
   warnings: [],
 };
 
+const railRecomputeCandidate = {
+  mode: "rail",
+  candidate_id: "rail_cand_recompute",
+  digest: `sha256:${"c".repeat(64)}`,
+  rail_dataset_version_id: 10,
+  graph_version: "china-20260815-r3.1",
+  profile_version: "2026-08-21-r0.1",
+  scoring_version: "2026-08-21-r0.2",
+  routing_profile: "china_high_speed",
+  distance_m: 159_500,
+  duration_ms: 3_600_000,
+  station_count: 2,
+  station_ids: [1801, 1802],
+  geometry: {
+    type: "LineString",
+    coordinates: [
+      [121.327, 31.2],
+      [120.212, 30.29],
+    ],
+  },
+  way_ranges: [{ start_index: 0, end_index: 1, osm_way_id: 19901 }],
+  score: 0.97,
+  score_details: [],
+  warnings: [],
+  can_commit: true,
+};
+
 async function mockReadyShell(page: Page) {
   await page.route("**/api/v1/config/public", (route) =>
     route.fulfill({
@@ -87,6 +160,48 @@ async function mockReadyShell(page: Page) {
         cities: 46,
         imported_at: "2026-08-20T00:00:00Z",
         quality_status: "ready",
+      },
+    }),
+  );
+  await page.route("**/api/v1/rail/data/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        status: "disabled",
+        enabled: false,
+        sidecar_available: false,
+        rail_dataset_version_id: null,
+        dataset_status: null,
+        station_count: 0,
+        graph_version: null,
+        profile_version: null,
+        sidecar_graph_version: null,
+        sidecar_profile_version: null,
+        sidecar_pbf_checksum: null,
+        pbf_checksum: null,
+        source_url: null,
+        source_timestamp: null,
+        extract_region: null,
+        license: null,
+        profiles: [],
+        bbox: null,
+        error_code: null,
+        error_message: null,
+      },
+    }),
+  );
+  await page.route("**/api/v1/data/quality", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        dataset_version_id: 1,
+        ready_cities: 46,
+        blocked_cities: 0,
+        ready_lines: 992,
+        blocked_lines: 0,
+        ready_variants: 992,
+        blocked_variants: 0,
+        issues: [],
       },
     }),
   );
@@ -214,6 +329,34 @@ test.beforeEach(async ({ page }) => {
   await mockReadyShell(page);
 });
 
+test("disabled railway data gives feedback while facts remain editable", async ({ page }) => {
+  await page.goto("/journeys/new");
+  await page.getByRole("tab", { name: "铁路 / 高铁" }).click();
+
+  const date = page.getByLabel("乘坐日期（必填）");
+  const trainNo = page.getByLabel("车次（建议）");
+  const trainType = page.getByLabel("车型");
+  const start = page.getByRole("combobox", { name: "上车站" });
+  await expect(date).toBeEnabled();
+  await expect(trainNo).toBeEnabled();
+  await expect(trainType).toBeEnabled();
+  await expect(start).toBeEnabled();
+
+  await date.fill("2026-08-21");
+  await trainNo.fill("G1");
+  await trainType.selectOption("D");
+  await start.fill("北京南");
+
+  await expect(page.getByText("铁路功能暂不可用")).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "当前本地服务未启用铁路功能" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "铁路数据就绪后可预览" })).toBeDisabled();
+  await page.getByRole("link", { name: "查看铁路设置" }).click();
+  await expect(page).toHaveURL(/\/settings\/data$/);
+  await expect(page.getByRole("heading", { name: "数据与设置" })).toBeVisible();
+});
+
 test("real-map journey can be previewed and saved", async ({ page }) => {
   await mockJourneyNetwork(page);
   let savedBody: Record<string, unknown> | undefined;
@@ -237,6 +380,8 @@ test("real-map journey can be previewed and saved", async ({ page }) => {
         track_count: 1,
         segment_count: 1,
         dataset_version_ids: [1],
+        rail_dataset_version_ids: [],
+        rail_graph_versions: [],
         blocking_errors: [],
         warnings: [],
       },
@@ -475,6 +620,160 @@ test("journey list supports filtering and metadata editing", async ({ page }) =>
   await expect(page.getByText(/机场接驳/)).toBeVisible();
 });
 
+test("rail journey recompute confirms a new immutable candidate", async ({ page }) => {
+  let recomputeBody: Record<string, unknown> | undefined;
+  await page.route("**/api/v1/journeys**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (request.method() === "GET" && url.pathname === "/api/v1/journeys") {
+      await route.fulfill({
+        contentType: "application/json",
+        json: { items: [railJourney], total: 1 },
+      });
+      return;
+    }
+    if (
+      request.method() === "POST" &&
+      url.pathname === "/api/v1/journeys/8/rail-recompute/preview"
+    ) {
+      await route.fulfill({
+        contentType: "application/json",
+        json: {
+          journey_id: 8,
+          target_graph_version: "china-20260815-r3.1",
+          target_profile_version: "2026-08-21-r0.1",
+          legs: [
+            {
+              leg_no: 1,
+              source_graph_version: "yangtze-20260815-r0.1",
+              target_graph_version: "china-20260815-r3.1",
+              station_names: ["上海虹桥", "杭州东"],
+              status: "needs_review",
+              candidates: [railRecomputeCandidate],
+            },
+          ],
+        },
+      });
+      return;
+    }
+    if (
+      request.method() === "POST" &&
+      url.pathname === "/api/v1/journeys/8/rail-recompute"
+    ) {
+      recomputeBody = request.postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        contentType: "application/json",
+        json: {
+          ...railJourney,
+          id: 9,
+          journey_code: "R-20260820-002",
+          legs: [
+            {
+              ...railJourney.legs[0],
+              graph_version: "china-20260815-r3.1",
+              candidate_digest: railRecomputeCandidate.digest,
+            },
+          ],
+        },
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await page.goto("/journeys");
+  await page.getByRole("button", { name: "重算铁路" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByText("yangtze-20260815-r0.1 → china-20260815-r3.1"),
+  ).toBeVisible();
+  await expect(dialog.getByText(/评分 97%/)).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  const viewport = page.viewportSize();
+  expect(dialogBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  if (dialogBox && viewport) {
+    expect(dialogBox.x).toBeGreaterThanOrEqual(0);
+    expect(dialogBox.y).toBeGreaterThanOrEqual(0);
+    expect(dialogBox.x + dialogBox.width).toBeLessThanOrEqual(viewport.width);
+    expect(dialogBox.y + dialogBox.height).toBeLessThanOrEqual(viewport.height);
+  }
+  await dialog.getByRole("button", { name: "确认并创建新行程" }).click();
+  await expect(dialog).toBeHidden();
+  await expect.poll(() => recomputeBody).toMatchObject({
+    target_graph_version: "china-20260815-r3.1",
+    selections: [
+      {
+        leg_no: 1,
+        candidate_id: "rail_cand_recompute",
+        candidate_digest: railRecomputeCandidate.digest,
+      },
+    ],
+  });
+});
+
+test("rail editor and graph comparison are usable", async ({ page }) => {
+  await mockJourneyNetwork(page);
+  await page.route("**/api/v1/rail/data/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        status: "ready",
+        enabled: true,
+        sidecar_available: true,
+        rail_dataset_version_id: 10,
+        dataset_status: "ready",
+        station_count: 18_490,
+        graph_version: "china-20260815-r3.1",
+        profile_version: "2026-08-21-r0.1",
+        sidecar_graph_version: "china-20260815-r3.1",
+        sidecar_profile_version: "2026-08-21-r0.1",
+        sidecar_pbf_checksum: "checksum",
+        pbf_checksum: "checksum",
+        source_url: "https://download.geofabrik.de/asia/china.html",
+        source_timestamp: "2026-08-15",
+        extract_region: "China",
+        license: "ODbL-1.0",
+        profiles: ["china_high_speed", "china_emu", "china_conventional"],
+        bbox: [69, 18, 135, 54],
+        error_code: null,
+        error_message: null,
+      },
+    }),
+  );
+  await page.route("**/api/v1/rail/data/compare?**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        from_graph_version: "yangtze-20260815-r0.1",
+        to_graph_version: "china-20260815-r3.1",
+        from_station_count: 2_400,
+        to_station_count: 18_490,
+        added_station_count: 16_100,
+        removed_station_count: 10,
+        changed_station_count: 42,
+        unchanged_station_count: 2_348,
+        affected_journey_count: 3,
+        samples: [],
+      },
+    }),
+  );
+
+  await page.goto("/journeys/new");
+  await page.getByRole("tab", { name: "铁路 / 高铁" }).click();
+  await expect(
+    page.getByRole("heading", { name: "添加一段真实铁路乘坐记录" }),
+  ).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "上车站" })).toBeVisible();
+  await page.goto("/settings/data");
+  await page.getByText("比较铁路图版本").click();
+  await page.getByLabel("原图版本").fill("yangtze-20260815-r0.1");
+  await page.getByRole("button", { name: "查看版本差异" }).click();
+  await expect(page.getByText("16100")).toBeVisible();
+  await expect(page.getByText("3", { exact: true })).toBeVisible();
+});
+
 test("first setup shows persistent import progress and can cancel after refresh", async ({ page }) => {
   const baseStatus = {
     import_id: null as number | null,
@@ -557,7 +856,11 @@ test("first setup shows persistent import progress and can cancel after refresh"
   });
 
   await page.goto("/settings/data");
-  await expect(page.locator(".settings-section__heading p")).toHaveText("尚未导入地铁数据");
+  await expect(
+    page
+      .getByRole("region", { name: "CPTOND 地铁数据" })
+      .getByText("尚未导入地铁数据"),
+  ).toBeVisible();
   await page.getByLabel("地铁数据目录（本机绝对路径）").fill("/data/cptond");
   await page.getByRole("button", { name: "导入数据目录" }).click();
   await expect(page.getByText("已处理 1 / 3 个城市")).toBeVisible();
@@ -697,6 +1000,8 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
         track_count: 1,
         segment_count: 1,
         dataset_version_ids: [1],
+        rail_dataset_version_ids: [],
+        rail_graph_versions: [],
         blocking_errors: [],
         warnings: [],
       },
@@ -704,9 +1009,9 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   });
   await page.route("**/api/v1/exports/gpx", (route) =>
     route.fulfill({
-      body: '<?xml version="1.0"?><gpx version="1.1" creator="Metro2Fog"/>',
+      body: '<?xml version="1.0"?><gpx version="1.1" creator="Transit2Fog"/>',
       contentType: "application/gpx+xml",
-      headers: { "Content-Disposition": 'attachment; filename="metro2fog.gpx"' },
+      headers: { "Content-Disposition": 'attachment; filename="transit2fog.gpx"' },
     }),
   );
 
@@ -719,12 +1024,12 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("metro2fog.gpx");
+  expect(download.suggestedFilename()).toBe("transit2fog.gpx");
 
   await page.getByLabel("行程模式（保留每次行程）").check();
   await expect.poll(() => previewBody).toMatchObject({ mode: "journeys" });
   const journeyDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const journeyDownload = await journeyDownloadPromise;
-  expect(journeyDownload.suggestedFilename()).toBe("metro2fog.gpx");
+  expect(journeyDownload.suggestedFilename()).toBe("transit2fog.gpx");
 });

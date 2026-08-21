@@ -1,0 +1,41 @@
+{
+  "graph_version": "yangtze-20260815-r0.1",
+  "routes": [
+    {
+      "name": "上海虹桥—南京南",
+      "profile": "china_high_speed",
+      "points": [
+        {"station": "上海虹桥", "lat": 31.1959782, "lon": 121.3162004},
+        {"station": "南京南", "lat": 31.970797, "lon": 118.7930516}
+      ],
+      "distance_km": {"min": 250, "max": 330}
+    },
+    {
+      "name": "上海虹桥—杭州东",
+      "profile": "china_high_speed",
+      "points": [
+        {"station": "上海虹桥", "lat": 31.1959782, "lon": 121.3162004},
+        {"station": "杭州东", "lat": 30.2935486, "lon": 120.2082034}
+      ],
+      "distance_km": {"min": 130, "max": 200}
+    },
+    {
+      "name": "上海—苏州",
+      "profile": "china_conventional",
+      "points": [
+        {"station": "上海", "lat": 31.2515568, "lon": 121.4511645},
+        {"station": "苏州", "lat": 31.3318827, "lon": 120.6066762}
+      ],
+      "distance_km": {"min": 70, "max": 110}
+    },
+    {
+      "name": "上海虹桥—合肥南",
+      "profile": "china_high_speed",
+      "points": [
+        {"station": "上海虹桥", "lat": 31.1959782, "lon": 121.3162004},
+        {"station": "合肥南", "lat": 31.8002988, "lon": 117.2848751}
+      ],
+      "distance_km": {"min": 390, "max": 500}
+    }
+  ]
+}

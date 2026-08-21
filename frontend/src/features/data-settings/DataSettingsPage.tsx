@@ -3,10 +3,13 @@ import { useState } from "react";
 
 import {
   cancelDatasetImport,
+  compareRailDatasets,
   fetchDataQuality,
   RequestError,
+  startRailDataImport,
   startDatasetImport,
 } from "../../api/client";
+import { useRailDataStatus } from "../journey-editor/useJourneyNetwork";
 import { useDataStatus } from "./useDataStatus";
 
 function datasetStatusLabel(status?: string) {
@@ -28,6 +31,11 @@ export function DataSettingsPage() {
   const query = useDataStatus();
   const queryClient = useQueryClient();
   const [directory, setDirectory] = useState("");
+  const [railPbfPath, setRailPbfPath] = useState("");
+  const [railGraphVersion, setRailGraphVersion] = useState("");
+  const [railCompareFrom, setRailCompareFrom] = useState("");
+  const [railCompareTo, setRailCompareTo] = useState("");
+  const railStatus = useRailDataStatus();
   const importMutation = useMutation({
     mutationFn: startDatasetImport,
     onSuccess: async () => {
@@ -45,6 +53,13 @@ export function DataSettingsPage() {
       await queryClient.invalidateQueries({ queryKey: ["data-status"] });
     },
   });
+  const railImportMutation = useMutation({
+    mutationFn: startRailDataImport,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rail-data-status"] });
+    },
+  });
+  const railCompareMutation = useMutation({ mutationFn: compareRailDatasets });
   const status = query.isError
     ? "本地服务未连接"
     : datasetStatusLabel(query.data?.status);
@@ -186,6 +201,177 @@ export function DataSettingsPage() {
         )}
       </section>
 
+      <section className="settings-section settings-section--stacked" aria-labelledby="rail-dataset-title">
+        <div className="settings-section__heading">
+          <div>
+            <h2 id="rail-dataset-title">OSM 中国铁路数据</h2>
+            <p>
+              {railStatus.isError
+                ? "铁路状态读取失败"
+                : railStatus.data?.status === "ready"
+                  ? "铁路图、车站索引和本地路径服务已就绪"
+                  : railStatus.data?.error_message ?? "铁路功能尚未启用"}
+            </p>
+          </div>
+          {railStatus.data?.graph_version ? <strong>{railStatus.data.graph_version}</strong> : null}
+        </div>
+        {railStatus.data?.status === "ready" ? (
+          <>
+            <dl className="dataset-facts">
+              <div><dt>铁路车站</dt><dd>{railStatus.data.station_count}</dd></div>
+              <div><dt>图版本</dt><dd>{railStatus.data.graph_version}</dd></div>
+              <div><dt>运行图版本</dt><dd>{railStatus.data.sidecar_graph_version}</dd></div>
+              <div><dt>Profile</dt><dd>{railStatus.data.profile_version}</dd></div>
+              <div><dt>提取范围</dt><dd>{railStatus.data.extract_region ?? "未知"}</dd></div>
+              <div><dt>数据时间</dt><dd>{railStatus.data.source_timestamp ?? "未知"}</dd></div>
+              <div><dt>许可</dt><dd>{railStatus.data.license ?? "ODbL-1.0"}</dd></div>
+            </dl>
+            <p className="settings-note">
+              铁路轨迹来源：<a href="https://www.openstreetmap.org/copyright" rel="noreferrer" target="_blank">© OpenStreetMap contributors（ODbL）</a>。
+            </p>
+            <details className="rail-version-compare">
+              <summary>比较铁路图版本</summary>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const toGraphVersion =
+                    railCompareTo.trim() || railStatus.data?.graph_version;
+                  if (!railCompareFrom.trim() || !toGraphVersion) return;
+                  railCompareMutation.mutate({
+                    fromGraphVersion: railCompareFrom.trim(),
+                    toGraphVersion,
+                  });
+                }}
+              >
+                <label className="field">
+                  <span className="field__label">原图版本</span>
+                  <input
+                    onChange={(event) => setRailCompareFrom(event.target.value)}
+                    placeholder="例如 china-20260715-r2.1"
+                    spellCheck={false}
+                    value={railCompareFrom}
+                  />
+                </label>
+                <label className="field">
+                  <span className="field__label">目标图版本</span>
+                  <input
+                    onChange={(event) => setRailCompareTo(event.target.value)}
+                    placeholder={railStatus.data.graph_version ?? "当前图版本"}
+                    spellCheck={false}
+                    value={railCompareTo}
+                  />
+                </label>
+                <button
+                  className="button button--secondary"
+                  disabled={!railCompareFrom.trim() || railCompareMutation.isPending}
+                  type="submit"
+                >
+                  {railCompareMutation.isPending ? "正在比较" : "查看版本差异"}
+                </button>
+              </form>
+              {railCompareMutation.data ? (
+                <div className="rail-version-compare__result" role="status">
+                  <dl className="dataset-facts">
+                    <div><dt>新增车站</dt><dd>{railCompareMutation.data.added_station_count}</dd></div>
+                    <div><dt>移除车站</dt><dd>{railCompareMutation.data.removed_station_count}</dd></div>
+                    <div><dt>属性变化</dt><dd>{railCompareMutation.data.changed_station_count}</dd></div>
+                    <div><dt>不变车站</dt><dd>{railCompareMutation.data.unchanged_station_count}</dd></div>
+                    <div><dt>受影响行程</dt><dd>{railCompareMutation.data.affected_journey_count}</dd></div>
+                  </dl>
+                  {railCompareMutation.data.samples.length ? (
+                    <details>
+                      <summary>查看差异样例</summary>
+                      <ul>
+                        {railCompareMutation.data.samples.map((sample) => (
+                          <li key={`${sample.osm_type}-${sample.osm_id}`}>
+                            {sample.from_name ?? "新增"} → {sample.to_name ?? "已移除"}
+                            {" · "}{sample.changed_fields.join(", ")}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
+                </div>
+              ) : null}
+              {railCompareMutation.isError ? (
+                <p className="form-message form-message--error" role="alert">
+                  {railCompareMutation.error instanceof RequestError
+                    ? railCompareMutation.error.message
+                    : "铁路图版本比较失败。"}
+                </p>
+              ) : null}
+            </details>
+          </>
+        ) : railStatus.data?.status === "disabled" ? (
+          <p className="settings-note">
+            设置 <code>TRANSIT2FOG_RAIL_ENABLED=true</code>、
+            <code>TRANSIT2FOG_RAIL_GRAPH_VERSION</code> 与图目录后重启本地服务；地铁功能不受影响。
+          </p>
+        ) : (
+          <form
+            className="dataset-import-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const graphVersion = railGraphVersion.trim() || railStatus.data?.graph_version;
+              if (!graphVersion) return;
+              railImportMutation.mutate({
+                pbf_path: railPbfPath.trim(),
+                graph_version: graphVersion,
+              });
+            }}
+          >
+            <label className="field">
+              <span className="field__label">与建图一致的 PBF（本机绝对路径）</span>
+              <input
+                disabled={railStatus.data?.status === "importing"}
+                onChange={(event) => setRailPbfPath(event.target.value)}
+                placeholder="/Users/you/Data/china-latest.osm.pbf"
+                spellCheck={false}
+                value={railPbfPath}
+              />
+            </label>
+            <label className="field">
+              <span className="field__label">不可变图版本</span>
+              <input
+                disabled={railStatus.data?.status === "importing"}
+                onChange={(event) => setRailGraphVersion(event.target.value)}
+                placeholder={railStatus.data?.graph_version ?? "china-2026-08-r1"}
+                spellCheck={false}
+                value={railGraphVersion}
+              />
+            </label>
+            <p className="settings-note">
+              PBF SHA-256 必须与图目录中的 <code>transit2fog-graph.json</code> 完全一致；旧版 <code>metro2fog-graph.json</code> 仍可读取，导入不会覆盖就绪版本。
+            </p>
+            <button
+              className="button button--primary"
+              disabled={
+                !railPbfPath.trim() ||
+                !(railGraphVersion.trim() || railStatus.data?.graph_version) ||
+                railImportMutation.isPending ||
+                railStatus.data?.status === "importing"
+              }
+              type="submit"
+            >
+              {railStatus.data?.status === "importing" ? "正在构建车站索引" : "导入铁路车站索引"}
+            </button>
+            {railStatus.data?.status === "importing" ? (
+              <div className="dataset-progress" aria-live="polite">
+                <span>正在读取 PBF 并绑定图版本，请保持本地服务运行。</span>
+                <progress />
+              </div>
+            ) : null}
+            {railImportMutation.isError ? (
+              <p className="form-message form-message--error" role="alert">
+                {railImportMutation.error instanceof RequestError
+                  ? railImportMutation.error.message
+                  : "铁路车站索引导入启动失败。"}
+              </p>
+            ) : null}
+          </form>
+        )}
+      </section>
+
       <section className="settings-section settings-section--stacked" aria-labelledby="map-privacy-title">
         <div>
           <h2 id="map-privacy-title">地图与隐私</h2>
@@ -193,7 +379,7 @@ export function DataSettingsPage() {
         </div>
         <p className="settings-note">
           瓦片仅随交互视口加载，不做预取或离线批量下载；可通过
-          <code>METRO2FOG_MAP_TILES_ENABLED</code> 关闭，或配置自托管瓦片 URL。
+          <code>TRANSIT2FOG_MAP_TILES_ENABLED</code> 关闭，或配置自托管瓦片 URL。
         </p>
       </section>
     </section>

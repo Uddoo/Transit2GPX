@@ -10,6 +10,8 @@ import {
 } from "../../api/client";
 import { Icon } from "../../components/Icon";
 import { downloadBlob } from "../../utils/download";
+import { JourneyModeTabs } from "./JourneyModeTabs";
+import { RailJourneyEditorPage } from "./RailJourneyEditorPage";
 import { useDataStatus } from "../data-settings/useDataStatus";
 import { StationCombobox } from "./StationCombobox";
 import { TransitPreviewMap } from "./TransitPreviewMap";
@@ -26,6 +28,19 @@ import { usePublicConfig } from "./usePublicConfig";
 type CandidateState = "editing" | "preview" | "saved";
 
 export function JourneyEditorPage() {
+  const [mode, setMode] = useState<"metro" | "rail">("metro");
+  return mode === "metro" ? (
+    <MetroJourneyEditorPage onModeChange={setMode} />
+  ) : (
+    <RailJourneyEditorPage onModeChange={setMode} />
+  );
+}
+
+function MetroJourneyEditorPage({
+  onModeChange,
+}: {
+  onModeChange: (mode: "metro" | "rail") => void;
+}) {
   const [state, setState] = useState<CandidateState>("editing");
   const [cityId, setCityId] = useState<number>();
   const [lineId, setLineId] = useState<number>();
@@ -55,6 +70,7 @@ export function JourneyEditorPage() {
       const options: ExportOptions = {
         mode: "journeys",
         max_segment_length_m: 25,
+        rail_max_segment_length_m: 200,
         journey_ids: [journeyId],
       };
       const exportPreview = await previewExport(options);
@@ -247,9 +263,12 @@ export function JourneyEditorPage() {
 
   return (
     <section className="journey-editor" aria-labelledby="journey-editor-title">
-      <header className="page-heading">
-        <h1 id="journey-editor-title">添加一段真实乘坐记录</h1>
-        <p>选择城市、线路与起终点，确认后再保存。</p>
+      <header className="page-heading page-heading--journey-mode">
+        <div>
+          <h1 id="journey-editor-title">添加一段真实乘坐记录</h1>
+          <p>选择城市、线路与起终点，确认后再保存。</p>
+        </div>
+        <JourneyModeTabs mode="metro" onChange={onModeChange} />
       </header>
 
       <div className="journey-workspace">

@@ -2,7 +2,7 @@
 
 ## 1. 架构目标
 
-Metro2Fog 采用本地单体服务配合浏览器前端。前端负责录入、审核和地图交互；后端统一负责数据导入、匹配、拓扑解析、持久化和 GPX 生成。所有路径规则只在后端实现，避免前后端结果不一致。
+Transit2Fog 采用本地单体服务配合浏览器前端。前端负责录入、审核和地图交互；后端统一负责数据导入、匹配、拓扑解析、持久化和 GPX 生成。所有路径规则只在后端实现，避免前后端结果不一致。
 
 ```text
 ┌──────────────────────────────────────────────┐
@@ -25,6 +25,20 @@ Metro2Fog 采用本地单体服务配合浏览器前端。前端负责录入、�
 └──────────────────────────────────────────────┘
 ```
 
+铁路扩展仍保持 FastAPI 为唯一前端 API，但在启用铁路能力时增加 OpenRailRouting loopback sidecar：
+
+```text
+React + TypeScript
+        │ REST / GeoJSON
+FastAPI / Provider facade
+        ├── MetroProvider → CPTOND edge / SQLite
+        └── RailwayProvider → OpenRailRouting sidecar
+                                  │
+                                  └── OSM PBF + versioned graph cache
+```
+
+sidecar 不是 metro-only 模式的启动依赖。铁路图未安装、建图中或服务不可用时，只禁用铁路路径计算，不影响现有地铁流程。详细设计见 [`RAILWAY.md`](RAILWAY.md)。
+
 ## 2. 技术栈
 
 | 层 | 选择 | 责任 |
@@ -37,6 +51,7 @@ Metro2Fog 采用本地单体服务配合浏览器前端。前端负责录入、�
 | 几何 | Shapely | 合并、投影点、切线、反转、加密和校验 |
 | 坐标 | PyProj | WGS‑84 与局部米制 CRS 互转 |
 | 图搜索 | NetworkX | 未指定线路时的换乘候选 |
+| 铁路路径 | OpenRailRouting、GraphHopper、自定义 Profile | OSM 铁路建图、有序途经点路径、站场/轨距/电气化偏好 |
 | XML | lxml | GPX 1.1 构建与 XSD 校验 |
 | 测试 | pytest、Vitest、Testing Library、Playwright | 单元、契约、集成和端到端测试 |
 
@@ -55,6 +70,8 @@ Metro2Fog 采用本地单体服务配合浏览器前端。前端负责录入、�
 3. 单一命令启动 `http://127.0.0.1:8765`。
 4. 数据库、缓存与日志位于可配置的应用数据目录，不写入源码目录。
 
+铁路模式额外启动 OpenRailRouting Java 进程或受监督 sidecar，端口只绑定 `127.0.0.1`。FastAPI 在启动时探测其状态，但不得因 sidecar 缺失而阻止地铁模式启动。PBF 与 `graph-cache/<version>` 位于应用数据目录，不提交源码仓库。
+
 生产服务默认不得监听 `0.0.0.0`。若未来允许局域网访问，必须作为显式配置并重新评估认证与 CSRF 风险。
 
 ## 4. 后端模块边界
@@ -71,6 +88,8 @@ backend/app/
 ├── geometry/         # CRS、edge 构建、加密、连接与校验
 ├── matching/         # 城市/线路/站点名称规范化和候选评分
 ├── routing/          # 线路内与换乘候选解析
+├── providers/        # Metro/Railway/Timetable Provider 边界
+├── rail/             # 铁路站点、sidecar client、候选评分与图版本
 ├── journeys/         # 行程事务和重算策略
 └── export/           # 轨迹组装、GPX、XSD 校验
 ```
@@ -81,6 +100,8 @@ backend/app/
 - `geometry` 输入输出显式标记坐标系和 `(lon, lat)` 约定。
 - API 不直接拼 SQL 或执行 Shapely 运算。
 - 导出只读取已保存的 `journey_leg_edge`，不临时重新规划。
+- 铁路导出只读取已保存的 `rail_journey_edge_snapshot`，不临时调用 sidecar。
+- Provider 必须输出同一候选协议：版本、摘要、有序来源引用、完整几何、评分和警告。
 
 ## 5. 前端模块边界
 
@@ -147,6 +168,9 @@ frontend/src/
 - 候选确认应检查版本/摘要，拒绝提交过期候选。
 - 新数据版本不会原地修改旧 edge；行程迁移是显式操作。
 - GPX 导出记录使用的数据版本集合，并按稳定排序输出。
+- 铁路候选摘要同时包含 OSM 数据版本、graph/Profile 版本、有序站序、来源引用和几何哈希。
+- GraphHopper 内部 edge ID 只允许作为短期诊断信息；确认后的铁路行程保存完整 WGS‑84 几何快照。
+- OSM 或 Profile 更新在新目录构建图并运行固定样本，验收后原子切换；历史快照不随新图变化。
 
 ## 9. 质量门禁
 
@@ -161,6 +185,14 @@ frontend/src/
 - 非环线的 station sequence 与 measure 基本单调。
 - 质量状态和所有 flags 被持久化。
 
+铁路图进入 `ready` 前还必须满足：
+
+- PBF checksum、数据时间、提取范围和 ODbL 信息完整。
+- OpenRailRouting 与 Profile 版本已固定，可重复构建同一图。
+- 跨提取边界的代表性铁路保持连通；省界裁剪断点不得静默忽略。
+- 固定高速、普速、枢纽和替代路径样本可生成候选，且废弃/施工轨道不会进入可提交候选。
+- sidecar 只监听 loopback，超时和无路径有稳定错误码。
+
 ## 10. 安全与隐私
 
 - 上传文件名不作为磁盘路径；临时文件名由应用生成。
@@ -173,8 +205,9 @@ frontend/src/
 ## 11. 目标仓库结构
 
 ```text
-metro2fog/
+transit2fog/
 ├── README.md
+├── ATTRIBUTION.md
 ├── docs/
 ├── backend/
 │   ├── app/
@@ -187,6 +220,6 @@ metro2fog/
 │   └── package.json
 ├── fixtures/         # 小型、可授权的合成/裁剪测试数据
 ├── scripts/          # 开发、导入、构建和发布入口
+├── rail-routing/     # Profile、sidecar 配置与版本清单；不含 PBF/graph cache
 └── Makefile          # 或等价的跨平台任务入口
 ```
-
