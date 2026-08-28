@@ -55,7 +55,10 @@ function StatusLabel() {
 function Brand() {
   return (
     <NavLink className="brand" to="/journeys/new" aria-label="Transit2Fog 首页">
-      Transit2Fog
+      <span className="brand__name">Transit2Fog</span>
+      <span className="brand__tagline">
+        记录真实地铁与铁路行程，导出 Fog of World 可用的 GPX
+      </span>
     </NavLink>
   );
 }
