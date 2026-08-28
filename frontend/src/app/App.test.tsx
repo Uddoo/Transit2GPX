@@ -347,6 +347,9 @@ describe("Transit2Fog app shell", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
+    const homeLinks = screen.getAllByRole("link", { name: "Transit2Fog 首页" });
+    expect(homeLinks).toHaveLength(2);
+    expect(homeLinks[0]).toHaveTextContent("Transit2Fog");
     expect(screen.getByRole("heading", { name: "添加一段真实乘坐记录" })).toBeInTheDocument();
     const previewButton = screen.getByRole("button", { name: "预览路径" });
     await waitFor(() => expect(previewButton).toBeEnabled());

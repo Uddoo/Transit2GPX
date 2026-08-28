@@ -54,8 +54,8 @@ function StatusLabel() {
 
 function Brand() {
   return (
-    <NavLink className="brand" to="/journeys/new" aria-label="Metro2Fog 首页">
-      Metro2Fog
+    <NavLink className="brand" to="/journeys/new" aria-label="Transit2Fog 首页">
+      Transit2Fog
     </NavLink>
   );
 }
@@ -111,7 +111,7 @@ export function AppShell() {
       </header>
 
       <header className="mobile-header">
-        <NavLink className="icon-button" to="/journeys/new" aria-label="Metro2Fog 首页">
+        <NavLink className="icon-button" to="/journeys/new" aria-label="Transit2Fog 首页">
           <Icon name="train" size={22} />
         </NavLink>
         <strong>{mobileTitle}</strong>
