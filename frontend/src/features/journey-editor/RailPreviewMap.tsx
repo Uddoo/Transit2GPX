@@ -13,7 +13,13 @@ import {
 import type { RailPathCandidate, RailStation } from "../../api/client";
 
 const CHINA_CENTER: [number, number] = [35.5, 104.2];
-const CANDIDATE_COLORS = ["#6d28d9", "#d97706", "#2563eb"] as const;
+const MUTED_CANDIDATE_COLORS = ["#5e5e5e", "#9c9c9c", "#c8c8c8"] as const;
+
+function candidateColor(candidateId: string, selectedCandidateId: string | undefined, index: number) {
+  return candidateId === selectedCandidateId
+    ? "#079aa4"
+    : MUTED_CANDIDATE_COLORS[index] ?? MUTED_CANDIDATE_COLORS[0];
+}
 
 type RailPreviewMapProps = {
   candidates: RailPathCandidate[];
@@ -98,7 +104,7 @@ export function RailPreviewMap({
               eventHandlers={{ click: () => onSelectCandidate(candidate.candidate_id) }}
               key={candidate.candidate_id}
               pathOptions={{
-                color: CANDIDATE_COLORS[index] ?? CANDIDATE_COLORS[0],
+                color: candidateColor(candidate.candidate_id, selectedCandidateId, index),
                 lineCap: "round",
                 lineJoin: "round",
                 opacity: selected ? 1 : 0.68,
@@ -113,7 +119,7 @@ export function RailPreviewMap({
             center={[station.lat, station.lon]}
             key={station.id}
             pathOptions={{
-              color: index === 0 || index === stations.length - 1 ? "#112333" : "#007f89",
+              color: index === 0 || index === stations.length - 1 ? "#079aa4" : "#5e5e5e",
               fillColor: "#ffffff",
               fillOpacity: 1,
               weight: 3,
@@ -141,7 +147,7 @@ export function RailPreviewMap({
               onClick={() => onSelectCandidate(candidate.candidate_id)}
               type="button"
             >
-              <span style={{ backgroundColor: CANDIDATE_COLORS[index] }} />
+              <span style={{ backgroundColor: candidateColor(candidate.candidate_id, selectedCandidateId, index) }} />
               候选 {index + 1}
             </button>
           ))}

@@ -16,7 +16,7 @@ const DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const DEFAULT_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const SHANGHAI_CENTER: [number, number] = [31.2304, 121.4737];
-const CANDIDATE_PATH_COLOR = "#6d28d9";
+const CANDIDATE_PATH_COLOR = "#079aa4";
 
 type MapState = "unavailable" | "loading" | "error" | "empty" | "ready";
 
@@ -221,7 +221,7 @@ export function TransitPreviewMap({
       {candidatePositions && candidatePositions.length >= 2 ? (
         <div
           className="map-candidate-legend"
-          aria-label="紫色线表示候选路径"
+          aria-label="青绿色线表示候选路径"
           data-route-color={CANDIDATE_PATH_COLOR}
         >
           <span aria-hidden="true" />

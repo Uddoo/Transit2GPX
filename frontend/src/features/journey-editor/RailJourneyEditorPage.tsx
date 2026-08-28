@@ -329,14 +329,7 @@ export function RailJourneyEditorPage({ onModeChange }: RailJourneyEditorPagePro
   }
 
   return (
-    <section className="journey-editor" aria-labelledby="rail-journey-editor-title">
-      <header className="page-heading page-heading--journey-mode">
-        <div>
-          <h1 id="rail-journey-editor-title">添加一段真实铁路乘坐记录</h1>
-          <p>输入乘车事实与有序站点，比较候选后确认保存。</p>
-        </div>
-        <JourneyModeTabs mode="rail" onChange={onModeChange} />
-      </header>
+    <section className="journey-editor journey-editor--rail" aria-labelledby="rail-journey-editor-title">
       <div className="journey-workspace journey-workspace--rail">
         <form
           className="journey-form"
@@ -345,6 +338,8 @@ export function RailJourneyEditorPage({ onModeChange }: RailJourneyEditorPagePro
             previewRailJourney();
           }}
         >
+          <h1 id="rail-journey-editor-title">添加一段真实铁路乘坐记录</h1>
+          <JourneyModeTabs mode="rail" onChange={onModeChange} />
           {!railReady ? (
             <aside className="rail-readiness" aria-live="polite">
               <div>
@@ -552,93 +547,93 @@ export function RailJourneyEditorPage({ onModeChange }: RailJourneyEditorPagePro
                 : undefined
             }
           />
-          {!selectedCandidate ? (
-            <div className="candidate-rail candidate-rail--idle" aria-live="polite">
-              <p>
-                {pathPreview.isError
-                  ? errorMessage(pathPreview.error, "铁路路径计算失败，请核对图版本和有序站点。")
-                  : pathPreview.data?.status === "unresolved"
-                    ? "没有找到通过全部有序站点的铁路路径。"
-                    : "填写乘车事实后预览，最多返回 3 条可解释候选。"}
-              </p>
-            </div>
-          ) : (
-            <section className="candidate-rail candidate-rail--rail" aria-labelledby="rail-candidate-title">
-              <div className="candidate-rail__title">
-                <h2 id="rail-candidate-title" ref={candidateTitleRef} tabIndex={-1}>铁路候选</h2>
-                <strong>{startStation?.name_cn} → {endStation?.name_cn}</strong>
-                {candidates.length > 1 ? (
-                  <select
-                    aria-label="铁路候选路径"
-                    onChange={(event) => {
-                      setSelectedCandidateId(event.target.value);
-                      setSavedJourneyId(undefined);
-                    }}
-                    value={selectedCandidate.candidate_id}
-                  >
-                    {candidates.map((candidate, index) => (
-                      <option key={candidate.candidate_id} value={candidate.candidate_id}>
-                        候选 {index + 1} · {PROFILE_LABELS[candidate.routing_profile] ?? candidate.routing_profile}
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-              </div>
-              <dl className="candidate-rail__facts">
-                <div><dt>距离</dt><dd><Icon name="ruler" size={17} />{(selectedCandidate.distance_m / 1000).toFixed(1)} km</dd></div>
-                <div><dt>置信度</dt><dd>{Math.round(selectedCandidate.score * 100)}%</dd></div>
-                <div><dt>来源区间</dt><dd>{selectedCandidate.way_ranges.length} 个 OSM way</dd></div>
-              </dl>
-              <div className="candidate-rail__actions">
-                <button className="button button--secondary" onClick={resetCandidate} type="button">返回修改</button>
-                <button
-                  className="button button--secondary candidate-rail__export"
-                  disabled={!selectedCandidate.can_commit || createJourney.isPending || directExport.isPending}
-                  onClick={() => void exportJourney()}
-                  type="button"
-                >
-                  <Icon name="download" size={17} />
-                  {directExport.isPending ? "正在导出" : savedJourneyId ? "导出 GPX" : "保存并导出"}
-                </button>
-                <button
-                  className="button button--primary"
-                  disabled={!selectedCandidate.can_commit || savedJourneyId !== undefined || createJourney.isPending}
-                  onClick={saveJourney}
-                  type="button"
-                >
-                  <Icon name="check" size={17} />
-                  {savedJourneyId ? "已保存" : createJourney.isPending ? "正在保存" : "确认并保存"}
-                </button>
-              </div>
-              <details className="rail-score-details">
-                <summary>查看评分依据 · 模型 {selectedCandidate.scoring_version}</summary>
-                <ul>
-                  {selectedCandidate.score_details
-                    .filter((detail) => detail.code !== "scoring_version")
-                    .map((detail, index) => (
-                      <li key={`${String(detail.code)}-${index}`}>
-                        <strong>{SCORE_LABELS[String(detail.code)] ?? String(detail.code)}</strong>
-                        <span>{scoreDetailMessage(detail)}</span>
-                      </li>
-                    ))}
-                </ul>
-              </details>
-              {selectedCandidate.warnings.length ? (
-                <ul className="rail-candidate-warnings">
-                  {selectedCandidate.warnings.map((warning, index) => (
-                    <li key={`${String(warning.code)}-${index}`}>{warningMessage(warning)}</li>
-                  ))}
-                </ul>
-              ) : null}
-              {createJourney.isError || directExport.isError ? (
-                <p className="form-message form-message--error" role="alert">
-                  {errorMessage(createJourney.error ?? directExport.error, "保存或导出失败，请重新预览候选。")}
-                </p>
-              ) : null}
-            </section>
-          )}
         </div>
       </div>
+      {!selectedCandidate ? (
+        <div className="candidate-rail candidate-rail--idle" aria-live="polite">
+          <p>
+            {pathPreview.isError
+              ? errorMessage(pathPreview.error, "铁路路径计算失败，请核对图版本和有序站点。")
+              : pathPreview.data?.status === "unresolved"
+                ? "没有找到通过全部有序站点的铁路路径。"
+                : "填写乘车事实后预览，最多返回 3 条可解释候选。"}
+          </p>
+        </div>
+      ) : (
+        <section className="candidate-rail candidate-rail--rail" aria-labelledby="rail-candidate-title">
+          <div className="candidate-rail__title">
+            <h2 id="rail-candidate-title" ref={candidateTitleRef} tabIndex={-1}>铁路候选</h2>
+            <strong>{startStation?.name_cn} → {endStation?.name_cn}</strong>
+            {candidates.length > 1 ? (
+              <select
+                aria-label="铁路候选路径"
+                onChange={(event) => {
+                  setSelectedCandidateId(event.target.value);
+                  setSavedJourneyId(undefined);
+                }}
+                value={selectedCandidate.candidate_id}
+              >
+                {candidates.map((candidate, index) => (
+                  <option key={candidate.candidate_id} value={candidate.candidate_id}>
+                    候选 {index + 1} · {PROFILE_LABELS[candidate.routing_profile] ?? candidate.routing_profile}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </div>
+          <dl className="candidate-rail__facts">
+            <div><dt>距离</dt><dd><Icon name="ruler" size={17} />{(selectedCandidate.distance_m / 1000).toFixed(1)} km</dd></div>
+            <div><dt>置信度</dt><dd>{Math.round(selectedCandidate.score * 100)}%</dd></div>
+            <div><dt>来源区间</dt><dd>{selectedCandidate.way_ranges.length} 个 OSM way</dd></div>
+          </dl>
+          <div className="candidate-rail__actions">
+            <button className="button button--secondary" onClick={resetCandidate} type="button">返回修改</button>
+            <button
+              className="button button--primary candidate-rail__export"
+              disabled={!selectedCandidate.can_commit || createJourney.isPending || directExport.isPending}
+              onClick={() => void exportJourney()}
+              type="button"
+            >
+              <Icon name="download" size={17} />
+              {directExport.isPending ? "正在导出" : savedJourneyId ? "导出 GPX" : "保存并导出"}
+            </button>
+            <button
+              className="button button--secondary"
+              disabled={!selectedCandidate.can_commit || savedJourneyId !== undefined || createJourney.isPending}
+              onClick={saveJourney}
+              type="button"
+            >
+              <Icon name="check" size={17} />
+              {savedJourneyId ? "已保存" : createJourney.isPending ? "正在保存" : "确认并保存"}
+            </button>
+          </div>
+          <details className="rail-score-details">
+            <summary>查看评分依据 · 模型 {selectedCandidate.scoring_version}</summary>
+            <ul>
+              {selectedCandidate.score_details
+                .filter((detail) => detail.code !== "scoring_version")
+                .map((detail, index) => (
+                  <li key={`${String(detail.code)}-${index}`}>
+                    <strong>{SCORE_LABELS[String(detail.code)] ?? String(detail.code)}</strong>
+                    <span>{scoreDetailMessage(detail)}</span>
+                  </li>
+                ))}
+            </ul>
+          </details>
+          {selectedCandidate.warnings.length ? (
+            <ul className="rail-candidate-warnings">
+              {selectedCandidate.warnings.map((warning, index) => (
+                <li key={`${String(warning.code)}-${index}`}>{warningMessage(warning)}</li>
+              ))}
+            </ul>
+          ) : null}
+          {createJourney.isError || directExport.isError ? (
+            <p className="form-message form-message--error" role="alert">
+              {errorMessage(createJourney.error ?? directExport.error, "保存或导出失败，请重新预览候选。")}
+            </p>
+          ) : null}
+        </section>
+      )}
       <p className="sr-only" aria-live="polite">{savedJourneyId ? "铁路行程已保存。" : ""}</p>
     </section>
   );

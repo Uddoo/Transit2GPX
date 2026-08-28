@@ -53,7 +53,9 @@ const CITIES = [
   { id: 1, name_cn: "上海", name_en: "Shanghai", center: [121.47, 31.23], bbox: CITY_MAP.bbox },
 ];
 const LINES = [
+  { id: 10, city_id: 1, name_cn: "10号线", name_en: "Line 10", display_color: "#079aa4" },
   { id: 2, city_id: 1, name_cn: "2号线", name_en: "Line 2", display_color: "#079aa4" },
+  { id: 6, city_id: 1, name_cn: "6号线", name_en: "Line 6", display_color: "#079aa4" },
 ];
 const STATIONS = [
   { id: 101, city_id: 1, name_cn: "虹桥火车站", name_en: "Hongqiao Railway Station", lon: 121.312, lat: 31.194 },
@@ -354,12 +356,32 @@ describe("Transit2Fog app shell", () => {
     expect(screen.getByText("2号线 · 虹桥火车站 → 人民广场")).toBeInTheDocument();
     expect(screen.getByText("候选路径", { selector: ".map-candidate-legend" })).toHaveAttribute(
       "data-route-color",
-      "#6d28d9",
+      "#079aa4",
     );
 
     await user.click(screen.getByRole("button", { name: "保存行程" }));
     expect(screen.getByRole("button", { name: "已保存" })).toBeInTheDocument();
     expect(screen.getByText("行程已保存。")).toBeInTheDocument();
+  });
+
+  it("sorts metro lines by their natural Chinese line names", async () => {
+    renderApp(<App />);
+
+    const line = screen.getByRole("combobox", { name: "线路" });
+    await waitFor(() => expect(line).toBeEnabled());
+
+    expect(
+      within(line)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "选择线路",
+      "自动规划换乘（需确认）",
+      "2号线",
+      "6号线",
+      "10号线",
+    ]);
+    expect(line).toHaveValue("2");
   });
 
   it("searches and selects both endpoint stations with the keyboard", async () => {
@@ -496,6 +518,11 @@ describe("Transit2Fog app shell", () => {
 
     await user.click(screen.getByRole("button", { name: "预览铁路路径" }));
     expect(await screen.findByRole("heading", { name: "铁路候选" })).toHaveFocus();
+    expect(screen.getByRole("heading", { name: "铁路候选" }).closest(".candidate-rail")).toHaveClass(
+      "candidate-rail--rail",
+    );
+    expect(screen.getByRole("button", { name: "保存并导出" })).toHaveClass("button--primary");
+    expect(screen.getByRole("button", { name: "确认并保存" })).toHaveClass("button--secondary");
     expect(screen.getByText("159.0 km")).toBeInTheDocument();
     expect(screen.getByText("95%")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "确认并保存" }));

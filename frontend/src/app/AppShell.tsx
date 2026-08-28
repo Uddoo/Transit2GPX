@@ -54,34 +54,47 @@ function StatusLabel() {
 
 function Brand() {
   return (
-    <NavLink className="brand" to="/journeys/new" aria-label="Transit2Fog 首页">
-      <span className="brand__mark" aria-hidden="true">
-        <Icon name="train" size={22} />
-      </span>
-      <span>Transit2Fog</span>
+    <NavLink className="brand" to="/journeys/new" aria-label="Metro2Fog 首页">
+      Metro2Fog
     </NavLink>
   );
 }
 
 function Navigation({ mobile = false }: { mobile?: boolean }) {
   return (
-    <nav className={mobile ? "mobile-nav" : "side-nav"} aria-label="主要导航">
+    <nav className={mobile ? "mobile-nav" : "top-nav"} aria-label="主要导航">
       {NAV_ITEMS.map((item) => (
         <NavLink
+          end={item.to === "/journeys"}
           key={item.to}
           to={item.to}
           className={({ isActive }) =>
-            `${mobile ? "mobile-nav__item" : "side-nav__item"}${
+            `${mobile ? "mobile-nav__item" : "top-nav__item"}${
               isActive ? " is-active" : ""
             }`
           }
         >
-          <Icon name={item.icon} size={mobile ? 21 : 20} />
+          <Icon name={item.icon} size={mobile ? 21 : 19} />
           <span>{item.label}</span>
         </NavLink>
       ))}
     </nav>
   );
+}
+
+function TodayLabel() {
+  const parts = new Intl.DateTimeFormat("zh-CN", {
+    day: "2-digit",
+    month: "2-digit",
+    weekday: "short",
+    year: "numeric",
+  })
+    .formatToParts(new Date());
+  const value = (type: "day" | "month" | "weekday" | "year") =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const today = `${value("year")}-${value("month")}-${value("day")} ${value("weekday").replace("周", "星期")}`;
+
+  return <span>{today}</span>;
 }
 
 export function AppShell() {
@@ -92,13 +105,13 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <header className="topbar">
         <Brand />
         <Navigation />
-      </aside>
+      </header>
 
       <header className="mobile-header">
-        <NavLink className="icon-button" to="/journeys/new" aria-label="Transit2Fog 首页">
+        <NavLink className="icon-button" to="/journeys/new" aria-label="Metro2Fog 首页">
           <Icon name="train" size={22} />
         </NavLink>
         <strong>{mobileTitle}</strong>
@@ -108,8 +121,12 @@ export function AppShell() {
       </header>
 
       <div className="workspace">
-        <header className="utility-bar" aria-label="应用状态">
-          <div className="utility-bar__status">
+        <header className="status-bar" aria-label="应用状态">
+          <div className="status-bar__date">
+            <Icon name="database" size={17} />
+            <TodayLabel />
+          </div>
+          <div className="status-bar__status">
             <Icon name="database" size={18} />
             <StatusLabel />
           </div>

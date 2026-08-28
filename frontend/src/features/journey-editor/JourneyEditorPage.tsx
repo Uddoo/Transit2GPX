@@ -24,6 +24,7 @@ import {
   useStations,
 } from "./useJourneyNetwork";
 import { usePublicConfig } from "./usePublicConfig";
+import { sortTransitLines } from "./lineSort";
 
 type CandidateState = "editing" | "preview" | "saved";
 
@@ -45,6 +46,7 @@ function MetroJourneyEditorPage({
   const [cityId, setCityId] = useState<number>();
   const [lineId, setLineId] = useState<number>();
   const [autoLine, setAutoLine] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [startStationId, setStartStationId] = useState<number>();
   const [endStationId, setEndStationId] = useState<number>();
   const [viaStationId, setViaStationId] = useState<number>();
@@ -62,6 +64,10 @@ function MetroJourneyEditorPage({
   );
   const cities = useCities(dataReady);
   const lines = useLines(cityId);
+  const sortedLines = useMemo(
+    () => (lines.data ? sortTransitLines(lines.data) : []),
+    [lines.data],
+  );
   const stations = useStations(cityId, lineId, autoLine);
   const pathPreview = usePathPreview();
   const createJourney = useCreateJourney();
@@ -100,10 +106,13 @@ function MetroJourneyEditorPage({
 
   useEffect(() => {
     if (autoLine) return;
-    if (lines.data?.length && !lines.data.some((line) => line.id === lineId)) {
-      setLineId(lines.data[0].id);
+    if (
+      sortedLines.length &&
+      !sortedLines.some((line) => line.id === lineId)
+    ) {
+      setLineId(sortedLines[0].id);
     }
-  }, [autoLine, lineId, lines.data]);
+  }, [autoLine, lineId, sortedLines]);
 
   useEffect(() => {
     if (!stations.data?.length) {
@@ -262,15 +271,7 @@ function MetroJourneyEditorPage({
   }
 
   return (
-    <section className="journey-editor" aria-labelledby="journey-editor-title">
-      <header className="page-heading page-heading--journey-mode">
-        <div>
-          <h1 id="journey-editor-title">添加一段真实乘坐记录</h1>
-          <p>选择城市、线路与起终点，确认后再保存。</p>
-        </div>
-        <JourneyModeTabs mode="metro" onChange={onModeChange} />
-      </header>
-
+    <section className="journey-editor journey-editor--metro" aria-labelledby="journey-editor-title">
       <div className="journey-workspace">
         <form
           className="journey-form"
@@ -279,105 +280,120 @@ function MetroJourneyEditorPage({
             previewSelectedPath();
           }}
         >
-          <label className="field">
-            <span className="field__label">城市</span>
-            <select
-              disabled={!dataReady || !cities.data?.length}
-              name="city"
-              onChange={(event) => {
+          <h1 id="journey-editor-title">添加一段真实乘坐记录</h1>
+          <JourneyModeTabs mode="metro" onChange={onModeChange} />
+          <div className="journey-form__selectors">
+            <label className="field">
+              <span className="field__label">城市</span>
+              <select
+                disabled={!dataReady || !cities.data?.length}
+                name="city"
+                onChange={(event) => {
                 setCityId(Number(event.target.value));
                 setAutoLine(false);
-                setLineId(undefined);
-                setStartStationId(undefined);
-                setEndStationId(undefined);
+                setShowAdvanced(false);
+                  setLineId(undefined);
+                  setStartStationId(undefined);
+                  setEndStationId(undefined);
+                  setViaStationId(undefined);
+                  resetCandidate();
+                }}
+                value={cityId ?? ""}
+              >
+                <option disabled value="">{dataReady ? "选择城市" : "请先导入数据"}</option>
+                {cities.data?.map((city) => <option key={city.id} value={city.id}>{city.name_cn}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span className="field__label">线路</span>
+              <select
+                disabled={!sortedLines.length}
+                name="line"
+                onChange={(event) => {
+                  const isAuto = event.target.value === "auto";
+                  setAutoLine(isAuto);
+                  setShowAdvanced(isAuto);
+                  setLineId(isAuto ? undefined : Number(event.target.value));
+                  setStartStationId(undefined);
+                  setEndStationId(undefined);
+                  setViaStationId(undefined);
+                  resetCandidate();
+                }}
+                value={autoLine ? "auto" : (lineId ?? "")}
+              >
+                <option disabled value="">选择线路</option>
+                <option value="auto">自动规划换乘（需确认）</option>
+                {sortedLines.map((line) => <option key={line.id} value={line.id}>{line.name_cn}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="journey-form__stations">
+            <StationCombobox
+              cityId={cityId}
+              disabled={!stations.data?.length}
+              label="起点站"
+              lineId={autoLine ? undefined : lineId}
+              name="startStation"
+              onFocus={() => setMapSelection("start")}
+              onSelect={(stationId) => {
+                setStartStationId(stationId);
+                setUsedMapSelection(false);
+                resetCandidate();
+              }}
+              placeholder="输入站名或拼音"
+              stations={stations.data ?? []}
+              value={startStationId}
+            />
+            <StationCombobox
+              cityId={cityId}
+              disabled={!stations.data?.length}
+              label="终点站"
+              lineId={autoLine ? undefined : lineId}
+              name="endStation"
+              onFocus={() => setMapSelection("end")}
+              onSelect={(stationId) => {
+                setEndStationId(stationId);
+                setUsedMapSelection(false);
+                resetCandidate();
+              }}
+              placeholder="输入站名或拼音"
+              stations={stations.data ?? []}
+              value={endStationId}
+            />
+          </div>
+          <details
+            className="journey-form__advanced"
+            onToggle={(event) => setShowAdvanced(event.currentTarget.open)}
+            open={showAdvanced}
+          >
+            <summary>更多路线选项</summary>
+            <label className="field">
+              <span className="field__label">方向（可选）</span>
+              <select disabled={!stations.data?.length || autoLine} defaultValue="auto" name="direction">
+                <option value="auto">自动识别；歧义时确认</option>
+              </select>
+            </label>
+            <StationCombobox
+              clearable
+              cityId={cityId}
+              disabled={!stations.data?.length}
+              emptyLabel="不指定"
+              label="途经站（可选）"
+              lineId={autoLine ? undefined : lineId}
+              name="via"
+              onClear={() => {
                 setViaStationId(undefined);
                 resetCandidate();
               }}
-              value={cityId ?? ""}
-            >
-              <option disabled value="">{dataReady ? "选择城市" : "请先导入数据"}</option>
-              {cities.data?.map((city) => <option key={city.id} value={city.id}>{city.name_cn}</option>)}
-            </select>
-          </label>
-          <label className="field">
-            <span className="field__label">线路</span>
-            <select
-              disabled={!lines.data?.length}
-              name="line"
-              onChange={(event) => {
-                const isAuto = event.target.value === "auto";
-                setAutoLine(isAuto);
-                setLineId(isAuto ? undefined : Number(event.target.value));
-                setStartStationId(undefined);
-                setEndStationId(undefined);
-                setViaStationId(undefined);
+              onSelect={(stationId) => {
+                setViaStationId(stationId);
                 resetCandidate();
               }}
-              value={autoLine ? "auto" : (lineId ?? "")}
-            >
-              <option disabled value="">选择线路</option>
-              <option value="auto">自动规划换乘（需确认）</option>
-              {lines.data?.map((line) => <option key={line.id} value={line.id}>{line.name_cn}</option>)}
-            </select>
-          </label>
-          <StationCombobox
-            cityId={cityId}
-            disabled={!stations.data?.length}
-            label="起点站"
-            lineId={autoLine ? undefined : lineId}
-            name="startStation"
-            onFocus={() => setMapSelection("start")}
-            onSelect={(stationId) => {
-              setStartStationId(stationId);
-              setUsedMapSelection(false);
-              resetCandidate();
-            }}
-            placeholder="输入站名或拼音"
-            stations={stations.data ?? []}
-            value={startStationId}
-          />
-          <StationCombobox
-            cityId={cityId}
-            disabled={!stations.data?.length}
-            label="终点站"
-            lineId={autoLine ? undefined : lineId}
-            name="endStation"
-            onFocus={() => setMapSelection("end")}
-            onSelect={(stationId) => {
-              setEndStationId(stationId);
-              setUsedMapSelection(false);
-              resetCandidate();
-            }}
-            placeholder="输入站名或拼音"
-            stations={stations.data ?? []}
-            value={endStationId}
-          />
-          <label className="field">
-            <span className="field__label">方向（可选）</span>
-            <select disabled={!stations.data?.length || autoLine} defaultValue="auto" name="direction">
-              <option value="auto">自动识别；歧义时确认</option>
-            </select>
-          </label>
-          <StationCombobox
-            clearable
-            cityId={cityId}
-            disabled={!stations.data?.length}
-            emptyLabel="不指定"
-            label="途经站（可选）"
-            lineId={autoLine ? undefined : lineId}
-            name="via"
-            onClear={() => {
-              setViaStationId(undefined);
-              resetCandidate();
-            }}
-            onSelect={(stationId) => {
-              setViaStationId(stationId);
-              resetCandidate();
-            }}
-            placeholder="输入站名或拼音"
-            stations={stations.data ?? []}
-            value={viaStationId}
-          />
+              placeholder="输入站名或拼音"
+              stations={stations.data ?? []}
+              value={viaStationId}
+            />
+          </details>
           <label className="field">
             <span className="field__label">乘坐日期（可选）</span>
             <input
@@ -445,93 +461,93 @@ function MetroJourneyEditorPage({
               地图点击将设置{mapSelection === "start" ? "起点" : "终点"}；也可使用左侧表单。
             </p>
           ) : null}
-          {state === "editing" || !selectedCandidate ? (
-            <div className="candidate-rail candidate-rail--idle" aria-live="polite">
-              <p>
-                {pathPreview.data?.status === "unresolved"
-                  ? "没有找到符合条件的真实线路区间。"
-                  : pathPreview.isError
-                    ? "路径解析失败，请检查本地数据后重试。"
-                    : "填写后预览真实线路区间。"}
-              </p>
-            </div>
-          ) : (
-            <section className="candidate-rail" aria-labelledby="candidate-title">
-              <div className="candidate-rail__title">
-                <h2 id="candidate-title" ref={candidateTitleRef} tabIndex={-1}>候选路径</h2>
-                <strong>
-                  {selectedCandidate.line_name} · {startStation?.name_cn} → {endStation?.name_cn}
-                </strong>
-                {pathPreview.data && pathPreview.data.candidates.length > 1 ? (
-                  <select
-                    aria-label="候选方向"
-                    onChange={(event) => setSelectedCandidateId(event.target.value)}
-                    value={selectedCandidate.candidate_id}
-                  >
-                    {pathPreview.data.candidates.map((candidate) => (
-                      <option key={candidate.candidate_id} value={candidate.candidate_id}>
-                        {candidate.direction_name} · {(candidate.distance_m / 1000).toFixed(1)} km
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-              </div>
-              <dl className="candidate-rail__facts">
-                <div><dt>站数</dt><dd><Icon name="train" size={17} />{selectedCandidate.station_count} 站</dd></div>
-                <div><dt>距离</dt><dd><Icon name="ruler" size={17} />{(selectedCandidate.distance_m / 1000).toFixed(1)} km</dd></div>
-                <div className={selectedCandidate.warnings.length ? "" : "candidate-rail__verified"}>
-                  <dt>质量</dt><dd><Icon name="check" size={17} />{selectedCandidate.warnings.length ? `${selectedCandidate.warnings.length} 项警告` : "路径已验证，无警告"}</dd>
-                </div>
-              </dl>
-              <div className="candidate-rail__actions">
-                <button className="button button--secondary" onClick={returnToForm} type="button">返回修改</button>
-                <button
-                  aria-label="导出 GPX"
-                  className="button button--secondary candidate-rail__export"
-                  disabled={createJourney.isPending || directExport.isPending}
-                  onClick={() => void exportSelectedPath()}
-                  title={
-                    savedJourneyId === undefined
-                      ? "保存当前行程并立即导出 GPX"
-                      : "直接导出当前行程的 GPX"
-                  }
-                  type="button"
-                >
-                  <Icon name="download" size={17} />
-                  {directExport.isPending
-                    ? "正在导出"
-                    : savedJourneyId === undefined
-                      ? "保存并导出"
-                      : "导出 GPX"}
-                </button>
-                <button
-                  className="button button--primary"
-                  disabled={state === "saved" || createJourney.isPending}
-                  onClick={saveJourney}
-                  type="button"
-                >
-                  <Icon name="check" size={17} />
-                  {state === "saved"
-                    ? "已保存"
-                    : createJourney.isPending
-                      ? "正在保存"
-                      : "保存行程"}
-                </button>
-              </div>
-              {createJourney.isError ? (
-                <p className="form-message form-message--error" role="alert">
-                  保存失败，候选可能已过期，请返回重新预览。
-                </p>
-              ) : null}
-              {directExport.isError ? (
-                <p className="form-message form-message--error" role="alert">
-                  GPX 导出失败，请检查当前行程后重试。
-                </p>
-              ) : null}
-            </section>
-          )}
         </div>
       </div>
+      {state === "editing" || !selectedCandidate ? (
+        <div className="candidate-rail candidate-rail--idle" aria-live="polite">
+          <p>
+            {pathPreview.data?.status === "unresolved"
+              ? "没有找到符合条件的真实线路区间。"
+              : pathPreview.isError
+                ? "路径解析失败，请检查本地数据后重试。"
+                : "填写后预览真实线路区间。"}
+          </p>
+        </div>
+      ) : (
+        <section className="candidate-rail" aria-labelledby="candidate-title">
+          <div className="candidate-rail__title">
+            <h2 id="candidate-title" ref={candidateTitleRef} tabIndex={-1}>候选路径</h2>
+            <strong>
+              {selectedCandidate.line_name} · {startStation?.name_cn} → {endStation?.name_cn}
+            </strong>
+            {pathPreview.data && pathPreview.data.candidates.length > 1 ? (
+              <select
+                aria-label="候选方向"
+                onChange={(event) => setSelectedCandidateId(event.target.value)}
+                value={selectedCandidate.candidate_id}
+              >
+                {pathPreview.data.candidates.map((candidate) => (
+                  <option key={candidate.candidate_id} value={candidate.candidate_id}>
+                    {candidate.direction_name} · {(candidate.distance_m / 1000).toFixed(1)} km
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </div>
+          <dl className="candidate-rail__facts">
+            <div><dt>站数</dt><dd><Icon name="train" size={17} />{selectedCandidate.station_count} 站</dd></div>
+            <div><dt>距离</dt><dd><Icon name="ruler" size={17} />{(selectedCandidate.distance_m / 1000).toFixed(1)} km</dd></div>
+            <div className={selectedCandidate.warnings.length ? "" : "candidate-rail__verified"}>
+              <dt>质量</dt><dd><Icon name="check" size={17} />{selectedCandidate.warnings.length ? `${selectedCandidate.warnings.length} 项警告` : "路径已验证，无警告"}</dd>
+            </div>
+          </dl>
+          <div className="candidate-rail__actions">
+            <button className="button button--secondary" onClick={returnToForm} type="button">返回修改</button>
+            <button
+              aria-label="导出 GPX"
+              className="button button--primary candidate-rail__export"
+              disabled={createJourney.isPending || directExport.isPending}
+              onClick={() => void exportSelectedPath()}
+              title={
+                savedJourneyId === undefined
+                  ? "保存当前行程并立即导出 GPX"
+                  : "直接导出当前行程的 GPX"
+              }
+              type="button"
+            >
+              <Icon name="download" size={17} />
+              {directExport.isPending
+                ? "正在导出"
+                : savedJourneyId === undefined
+                  ? "保存并导出"
+                  : "导出 GPX"}
+            </button>
+            <button
+              className="button button--secondary"
+              disabled={state === "saved" || createJourney.isPending}
+              onClick={saveJourney}
+              type="button"
+            >
+              <Icon name="check" size={17} />
+              {state === "saved"
+                ? "已保存"
+                : createJourney.isPending
+                  ? "正在保存"
+                  : "保存行程"}
+            </button>
+          </div>
+          {createJourney.isError ? (
+            <p className="form-message form-message--error" role="alert">
+              保存失败，候选可能已过期，请返回重新预览。
+            </p>
+          ) : null}
+          {directExport.isError ? (
+            <p className="form-message form-message--error" role="alert">
+              GPX 导出失败，请检查当前行程后重试。
+            </p>
+          ) : null}
+        </section>
+      )}
       <p className="sr-only" aria-live="polite">
         {state === "saved" ? "行程已保存。" : ""}
       </p>
