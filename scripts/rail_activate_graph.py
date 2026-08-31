@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,6 +16,7 @@ IDENTITY_FIELDS = (
     "profile_version",
     "openrailrouting_commit",
 )
+_GRAPH_VERSION_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
 class ActivationError(RuntimeError):
@@ -41,22 +43,58 @@ def _identity(payload: dict[str, Any], source: Path) -> dict[str, str]:
     return identity
 
 
-def _link_version(path: Path) -> str | None:
-    if not path.exists() and not path.is_symlink():
+def _selector_json_path(path: Path) -> Path:
+    return path.with_name(f"{path.name}.json")
+
+
+def _valid_graph_version(value: object) -> str | None:
+    if (
+        not isinstance(value, str)
+        or not _GRAPH_VERSION_RE.fullmatch(value)
+        or value.startswith(".")
+    ):
         return None
-    if not path.is_symlink():
-        raise ActivationError(f"Refusing to replace non-symlink selector: {path}")
-    target = Path(os.readlink(path))
-    if target.is_absolute() or len(target.parts) != 1 or target.name.startswith("."):
-        raise ActivationError(f"Selector has an unsafe target: {path}")
-    return target.name
+    return value
 
 
-def _replace_link(path: Path, graph_version: str) -> None:
-    temporary = path.parent / f".{path.name}.{os.getpid()}.tmp"
-    temporary.unlink(missing_ok=True)
-    os.symlink(graph_version, temporary)
-    os.replace(temporary, path)
+def _selector_version(path: Path) -> str | None:
+    selector_json = _selector_json_path(path)
+    legacy_exists = path.exists() or path.is_symlink()
+    json_exists = selector_json.exists()
+    if legacy_exists and json_exists:
+        raise ActivationError(f"Selector is ambiguous: {path}")
+    if legacy_exists:
+        if not path.is_symlink():
+            raise ActivationError(f"Refusing to replace non-symlink selector: {path}")
+        target = Path(os.readlink(path))
+        version = _valid_graph_version(target.name)
+        if target.is_absolute() or len(target.parts) != 1 or version is None:
+            raise ActivationError(f"Selector has an unsafe target: {path}")
+        return version
+    if json_exists:
+        payload = _read_json(selector_json)
+        version = _valid_graph_version(payload.get("graph_version"))
+        if version is None:
+            raise ActivationError(f"Selector has an unsafe target: {selector_json}")
+        return version
+    return None
+
+
+def _replace_selector(path: Path, graph_version: str) -> None:
+    if _valid_graph_version(graph_version) is None:
+        raise ActivationError(f"Selector target is invalid: {graph_version}")
+    selector_json = _selector_json_path(path)
+    if path.exists() or path.is_symlink():
+        if selector_json.exists():
+            raise ActivationError(f"Selector is ambiguous: {path}")
+        if not path.is_symlink():
+            raise ActivationError(f"Refusing to replace non-symlink selector: {path}")
+        temporary = path.parent / f".{path.name}.{os.getpid()}.tmp"
+        temporary.unlink(missing_ok=True)
+        os.symlink(graph_version, temporary)
+        os.replace(temporary, path)
+        return
+    _write_json_atomic(selector_json, {"graph_version": graph_version})
 
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
@@ -100,16 +138,16 @@ def activate(
         raise ActivationError(
             "Validation report sidecar identity does not match graph metadata."
         )
-    current = _link_version(graph_root / "active")
+    current = _selector_version(graph_root / "active")
     if current and current != graph_version:
-        _replace_link(graph_root / "previous", current)
-    _replace_link(graph_root / "active", graph_version)
+        _replace_selector(graph_root / "previous", current)
+    _replace_selector(graph_root / "active", graph_version)
     result = {
         "status": "activated",
         "active_graph_version": graph_version,
         "previous_graph_version": current
         if current != graph_version
-        else _link_version(graph_root / "previous"),
+        else _selector_version(graph_root / "previous"),
         "activated_at": datetime.now(UTC).isoformat(),
         "validation_report": str(validation_report.resolve()),
         "validation_report_sha256": hashlib.sha256(
@@ -123,14 +161,14 @@ def activate(
 
 def rollback(graph_root: Path) -> dict[str, Any]:
     graph_root = graph_root.resolve()
-    current = _link_version(graph_root / "active")
-    previous = _link_version(graph_root / "previous")
+    current = _selector_version(graph_root / "active")
+    previous = _selector_version(graph_root / "previous")
     if current is None or previous is None or not (graph_root / previous).is_dir():
         raise ActivationError(
             "No valid previous graph version is available for rollback."
         )
-    _replace_link(graph_root / "active", previous)
-    _replace_link(graph_root / "previous", current)
+    _replace_selector(graph_root / "active", previous)
+    _replace_selector(graph_root / "previous", current)
     result = {
         "status": "rolled_back",
         "active_graph_version": previous,

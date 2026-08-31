@@ -7,6 +7,7 @@ import sqlite3
 import subprocess
 import sys
 import zipfile
+from contextlib import closing
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
@@ -39,7 +40,7 @@ def _run_script(
 
 def test_backup_restore_preserves_railway_snapshot_data(tmp_path: Path) -> None:
     source = tmp_path / "source.sqlite3"
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection, connection:
         connection.execute(
             "CREATE TABLE rail_snapshot "
             "(id INTEGER PRIMARY KEY, graph_version TEXT, geometry_sha256 TEXT)"
@@ -53,19 +54,19 @@ def test_backup_restore_preserves_railway_snapshot_data(tmp_path: Path) -> None:
     _run_script("backup.py", source, str(backup))
 
     restored = tmp_path / "restored.sqlite3"
-    with sqlite3.connect(restored) as connection:
+    with closing(sqlite3.connect(restored)) as connection, connection:
         connection.execute("CREATE TABLE old_data (value TEXT)")
         connection.execute("INSERT INTO old_data VALUES ('safety copy')")
     _run_script("restore.py", restored, str(backup), "--yes")
 
-    with sqlite3.connect(restored) as connection:
+    with closing(sqlite3.connect(restored)) as connection:
         assert connection.execute(
             "SELECT graph_version, geometry_sha256 FROM rail_snapshot"
         ).fetchone() == ("china-20260815-r3.1", "a" * 64)
         assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
     safety_copies = list(tmp_path.glob("restored.sqlite3.pre-restore-*.bak"))
     assert len(safety_copies) == 1
-    with sqlite3.connect(safety_copies[0]) as connection:
+    with closing(sqlite3.connect(safety_copies[0])) as connection:
         assert connection.execute("SELECT value FROM old_data").fetchone() == (
             "safety copy",
         )
@@ -73,7 +74,7 @@ def test_backup_restore_preserves_railway_snapshot_data(tmp_path: Path) -> None:
 
 def test_restore_rejects_checksum_tampering(tmp_path: Path) -> None:
     source = tmp_path / "source.sqlite3"
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection, connection:
         connection.execute("CREATE TABLE proof (value TEXT)")
         connection.execute("INSERT INTO proof VALUES ('original')")
     backup = tmp_path / "backup.zip"
@@ -94,9 +95,23 @@ def test_restore_rejects_checksum_tampering(tmp_path: Path) -> None:
     assert not target.exists()
 
 
+def test_backup_refuses_to_overwrite_existing_archive(tmp_path: Path) -> None:
+    source = tmp_path / "source.sqlite3"
+    with closing(sqlite3.connect(source)) as connection, connection:
+        connection.execute("CREATE TABLE proof (value TEXT)")
+    backup = tmp_path / "backup.zip"
+    backup.write_bytes(b"keep-me")
+
+    result = _run_script("backup.py", source, str(backup), check=False)
+
+    assert result.returncode != 0
+    assert "拒绝覆盖" in result.stderr
+    assert backup.read_bytes() == b"keep-me"
+
+
 def test_restore_accepts_legacy_metro2fog_backup(tmp_path: Path) -> None:
     source = tmp_path / "legacy.sqlite3"
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection, connection:
         connection.execute("CREATE TABLE legacy_proof (value TEXT)")
         connection.execute("INSERT INTO legacy_proof VALUES ('kept')")
     checksum = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -116,7 +131,7 @@ def test_restore_accepts_legacy_metro2fog_backup(tmp_path: Path) -> None:
     restored = tmp_path / "restored.sqlite3"
     _run_script("restore.py", restored, str(backup), "--yes")
 
-    with sqlite3.connect(restored) as connection:
+    with closing(sqlite3.connect(restored)) as connection:
         assert connection.execute("SELECT value FROM legacy_proof").fetchone() == (
             "kept",
         )

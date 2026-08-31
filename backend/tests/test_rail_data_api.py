@@ -183,7 +183,9 @@ def _seed_next_rail_dataset(
 def test_active_graph_pointer_resolves_to_immutable_version(tmp_path: Path) -> None:
     graph_version = "china-20260815-r3.1"
     _write_graph_metadata(tmp_path, graph_version)
-    (tmp_path / "active").symlink_to(graph_version, target_is_directory=True)
+    (tmp_path / "active.json").write_text(
+        json.dumps({"graph_version": graph_version}), encoding="utf-8"
+    )
 
     metadata = load_graph_metadata(tmp_path, "active")
 
@@ -205,8 +207,8 @@ def test_active_graph_pointer_cannot_escape_graph_root(tmp_path: Path) -> None:
     nested_root = tmp_path / "nested"
     nested_root.mkdir()
     _write_graph_metadata(nested_root, "outside")
-    (tmp_path / "active").symlink_to(
-        Path("nested") / "outside", target_is_directory=True
+    (tmp_path / "active.json").write_text(
+        json.dumps({"graph_version": "nested/outside"}), encoding="utf-8"
     )
 
     with pytest.raises(RailImportError, match="超出图数据目录"):
@@ -381,7 +383,7 @@ def test_rail_status_degrades_without_blocking_api(
     monkeypatch.setattr("app.api.rail_data.fetch_sidecar_info", unavailable)
 
     rail_response = client.get("/api/v1/rail/data/status")
-    health_response = client.get("/health")
+    health_response = client.get("/healthz")
 
     assert rail_response.status_code == 200
     assert rail_response.json()["status"] == "unavailable"

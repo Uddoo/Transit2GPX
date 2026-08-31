@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import tempfile
 import zipfile
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -32,12 +33,14 @@ def main() -> None:
     if not source.is_file():
         raise SystemExit(f"数据库不存在：{source}")
     output = args.output.expanduser().resolve()
+    if output.exists():
+        raise SystemExit(f"备份目标已存在，拒绝覆盖：{output}")
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="transit2fog-backup-") as temp_dir:
         snapshot = Path(temp_dir) / "transit2fog.sqlite3"
         with (
-            sqlite3.connect(source) as source_db,
-            sqlite3.connect(snapshot) as target_db,
+            closing(sqlite3.connect(source)) as source_db,
+            closing(sqlite3.connect(snapshot)) as target_db,
         ):
             source_db.backup(target_db)
         checksum = hashlib.sha256(snapshot.read_bytes()).hexdigest()

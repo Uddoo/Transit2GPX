@@ -72,19 +72,56 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _active_graph_path(graph_root: Path) -> Path:
+    legacy_selector = graph_root / "active"
+    json_selector = graph_root / "active.json"
+    legacy_exists = legacy_selector.exists() or legacy_selector.is_symlink()
+    json_exists = json_selector.exists()
+    if legacy_exists and json_exists:
+        raise RailImportError("铁路 active 图版本指针存在冲突。")
+    if legacy_exists:
+        if not legacy_selector.is_symlink():
+            raise RailImportError("铁路 active 图版本指针不是受支持的 selector。")
+        try:
+            resolved = legacy_selector.resolve(strict=True)
+        except OSError as error:
+            raise RailImportError("铁路 active 图版本指针已经失效。") from error
+    elif json_exists:
+        try:
+            selector_payload: Any = json.loads(
+                json_selector.read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError) as error:
+            raise RailImportError("铁路 active 图版本指针不是有效 JSON。") from error
+        version = (
+            selector_payload.get("graph_version")
+            if isinstance(selector_payload, dict)
+            else None
+        )
+        if (
+            not isinstance(version, str)
+            or not _GRAPH_VERSION_RE.fullmatch(version)
+            or version.startswith(".")
+        ):
+            raise RailImportError("铁路 active 图版本指针超出图数据目录。")
+        resolved = (graph_root / version).resolve(strict=False)
+        if not resolved.is_dir():
+            raise RailImportError("铁路 active 图版本指针已经失效。")
+    else:
+        raise RailImportError("铁路 active 图版本指针不存在。")
+    if resolved.parent != graph_root.resolve():
+        raise RailImportError("铁路 active 图版本指针超出图数据目录。")
+    return resolved
+
+
 def load_graph_metadata(graph_root: Path, graph_version: str) -> dict[str, Any]:
     if not _GRAPH_VERSION_RE.fullmatch(graph_version):
         raise RailImportError("铁路图版本名包含不允许的字符。")
-    graph_path = graph_root / graph_version
-    if graph_version == "active" and not graph_path.is_symlink():
-        raise RailImportError("铁路 active 图版本指针不存在或不是符号链接。")
-    if graph_version == "active":
-        try:
-            resolved_graph_path = graph_path.resolve(strict=True)
-        except OSError as error:
-            raise RailImportError("铁路 active 图版本指针已经失效。") from error
-        if resolved_graph_path.parent != graph_root.resolve():
-            raise RailImportError("铁路 active 图版本指针超出图数据目录。")
+    graph_path = (
+        _active_graph_path(graph_root)
+        if graph_version == "active"
+        else graph_root / graph_version
+    )
     metadata_path = graph_path / "transit2fog-graph.json"
     if not metadata_path.exists():
         metadata_path = graph_path / "metro2fog-graph.json"

@@ -55,9 +55,9 @@ echo "项目：$project_dir"
 echo
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-  pass "macOS：当前首个支持平台"
+  pass "macOS：受支持的 POSIX 运行平台"
 else
-  warn "当前系统为 $(uname -s)；项目首先在 macOS 上验收"
+  warn "当前系统为 $(uname -s)；此脚本面向 macOS，Windows 请使用 transit2fog.ps1"
 fi
 
 if command -v uv >/dev/null 2>&1; then
@@ -168,8 +168,19 @@ if [[ "$rail_mode" == true ]]; then
   else
     warn "sidecar JAR 尚未构建；首次使用执行 make rail-bootstrap"
   fi
-  if [[ -L "$rail_graph_root/active" ]]; then
+  if [[ -L "$rail_graph_root/active" && ! -e "$rail_graph_root/active.json" ]]; then
     pass "已激活铁路图：$(readlink "$rail_graph_root/active")"
+  elif [[ -f "$rail_graph_root/active.json" && ! -e "$rail_graph_root/active" ]]; then
+    active_version="$(python3 - "$rail_graph_root/active.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(payload.get("graph_version", "invalid"))
+PY
+)"
+    pass "已激活铁路图：$active_version"
   else
     warn "尚未发现 active 铁路图；完成构建和固定样本验证后再激活"
   fi

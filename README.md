@@ -59,6 +59,7 @@ GPX 1.1（WGS‑84）
 - [关键设计决策](docs/DECISIONS.md)：已确定方案、理由与代价。
 - [视觉与交互设计系统](docs/DESIGN_SYSTEM.md)：概念图、tokens、组件和响应式规则。
 - [开发与运行](docs/DEVELOPMENT.md)：安装、开发、生产启动和质量检查。
+- [Windows 原生运行](docs/WINDOWS.md)：PowerShell 7 命令、路径写法、铁路环境与故障排查。
 - [交付路线图](docs/ROADMAP.md)：当前进度、实施阶段、测试矩阵与完成标准。
 - [已知限制](docs/KNOWN_LIMITATIONS.md)：当前验收缺口和发布前待办。
 - [v1.0 验收审计](docs/V1_AUDIT.md)：逐条完成状态、测试证据与最后外部阻断项。
@@ -68,16 +69,25 @@ GPX 1.1（WGS‑84）
 
 ## 10 分钟地铁上手
 
-这条路径面向第一次使用项目的人；“10 分钟”不包含第三方数据和依赖的网络下载时间。当前首个支持平台是 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。
+这条路径面向第一次使用项目的人；“10 分钟”不包含第三方数据和依赖的网络下载时间。当前支持 Windows 10/11 x64 与 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。Windows 还需要 PowerShell 7；不要求 WSL、Git Bash 或 GNU Make。
 
 ### 1. 检查并安装环境
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 doctor
+.\transit2fog.ps1 setup
+```
+
+macOS：
 
 ```bash
 make doctor
 make setup
 ```
 
-`make doctor` 只检查环境，不下载或修改数据；`make setup` 根据锁文件安装 Python 和前端依赖。
+`doctor` 只检查环境，不下载或修改数据；`setup` 根据锁文件安装 Python 和前端依赖。
 
 ### 2. 获取一份地铁数据
 
@@ -91,6 +101,14 @@ make setup
 不要只复制 `.shp`。每组 Shapefile 必须同时保留同名的 `.shx`、`.dbf`、`.prj`；文件可以位于所选目录的任意子层级。
 
 ### 3. 启动并导入
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 dev
+```
+
+macOS：
 
 ```bash
 make dev
@@ -108,7 +126,7 @@ make dev
 3. 保存后打开“导出”，先用少量行程生成 journey GPX 抽检，再按需生成 coverage GPX。
 4. 将 GPX 导入目标轨迹应用，确认轨迹没有错误直线或明显跳点；例如可使用《世界迷雾》。
 
-生产模式使用 `make start`，由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](docs/DEVELOPMENT.md)。
+生产模式在 Windows 使用 `.\transit2fog.ps1 start`，在 macOS 使用 `make start`；二者都由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](docs/DEVELOPMENT.md)。
 
 ## 铁路最短可用路径
 
@@ -127,6 +145,17 @@ make dev
 
 先检查核心和铁路环境：
 
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 setup
+.\transit2fog.ps1 setup-java
+.\transit2fog.ps1 doctor-rail
+.\transit2fog.ps1 rail-bootstrap
+```
+
+macOS：
+
 ```bash
 make setup
 make doctor-rail
@@ -135,12 +164,30 @@ make rail-bootstrap
 
 选择长三角轻量图：
 
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 rail-yangtze-data
+.\transit2fog.ps1 rail-yangtze-graph
+```
+
+macOS：
+
 ```bash
 make rail-yangtze-data
 make rail-yangtze-graph
 ```
 
 或者选择全国完整图：
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 rail-china-data
+.\transit2fog.ps1 rail-china-graph
+```
+
+macOS：
 
 ```bash
 make rail-china-data
@@ -153,6 +200,19 @@ make rail-china-graph
 
 长三角路径：
 
+Windows PowerShell 7：
+
+```powershell
+# 终端 A
+.\transit2fog.ps1 rail-yangtze-start
+
+# 终端 B
+.\transit2fog.ps1 rail-yangtze-activate
+.\transit2fog.ps1 dev-rail
+```
+
+macOS：
+
 ```bash
 # 终端 A：保持 sidecar 运行
 make rail-yangtze-start
@@ -164,6 +224,19 @@ make dev-rail
 
 全国路径只需替换命令名：
 
+Windows PowerShell 7：
+
+```powershell
+# 终端 A
+.\transit2fog.ps1 rail-china-start
+
+# 终端 B
+.\transit2fog.ps1 rail-china-activate
+.\transit2fog.ps1 dev-rail
+```
+
+macOS：
+
 ```bash
 # 终端 A
 make rail-china-start
@@ -173,9 +246,19 @@ make rail-china-activate
 make dev-rail
 ```
 
-`*-activate` 会先运行对应的固定样本验证，再原子切换 `active`。已经验证并激活过同一图版本时，终端 B 可直接运行 `make dev-rail`。应用位于 `http://127.0.0.1:5173`；sidecar 只监听 `127.0.0.1:8989`，不要直接暴露给局域网。完整的版本锁定、区域图、自定义 PBF 和回滚说明见 [`rail-routing/README.md`](rail-routing/README.md)。
+`*-activate` 会先运行对应的固定样本验证，再原子切换 `active`。Windows 使用无需管理员或开发者模式的原子 JSON selector，既有 macOS 符号链接 selector 仍可读取。已经验证并激活过同一图版本时，终端 B 可直接运行 `dev-rail`。应用位于 `http://127.0.0.1:5173`；sidecar 只监听 `127.0.0.1:8989`，不要直接暴露给局域网。完整的版本锁定、区域图、自定义 PBF 和回滚说明见 [`rail-routing/README.md`](rail-routing/README.md)。
 
 如果已有图位于旧验收目录或其他自定义位置，请在两个终端先设置相同路径，再运行上述命令；`make doctor-rail` 会显示它实际检查到的 JAR 和 `active` 图：
+
+Windows PowerShell 7：
+
+```powershell
+$env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
+$env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
+.\transit2fog.ps1 doctor-rail
+```
+
+macOS：
 
 ```bash
 export RAIL_WORK_DIR=/absolute/path/to/rail-work

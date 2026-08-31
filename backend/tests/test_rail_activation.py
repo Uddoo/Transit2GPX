@@ -47,6 +47,11 @@ def _run(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _selector(root: Path, name: str) -> str:
+    payload = json.loads((root / f"{name}.json").read_text(encoding="utf-8"))
+    return str(payload["graph_version"])
+
+
 def test_graph_activation_is_atomic_and_can_roll_back(tmp_path: Path) -> None:
     first_report = _prepare_version(tmp_path, "china-v1", "a")
     second_report = _prepare_version(tmp_path, "china-v2", "b")
@@ -68,14 +73,14 @@ def test_graph_activation_is_atomic_and_can_roll_back(tmp_path: Path) -> None:
 
     assert first.returncode == 0, first.stderr
     assert second.returncode == 0, second.stderr
-    assert (tmp_path / "active").readlink() == Path("china-v2")
-    assert (tmp_path / "previous").readlink() == Path("china-v1")
+    assert _selector(tmp_path, "active") == "china-v2"
+    assert _selector(tmp_path, "previous") == "china-v1"
 
     rolled_back = _run(tmp_path, "rollback")
 
     assert rolled_back.returncode == 0, rolled_back.stderr
-    assert (tmp_path / "active").readlink() == Path("china-v1")
-    assert (tmp_path / "previous").readlink() == Path("china-v2")
+    assert _selector(tmp_path, "active") == "china-v1"
+    assert _selector(tmp_path, "previous") == "china-v2"
 
 
 def test_graph_activation_rejects_mismatched_sidecar_identity(tmp_path: Path) -> None:
@@ -94,7 +99,7 @@ def test_graph_activation_rejects_mismatched_sidecar_identity(tmp_path: Path) ->
 
     assert result.returncode != 0
     assert "identity does not match" in result.stderr
-    assert not (tmp_path / "active").exists()
+    assert not (tmp_path / "active.json").exists()
 
 
 def test_graph_activation_accepts_legacy_metadata_filename(tmp_path: Path) -> None:
@@ -111,4 +116,4 @@ def test_graph_activation_accepts_legacy_metadata_filename(tmp_path: Path) -> No
     )
 
     assert result.returncode == 0, result.stderr
-    assert (tmp_path / "active").readlink() == Path("china-v1")
+    assert _selector(tmp_path, "active") == "china-v1"

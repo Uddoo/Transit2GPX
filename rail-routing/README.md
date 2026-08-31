@@ -16,6 +16,16 @@ downloaded into the ignored work directory and verified with SHA-512.
 Set `RAIL_JAVA_HOME` when the system default Java is not the version intended
 for a reproducible build; Java 21 is the currently verified runtime.
 
+The commands below use the macOS Makefile form. On Windows PowerShell 7, use
+the same target name after `.\transit2fog.ps1`; for example,
+`.\transit2fog.ps1 doctor-rail` and `.\transit2fog.ps1 rail-bootstrap`.
+The Windows bootstrap uses `mvn.cmd`, `git apply`, native archive/hash APIs,
+and does not require WSL, Git Bash, GNU Make, `patch`, or `shasum`.
+`.\transit2fog.ps1 setup-java` installs the pinned project-local Temurin 21
+archive after SHA-256 verification without changing system environment
+variables. `.\transit2fog.ps1 rail-fixture-verify` starts the fixture sidecar,
+checks routing and both metadata endpoints, and then verifies port cleanup.
+
 Run the preflight check before downloading or building anything:
 
 ```sh
@@ -72,6 +82,14 @@ build it into a new immutable graph directory:
 ./scripts/rail_start.sh region-YYYYMMDD /absolute/path/region.osm.pbf
 ```
 
+Windows equivalent:
+
+```powershell
+.\transit2fog.ps1 rail-build-graph `
+  -PbfPath 'D:\Rail\region.osm.pbf' `
+  -GraphVersion 'region-YYYYMMDD'
+```
+
 The build refuses to overwrite an existing version. A successful import is
 first created in a temporary sibling directory and moved into place only after
 OpenRailRouting exits successfully.
@@ -95,9 +113,11 @@ make dev-rail
 ```
 
 Activation refuses a report whose graph/PBF/Profile/commit identity differs
-from the immutable graph metadata. It atomically updates safe relative
-`active` and `previous` symlinks. Roll back to the previously validated graph
-with:
+from the immutable graph metadata. New activations atomically update
+`active.json` and `previous.json`, whose values are restricted to a safe,
+single graph-version name. Existing safe relative `active` and `previous`
+symlinks remain supported for compatibility. The JSON form avoids Windows
+symlink privilege requirements. Roll back to the previously validated graph with:
 
 ```sh
 make rail-rollback
