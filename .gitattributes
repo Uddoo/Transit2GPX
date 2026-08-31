@@ -2,3 +2,5 @@
 *.sh text eol=lf
 *.ps1 text eol=crlf
 uv.lock text eol=lf
+frontend/openapi.json text eol=lf
+frontend/src/api/generated.ts text eol=lf
