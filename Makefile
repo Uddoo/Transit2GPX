@@ -1,6 +1,7 @@
-.PHONY: doctor doctor-rail setup dev dev-rail build start check backend-check frontend-check test e2e db-upgrade backup validate-real-data rail-bootstrap rail-fixture rail-fixture-start rail-fixture-smoke rail-yangtze-data rail-yangtze-graph rail-yangtze-start rail-yangtze-validate rail-yangtze-activate rail-china-data rail-china-graph rail-china-start rail-china-validate rail-china-activate rail-rollback clean
+.PHONY: doctor doctor-rail setup dev dev-rail build start start-rail package check backend-check frontend-check test e2e db-upgrade backup validate-real-data rail-bootstrap rail-fixture rail-fixture-start rail-fixture-smoke rail-yangtze-data rail-yangtze-graph rail-yangtze-start rail-yangtze-validate rail-yangtze-activate rail-china-data rail-china-graph rail-china-start rail-china-validate rail-china-activate rail-rollback clean
 
 RAIL_GRAPH_ROOT ?= $(CURDIR)/data/rail-routing/graphs
+PROJECT_TASK = uv run --project backend python scripts/project.py
 
 doctor:
 	./scripts/doctor.sh
@@ -9,55 +10,50 @@ doctor-rail:
 	./scripts/doctor.sh --rail
 
 setup:
-	uv sync --project backend --dev
-	npm ci --prefix frontend
+	$(PROJECT_TASK) setup
 
-dev: db-upgrade
-	./scripts/dev.sh
+dev:
+	$(PROJECT_TASK) dev
 
-dev-rail: db-upgrade
-	TRANSIT2FOG_RAIL_ENABLED=true \
-	TRANSIT2FOG_RAIL_GRAPH_VERSION=active \
-	TRANSIT2FOG_RAIL_GRAPH_ROOT="$(RAIL_GRAPH_ROOT)" \
-	TRANSIT2FOG_RAIL_SIDECAR_URL=http://127.0.0.1:8989 \
-	./scripts/dev.sh
+dev-rail:
+	RAIL_GRAPH_ROOT="$(RAIL_GRAPH_ROOT)" $(PROJECT_TASK) dev --rail
 
 build:
-	npm run build --prefix frontend
+	$(PROJECT_TASK) build
 
-start: build db-upgrade
-	./scripts/start.sh
+start:
+	$(PROJECT_TASK) start
+
+start-rail:
+	RAIL_GRAPH_ROOT="$(RAIL_GRAPH_ROOT)" $(PROJECT_TASK) start --rail
+
+package:
+	$(PROJECT_TASK) package $(if $(SIDECAR_JAR),--sidecar-jar "$(SIDECAR_JAR)",)
 
 check:
-	./scripts/check.sh
+	$(PROJECT_TASK) check
 
 backend-check:
-	uv run --project backend ruff check backend/app backend/tests backend/migrations scripts
-	uv run --project backend ruff format --check backend/app backend/tests backend/migrations scripts
-	uv run --project backend mypy backend/app
-	uv run --project backend pytest backend/tests --cov=backend/app --cov-report=term-missing
+	$(PROJECT_TASK) backend-check
 
 frontend-check:
-	npm run lint --prefix frontend
-	npm run test --prefix frontend
-	npm run build --prefix frontend
+	$(PROJECT_TASK) frontend-check
 
 test:
-	uv run --project backend pytest backend/tests
-	npm run test --prefix frontend
+	$(PROJECT_TASK) test
 
-e2e: build
-	npm run test:e2e --prefix frontend
+e2e:
+	$(PROJECT_TASK) e2e
 
 db-upgrade:
-	cd backend && uv run alembic upgrade head
+	$(PROJECT_TASK) db-upgrade
 
 backup:
-	uv run --project backend python scripts/backup.py transit2fog-backup.zip
+	$(PROJECT_TASK) backup --output transit2fog-backup.zip
 
 validate-real-data:
 	@test -n "$(CPTOND_DIR)" || (echo "请设置 CPTOND_DIR=/absolute/path" && exit 2)
-	uv run --project backend python scripts/validate_cptond.py "$(CPTOND_DIR)"
+	$(PROJECT_TASK) validate-real-data --cptond-dir "$(CPTOND_DIR)"
 
 rail-bootstrap:
 	./scripts/rail_bootstrap.sh

@@ -11,6 +11,8 @@ param(
         'dev-rail',
         'build',
         'start',
+        'start-rail',
+        'package',
         'check',
         'backend-check',
         'frontend-check',
@@ -42,6 +44,8 @@ param(
 
     [string]$CptondDir,
     [string]$OutputPath = 'transit2fog-backup.zip',
+    [string]$PackageOutputPath = 'release\packages',
+    [string]$SidecarJar,
     [string]$PbfPath,
     [string]$GraphVersion
 )
@@ -67,6 +71,7 @@ Transit2Fog Windows 原生命令入口（PowerShell 7）
   .\transit2fog.ps1 dev
   .\transit2fog.ps1 build
   .\transit2fog.ps1 start
+  .\transit2fog.ps1 package
   .\transit2fog.ps1 check
   .\transit2fog.ps1 e2e
 
@@ -455,125 +460,70 @@ function Invoke-Doctor {
     Write-Host "检查完成：无失败，$warnings 项提醒。"
 }
 
-function Invoke-Setup {
-    $uv = Get-RequiredCommand 'uv'
-    $npm = Get-RequiredCommand 'npm'
-    Invoke-Native $uv @('sync', '--project', $script:BackendDir, '--dev')
-    Invoke-Native $npm @('ci', '--prefix', $script:FrontendDir)
-}
+function Invoke-ProjectTask {
+    param([Parameter(Mandatory)][string[]]$Arguments)
 
-function Invoke-DbUpgrade {
-    $uv = Get-RequiredCommand 'uv'
-    Invoke-Native $uv @('run', 'alembic', 'upgrade', 'head') $script:BackendDir
-}
-
-function Invoke-Build {
-    $npm = Get-RequiredCommand 'npm'
-    Invoke-Native $npm @('run', 'build', '--prefix', $script:FrontendDir)
-}
-
-function Invoke-BackendCheck {
     $uv = Get-RequiredCommand 'uv'
     Invoke-Native $uv @(
         'run', '--project', $script:BackendDir,
-        'ruff', 'check',
-        (Join-Path $script:BackendDir 'app'),
-        (Join-Path $script:BackendDir 'tests'),
-        (Join-Path $script:BackendDir 'migrations'),
-        (Join-Path $script:ProjectDir 'scripts')
+        'python', (Join-Path $script:ProjectDir 'scripts\project.py'),
+        $Arguments
     )
-    Invoke-Native $uv @(
-        'run', '--project', $script:BackendDir,
-        'ruff', 'format', '--check',
-        (Join-Path $script:BackendDir 'app'),
-        (Join-Path $script:BackendDir 'tests'),
-        (Join-Path $script:BackendDir 'migrations'),
-        (Join-Path $script:ProjectDir 'scripts')
-    )
-    Invoke-Native $uv @(
-        'run', '--project', $script:BackendDir,
-        'mypy', (Join-Path $script:BackendDir 'app')
-    )
-    Invoke-Native $uv @(
-        'run', '--project', $script:BackendDir,
-        'pytest', (Join-Path $script:BackendDir 'tests'),
-        '--cov=backend/app', '--cov-report=term-missing'
-    ) $script:ProjectDir
 }
 
-function Invoke-FrontendCheck {
-    $npm = Get-RequiredCommand 'npm'
-    Invoke-Native $npm @('run', 'lint', '--prefix', $script:FrontendDir)
-    Invoke-Native $npm @('run', 'test', '--prefix', $script:FrontendDir)
-    Invoke-Native $npm @('run', 'build', '--prefix', $script:FrontendDir)
-}
+function Invoke-Setup { Invoke-ProjectTask @('setup') }
 
-function Invoke-Tests {
-    $uv = Get-RequiredCommand 'uv'
-    $npm = Get-RequiredCommand 'npm'
-    Invoke-Native $uv @(
-        'run', '--project', $script:BackendDir,
-        'pytest', (Join-Path $script:BackendDir 'tests')
-    )
-    Invoke-Native $npm @('run', 'test', '--prefix', $script:FrontendDir)
-}
+function Invoke-DbUpgrade { Invoke-ProjectTask @('db-upgrade') }
 
-function Start-BackendProcess {
-    param([switch]$Rail)
+function Invoke-Build { Invoke-ProjectTask @('build') }
 
-    $uv = Get-RequiredCommand 'uv'
-    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = $uv
-    $startInfo.WorkingDirectory = $script:BackendDir
-    $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
-    foreach ($argument in @('run', 'python', '-m', 'app')) {
-        $null = $startInfo.ArgumentList.Add($argument)
-    }
-    $startInfo.Environment['TRANSIT2FOG_ENVIRONMENT'] = 'development'
-    if ($Rail) {
-        $startInfo.Environment['TRANSIT2FOG_RAIL_ENABLED'] = 'true'
-        $startInfo.Environment['TRANSIT2FOG_RAIL_GRAPH_VERSION'] = 'active'
-        $startInfo.Environment['TRANSIT2FOG_RAIL_GRAPH_ROOT'] = Get-RailGraphRoot
-        $startInfo.Environment['TRANSIT2FOG_RAIL_SIDECAR_URL'] = 'http://127.0.0.1:8989'
-    }
-    $process = [System.Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
-    if (-not $process.Start()) {
-        throw '无法启动 Transit2Fog 后端进程。'
-    }
-    return $process
-}
+function Invoke-BackendCheck { Invoke-ProjectTask @('backend-check') }
+
+function Invoke-FrontendCheck { Invoke-ProjectTask @('frontend-check') }
+
+function Invoke-Tests { Invoke-ProjectTask @('test') }
 
 function Invoke-Dev {
     param([switch]$Rail)
 
-    Invoke-DbUpgrade
-    $backend = Start-BackendProcess -Rail:$Rail
-    try {
-        Start-Sleep -Milliseconds 750
-        if ($backend.HasExited) {
-            throw "后端启动失败（退出码 $($backend.ExitCode)）。"
+    if ($Rail) {
+        Invoke-WithEnvironment @{ RAIL_GRAPH_ROOT = Get-RailGraphRoot } {
+            Invoke-ProjectTask @('dev', '--rail')
         }
-        $npm = Get-RequiredCommand 'npm'
-        Invoke-Native $npm @('run', 'dev') $script:FrontendDir
     }
-    finally {
-        if (-not $backend.HasExited) {
-            $backend.Kill($true)
-            $backend.WaitForExit(5000)
-        }
-        $backend.Dispose()
+    else {
+        Invoke-ProjectTask @('dev')
     }
 }
 
 function Invoke-Start {
-    Invoke-Build
-    Invoke-DbUpgrade
-    $uv = Get-RequiredCommand 'uv'
-    Invoke-WithEnvironment @{ TRANSIT2FOG_ENVIRONMENT = 'production' } {
-        Invoke-Native $uv @('run', 'python', '-m', 'app') $script:BackendDir
+    param([switch]$Rail)
+
+    if ($Rail) {
+        Invoke-WithEnvironment @{
+            RAIL_WORK_DIR = Get-RailWorkDir
+            RAIL_GRAPH_ROOT = Get-RailGraphRoot
+        } {
+            Invoke-ProjectTask @('start', '--rail')
+        }
     }
+    else {
+        Invoke-ProjectTask @('start')
+    }
+}
+
+function Invoke-Package {
+    $resolvedOutput = if ([System.IO.Path]::IsPathRooted($PackageOutputPath)) {
+        [System.IO.Path]::GetFullPath($PackageOutputPath)
+    }
+    else {
+        Join-Path $script:ProjectDir $PackageOutputPath
+    }
+    $arguments = @('package', '--output', $resolvedOutput)
+    if ($SidecarJar) {
+        $arguments += @('--sidecar-jar', (Resolve-Path -LiteralPath $SidecarJar).Path)
+    }
+    Invoke-ProjectTask $arguments
 }
 
 function Invoke-RailBootstrap {
@@ -962,35 +912,28 @@ switch ($Command) {
     'dev-rail' { Invoke-Dev -Rail }
     'build' { Invoke-Build }
     'start' { Invoke-Start }
-    'check' { Invoke-BackendCheck; Invoke-FrontendCheck }
+    'start-rail' { Invoke-Start -Rail }
+    'package' { Invoke-Package }
+    'check' { Invoke-ProjectTask @('check') }
     'backend-check' { Invoke-BackendCheck }
     'frontend-check' { Invoke-FrontendCheck }
     'test' { Invoke-Tests }
-    'e2e' {
-        Invoke-Build
-        $npm = Get-RequiredCommand 'npm'
-        Invoke-Native $npm @('run', 'test:e2e', '--prefix', $script:FrontendDir)
-    }
+    'e2e' { Invoke-ProjectTask @('e2e') }
     'db-upgrade' { Invoke-DbUpgrade }
     'backup' {
-        $uv = Get-RequiredCommand 'uv'
         $resolvedOutput = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
             [System.IO.Path]::GetFullPath($OutputPath)
         }
         else {
             Join-Path $script:ProjectDir $OutputPath
         }
-        Invoke-Native $uv @(
-            'run', '--project', $script:BackendDir, 'python',
-            (Join-Path $script:ProjectDir 'scripts\backup.py'), $resolvedOutput
-        )
+        Invoke-ProjectTask @('backup', '--output', $resolvedOutput)
     }
     'validate-real-data' {
         if (-not $CptondDir) { throw '请通过 -CptondDir 指定 CPTOND 数据目录。' }
-        $uv = Get-RequiredCommand 'uv'
-        Invoke-Native $uv @(
-            'run', '--project', $script:BackendDir, 'python',
-            (Join-Path $script:ProjectDir 'scripts\validate_cptond.py'),
+        Invoke-ProjectTask @(
+            'validate-real-data',
+            '--cptond-dir',
             (Resolve-Path -LiteralPath $CptondDir).Path
         )
     }
