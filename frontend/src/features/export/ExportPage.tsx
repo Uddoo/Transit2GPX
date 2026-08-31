@@ -23,7 +23,7 @@ export function ExportPage() {
   const [selectedJourneyIds, setSelectedJourneyIds] = useState<number[]>([]);
   const journeys = useQuery({
     queryKey: ["journeys"],
-    queryFn: ({ signal }) => fetchJourneys(signal),
+    queryFn: ({ signal }) => fetchJourneys({ limit: 500, signal }),
   });
   const cities = useMemo(
     () =>

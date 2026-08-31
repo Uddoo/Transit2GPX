@@ -159,17 +159,26 @@ function RailRecomputeDialog({
   );
 }
 
+const JOURNEY_PAGE_SIZE = 20;
+
 export function JourneysPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<Journey>();
   const [railRecompute, setRailRecompute] = useState<{
     journey: Journey;
     preview: RailRecomputePreview;
   }>();
   const journeys = useQuery({
-    queryKey: ["journeys"],
-    queryFn: ({ signal }) => fetchJourneys(signal),
+    queryKey: ["journeys", page],
+    queryFn: ({ signal }) =>
+      fetchJourneys({
+        limit: JOURNEY_PAGE_SIZE,
+        offset: page * JOURNEY_PAGE_SIZE,
+        signal,
+      }),
+    placeholderData: (previous) => previous,
   });
   const removeJourney = useMutation({
     mutationFn: deleteJourney,
@@ -238,7 +247,7 @@ export function JourneysPage() {
           type="search"
           value={filter}
         />
-        <span>{filteredItems.length} 条</span>
+        <span>本页 {filteredItems.length} 条</span>
       </label>
       {journeys.isPending ? <p className="panel-message">正在读取行程…</p> : null}
       {journeys.isError ? (
@@ -333,6 +342,32 @@ export function JourneysPage() {
             );
           })}
         </div>
+      ) : null}
+      {journeys.data && journeys.data.total > 0 ? (
+        <nav className="table-pagination" aria-label="行程分页">
+          <span>
+            第 {journeys.data.offset + 1}–
+            {journeys.data.offset + journeys.data.items.length} 条，共 {journeys.data.total} 条
+          </span>
+          <div>
+            <button
+              className="button button--secondary"
+              disabled={page === 0 || journeys.isFetching}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              type="button"
+            >
+              上一页
+            </button>
+            <button
+              className="button button--secondary"
+              disabled={!journeys.data.has_more || journeys.isFetching}
+              onClick={() => setPage((current) => current + 1)}
+              type="button"
+            >
+              下一页
+            </button>
+          </div>
+        </nav>
       ) : null}
       {filter && journeys.data?.items.length && filteredItems.length === 0 ? (
         <p className="panel-message">没有符合筛选条件的行程。</p>

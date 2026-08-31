@@ -1,0 +1,5155 @@
+{
+  "components": {
+    "schemas": {
+      "Body_create_import_batch_api_v1_import_batches_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_import_batch_api_v1_import_batches_post",
+        "type": "object"
+      },
+      "CityMapResponse": {
+        "properties": {
+          "bbox": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Bbox",
+            "type": "array"
+          },
+          "city_id": {
+            "title": "City Id",
+            "type": "integer"
+          },
+          "dataset_version_id": {
+            "title": "Dataset Version Id",
+            "type": "integer"
+          },
+          "lines": {
+            "$ref": "#/components/schemas/FeatureCollection"
+          },
+          "stations": {
+            "$ref": "#/components/schemas/FeatureCollection"
+          }
+        },
+        "required": [
+          "city_id",
+          "dataset_version_id",
+          "bbox",
+          "lines",
+          "stations"
+        ],
+        "title": "CityMapResponse",
+        "type": "object"
+      },
+      "CityResponse": {
+        "properties": {
+          "bbox": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Bbox",
+            "type": "array"
+          },
+          "center": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Center",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name_cn": {
+            "title": "Name Cn",
+            "type": "string"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          }
+        },
+        "required": [
+          "id",
+          "name_cn",
+          "name_en",
+          "center",
+          "bbox"
+        ],
+        "title": "CityResponse",
+        "type": "object"
+      },
+      "CommitRequest": {
+        "properties": {
+          "strategy": {
+            "default": "all",
+            "enum": [
+              "all",
+              "resolved_only"
+            ],
+            "title": "Strategy",
+            "type": "string"
+          }
+        },
+        "title": "CommitRequest",
+        "type": "object"
+      },
+      "DataStatusResponse": {
+        "properties": {
+          "blocked_lines": {
+            "title": "Blocked Lines",
+            "type": "integer"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "cities": {
+            "title": "Cities",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "dataset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "import_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Import Id"
+          },
+          "imported_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imported At"
+          },
+          "importer_schema_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Importer Schema Version"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
+          },
+          "processed_cities": {
+            "title": "Processed Cities",
+            "type": "integer"
+          },
+          "quality_status": {
+            "enum": [
+              "not_available",
+              "checking",
+              "ready",
+              "blocked"
+            ],
+            "title": "Quality Status",
+            "type": "string"
+          },
+          "ready_available": {
+            "title": "Ready Available",
+            "type": "boolean"
+          },
+          "ready_lines": {
+            "title": "Ready Lines",
+            "type": "integer"
+          },
+          "route_count": {
+            "title": "Route Count",
+            "type": "integer"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "status": {
+            "enum": [
+              "not_configured",
+              "importing",
+              "ready",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "stop_count": {
+            "title": "Stop Count",
+            "type": "integer"
+          },
+          "total_cities": {
+            "title": "Total Cities",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "ready_available",
+          "import_id",
+          "dataset",
+          "captured_at",
+          "license",
+          "source_url",
+          "checksum",
+          "importer_schema_version",
+          "cities",
+          "route_count",
+          "stop_count",
+          "total_cities",
+          "processed_cities",
+          "ready_lines",
+          "blocked_lines",
+          "imported_at",
+          "completed_at",
+          "error_code",
+          "error_message",
+          "quality_status"
+        ],
+        "title": "DataStatusResponse",
+        "type": "object"
+      },
+      "DatasetImportRequest": {
+        "properties": {
+          "directory": {
+            "title": "Directory",
+            "type": "string"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          }
+        },
+        "required": [
+          "directory"
+        ],
+        "title": "DatasetImportRequest",
+        "type": "object"
+      },
+      "DatasetImportResponse": {
+        "properties": {
+          "blocked_lines": {
+            "default": 0,
+            "title": "Blocked Lines",
+            "type": "integer"
+          },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "import_id": {
+            "title": "Import Id",
+            "type": "integer"
+          },
+          "processed_cities": {
+            "default": 0,
+            "title": "Processed Cities",
+            "type": "integer"
+          },
+          "ready_lines": {
+            "default": 0,
+            "title": "Ready Lines",
+            "type": "integer"
+          },
+          "route_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Count"
+          },
+          "status": {
+            "enum": [
+              "staging",
+              "checking",
+              "ready",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "stop_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Count"
+          },
+          "total_cities": {
+            "default": 0,
+            "title": "Total Cities",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "import_id",
+          "status"
+        ],
+        "title": "DatasetImportResponse",
+        "type": "object"
+      },
+      "ExportPreviewResponse": {
+        "properties": {
+          "blocking_errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocking Errors",
+            "type": "array"
+          },
+          "dataset_version_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Dataset Version Ids",
+            "type": "array"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "edge_count": {
+            "title": "Edge Count",
+            "type": "integer"
+          },
+          "journey_count": {
+            "title": "Journey Count",
+            "type": "integer"
+          },
+          "preview_token": {
+            "title": "Preview Token",
+            "type": "string"
+          },
+          "rail_dataset_version_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Rail Dataset Version Ids",
+            "type": "array"
+          },
+          "rail_graph_versions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rail Graph Versions",
+            "type": "array"
+          },
+          "segment_count": {
+            "title": "Segment Count",
+            "type": "integer"
+          },
+          "track_count": {
+            "title": "Track Count",
+            "type": "integer"
+          },
+          "unique_edge_count": {
+            "title": "Unique Edge Count",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "preview_token",
+          "journey_count",
+          "edge_count",
+          "unique_edge_count",
+          "distance_m",
+          "track_count",
+          "segment_count",
+          "dataset_version_ids",
+          "rail_dataset_version_ids",
+          "rail_graph_versions",
+          "blocking_errors",
+          "warnings"
+        ],
+        "title": "ExportPreviewResponse",
+        "type": "object"
+      },
+      "ExportRequest": {
+        "properties": {
+          "city_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "journey_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 5000,
+            "title": "Journey Ids",
+            "type": "array"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "max_segment_length_m": {
+            "anyOf": [
+              {
+                "enum": [
+                  15,
+                  25,
+                  50
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 25,
+            "title": "Max Segment Length M"
+          },
+          "mode": {
+            "default": "coverage",
+            "enum": [
+              "journeys",
+              "coverage"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "rail_max_segment_length_m": {
+            "anyOf": [
+              {
+                "enum": [
+                  100,
+                  200,
+                  500
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 200,
+            "title": "Rail Max Segment Length M"
+          },
+          "traveled_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled From"
+          },
+          "traveled_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled To"
+          }
+        },
+        "title": "ExportRequest",
+        "type": "object"
+      },
+      "FeatureCollection": {
+        "properties": {
+          "features": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "default": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "FeatureCollection",
+        "type": "object"
+      },
+      "GPXRequest": {
+        "properties": {
+          "city_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "journey_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 5000,
+            "title": "Journey Ids",
+            "type": "array"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "max_segment_length_m": {
+            "anyOf": [
+              {
+                "enum": [
+                  15,
+                  25,
+                  50
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 25,
+            "title": "Max Segment Length M"
+          },
+          "mode": {
+            "default": "coverage",
+            "enum": [
+              "journeys",
+              "coverage"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "preview_token": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Preview Token",
+            "type": "string"
+          },
+          "rail_max_segment_length_m": {
+            "anyOf": [
+              {
+                "enum": [
+                  100,
+                  200,
+                  500
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 200,
+            "title": "Rail Max Segment Length M"
+          },
+          "traveled_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled From"
+          },
+          "traveled_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled To"
+          }
+        },
+        "required": [
+          "preview_token"
+        ],
+        "title": "GPXRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "database": {
+            "const": "ok",
+            "title": "Database",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "database"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "ImportBatchResponse": {
+        "properties": {
+          "committed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "encoding": {
+            "title": "Encoding",
+            "type": "string"
+          },
+          "failed_rows": {
+            "title": "Failed Rows",
+            "type": "integer"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "resolved_rows": {
+            "title": "Resolved Rows",
+            "type": "integer"
+          },
+          "review_rows": {
+            "title": "Review Rows",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_rows": {
+            "title": "Total Rows",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "encoding",
+          "total_rows",
+          "resolved_rows",
+          "review_rows",
+          "failed_rows",
+          "status",
+          "created_at",
+          "committed_at"
+        ],
+        "title": "ImportBatchResponse",
+        "type": "object"
+      },
+      "ImportRowPatch": {
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "end_station": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Station"
+          },
+          "from_station": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Station"
+          },
+          "ignored": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ignored"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "metro",
+                  "rail"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "route_hint": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Hint"
+          },
+          "selected_candidate_id": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Candidate Id"
+          },
+          "start_station": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Station"
+          },
+          "to_station": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Station"
+          },
+          "train_no": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train No"
+          },
+          "train_type": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Type"
+          },
+          "travel_date": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Date"
+          },
+          "traveled_at": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled At"
+          },
+          "via_station": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via Station"
+          },
+          "via_stations": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via Stations"
+          }
+        },
+        "title": "ImportRowPatch",
+        "type": "object"
+      },
+      "ImportRowResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "matched_city_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched City Id"
+          },
+          "matched_end_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched End Station Id"
+          },
+          "matched_line_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Line Id"
+          },
+          "matched_rail_end_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Rail End Station Id"
+          },
+          "matched_rail_start_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Rail Start Station Id"
+          },
+          "matched_start_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Start Station Id"
+          },
+          "normalized": {
+            "additionalProperties": true,
+            "title": "Normalized",
+            "type": "object"
+          },
+          "raw": {
+            "additionalProperties": true,
+            "title": "Raw",
+            "type": "object"
+          },
+          "resolution_status": {
+            "title": "Resolution Status",
+            "type": "string"
+          },
+          "row_no": {
+            "title": "Row No",
+            "type": "integer"
+          },
+          "selected_candidate_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Candidate Id"
+          }
+        },
+        "required": [
+          "id",
+          "row_no",
+          "raw",
+          "normalized",
+          "resolution_status",
+          "matched_city_id",
+          "matched_line_id",
+          "matched_start_station_id",
+          "matched_end_station_id",
+          "matched_rail_start_station_id",
+          "matched_rail_end_station_id",
+          "selected_candidate_id",
+          "candidates",
+          "error_code",
+          "error_message"
+        ],
+        "title": "ImportRowResponse",
+        "type": "object"
+      },
+      "ImportRowsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRowResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ImportRowsResponse",
+        "type": "object"
+      },
+      "JourneyCreate": {
+        "properties": {
+          "journey_code": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Code"
+          },
+          "legs": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "metro": "#/components/schemas/MetroJourneyLegCreate",
+                  "rail": "#/components/schemas/RailJourneyLegCreate"
+                },
+                "propertyName": "mode"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/MetroJourneyLegCreate"
+                },
+                {
+                  "$ref": "#/components/schemas/RailJourneyLegCreate"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Legs",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_type": {
+            "default": "manual",
+            "enum": [
+              "manual",
+              "map",
+              "csv"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "traveled_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled At"
+          }
+        },
+        "required": [
+          "legs"
+        ],
+        "title": "JourneyCreate",
+        "type": "object"
+      },
+      "JourneyLegResponse": {
+        "properties": {
+          "candidate_digest": {
+            "title": "Candidate Digest",
+            "type": "string"
+          },
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "dataset_version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Version Id"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "edge_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Edge Ids",
+            "type": "array"
+          },
+          "end_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Station Id"
+          },
+          "end_station_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Station Name"
+          },
+          "graph_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Version"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "leg_no": {
+            "title": "Leg No",
+            "type": "integer"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "line_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Name"
+          },
+          "osm_way_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Osm Way Ids",
+            "type": "array"
+          },
+          "rail_dataset_version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rail Dataset Version Id"
+          },
+          "resolution_status": {
+            "title": "Resolution Status",
+            "type": "string"
+          },
+          "reversed_edges": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Reversed Edges",
+            "type": "array"
+          },
+          "route_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Hint"
+          },
+          "route_variant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Variant Id"
+          },
+          "routing_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Profile"
+          },
+          "score_details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Score Details",
+            "type": "array"
+          },
+          "scoring_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scoring Version"
+          },
+          "start_station_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Station Id"
+          },
+          "start_station_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Station Name"
+          },
+          "timetable_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timetable Provider"
+          },
+          "train_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train No"
+          },
+          "train_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Type"
+          },
+          "transport_mode": {
+            "enum": [
+              "metro",
+              "rail"
+            ],
+            "title": "Transport Mode",
+            "type": "string"
+          },
+          "travel_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Date"
+          },
+          "via_station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Via Station Ids",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "leg_no",
+          "transport_mode",
+          "dataset_version_id",
+          "city_id",
+          "city_name",
+          "line_id",
+          "line_name",
+          "route_variant_id",
+          "start_station_id",
+          "start_station_name",
+          "end_station_id",
+          "end_station_name",
+          "direction",
+          "resolution_status",
+          "candidate_digest",
+          "edge_ids",
+          "reversed_edges",
+          "distance_m"
+        ],
+        "title": "JourneyLegResponse",
+        "type": "object"
+      },
+      "JourneyListResponse": {
+        "properties": {
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_more"
+        ],
+        "title": "JourneyListResponse",
+        "type": "object"
+      },
+      "JourneyPatch": {
+        "properties": {
+          "expected_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Updated At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "traveled_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled At"
+          }
+        },
+        "title": "JourneyPatch",
+        "type": "object"
+      },
+      "JourneyResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "journey_code": {
+            "title": "Journey Code",
+            "type": "string"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyLegResponse"
+            },
+            "title": "Legs",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "traveled_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "journey_code",
+          "traveled_at",
+          "source_type",
+          "note",
+          "created_at",
+          "updated_at",
+          "distance_m",
+          "legs"
+        ],
+        "title": "JourneyResponse",
+        "type": "object"
+      },
+      "LineResponse": {
+        "properties": {
+          "city_id": {
+            "title": "City Id",
+            "type": "integer"
+          },
+          "display_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Color"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name_cn": {
+            "title": "Name Cn",
+            "type": "string"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          }
+        },
+        "required": [
+          "id",
+          "city_id",
+          "name_cn",
+          "name_en",
+          "display_color"
+        ],
+        "title": "LineResponse",
+        "type": "object"
+      },
+      "MetroJourneyLegCreate": {
+        "properties": {
+          "candidate_digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Candidate Digest",
+            "type": "string"
+          },
+          "candidate_id": {
+            "maxLength": 160,
+            "minLength": 6,
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "city_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "City Id",
+            "type": "integer"
+          },
+          "direction": {
+            "default": "auto",
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Station Id",
+            "type": "integer"
+          },
+          "line_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Line Id",
+            "type": "integer"
+          },
+          "mode": {
+            "const": "metro",
+            "default": "metro",
+            "title": "Mode",
+            "type": "string"
+          },
+          "start_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Start Station Id",
+            "type": "integer"
+          },
+          "via_station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Via Station Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "city_id",
+          "line_id",
+          "start_station_id",
+          "end_station_id",
+          "candidate_id",
+          "candidate_digest"
+        ],
+        "title": "MetroJourneyLegCreate",
+        "type": "object"
+      },
+      "MetroPathPreviewRequest": {
+        "properties": {
+          "city_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "City Id",
+            "type": "integer"
+          },
+          "direction": {
+            "default": "auto",
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Station Id",
+            "type": "integer"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "mode": {
+            "const": "metro",
+            "default": "metro",
+            "title": "Mode",
+            "type": "string"
+          },
+          "start_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Start Station Id",
+            "type": "integer"
+          },
+          "via_station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Via Station Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "city_id",
+          "start_station_id",
+          "end_station_id"
+        ],
+        "title": "MetroPathPreviewRequest",
+        "type": "object"
+      },
+      "PathCandidateResponse": {
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "dataset_version_id": {
+            "title": "Dataset Version Id",
+            "type": "integer"
+          },
+          "digest": {
+            "title": "Digest",
+            "type": "string"
+          },
+          "direction_name": {
+            "title": "Direction Name",
+            "type": "string"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "edge_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Edge Ids",
+            "type": "array"
+          },
+          "geometry": {
+            "additionalProperties": true,
+            "title": "Geometry",
+            "type": "object"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/PathLegCandidateResponse"
+            },
+            "title": "Legs",
+            "type": "array"
+          },
+          "line_name": {
+            "title": "Line Name",
+            "type": "string"
+          },
+          "mode": {
+            "const": "metro",
+            "default": "metro",
+            "title": "Mode",
+            "type": "string"
+          },
+          "reversed_edges": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Reversed Edges",
+            "type": "array"
+          },
+          "route_variant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Variant Id"
+          },
+          "station_count": {
+            "title": "Station Count",
+            "type": "integer"
+          },
+          "station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Station Ids",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "digest",
+          "dataset_version_id",
+          "route_variant_id",
+          "line_name",
+          "direction_name",
+          "distance_m",
+          "station_count",
+          "station_ids",
+          "edge_ids",
+          "reversed_edges",
+          "geometry",
+          "warnings",
+          "legs"
+        ],
+        "title": "PathCandidateResponse",
+        "type": "object"
+      },
+      "PathLegCandidateResponse": {
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "dataset_version_id": {
+            "title": "Dataset Version Id",
+            "type": "integer"
+          },
+          "digest": {
+            "title": "Digest",
+            "type": "string"
+          },
+          "direction_name": {
+            "title": "Direction Name",
+            "type": "string"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "edge_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Edge Ids",
+            "type": "array"
+          },
+          "end_station_id": {
+            "title": "End Station Id",
+            "type": "integer"
+          },
+          "line_id": {
+            "title": "Line Id",
+            "type": "integer"
+          },
+          "line_name": {
+            "title": "Line Name",
+            "type": "string"
+          },
+          "reversed_edges": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Reversed Edges",
+            "type": "array"
+          },
+          "route_variant_id": {
+            "title": "Route Variant Id",
+            "type": "integer"
+          },
+          "start_station_id": {
+            "title": "Start Station Id",
+            "type": "integer"
+          },
+          "station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Station Ids",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "digest",
+          "dataset_version_id",
+          "line_id",
+          "route_variant_id",
+          "line_name",
+          "direction_name",
+          "distance_m",
+          "start_station_id",
+          "end_station_id",
+          "station_ids",
+          "edge_ids",
+          "reversed_edges",
+          "warnings"
+        ],
+        "title": "PathLegCandidateResponse",
+        "type": "object"
+      },
+      "PathPreviewRequest": {
+        "discriminator": {
+          "mapping": {
+            "metro": "#/components/schemas/MetroPathPreviewRequest",
+            "rail": "#/components/schemas/RailPathPreviewRequest"
+          },
+          "propertyName": "mode"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/MetroPathPreviewRequest"
+          },
+          {
+            "$ref": "#/components/schemas/RailPathPreviewRequest"
+          }
+        ],
+        "title": "PathPreviewRequest"
+      },
+      "PathPreviewResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PathCandidateResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/RailPathCandidateResponse"
+                }
+              ]
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "resolved",
+              "needs_review",
+              "unresolved"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "candidates"
+        ],
+        "title": "PathPreviewResponse",
+        "type": "object"
+      },
+      "PublicConfigResponse": {
+        "properties": {
+          "map": {
+            "$ref": "#/components/schemas/PublicMapConfig"
+          }
+        },
+        "required": [
+          "map"
+        ],
+        "title": "PublicConfigResponse",
+        "type": "object"
+      },
+      "PublicMapConfig": {
+        "properties": {
+          "external_tiles": {
+            "title": "External Tiles",
+            "type": "boolean"
+          },
+          "max_zoom": {
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Max Zoom",
+            "type": "integer"
+          },
+          "tile_attribution": {
+            "title": "Tile Attribution",
+            "type": "string"
+          },
+          "tile_url": {
+            "title": "Tile Url",
+            "type": "string"
+          },
+          "tiles_enabled": {
+            "title": "Tiles Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tiles_enabled",
+          "tile_url",
+          "tile_attribution",
+          "max_zoom",
+          "external_tiles"
+        ],
+        "title": "PublicMapConfig",
+        "type": "object"
+      },
+      "QualityResponse": {
+        "properties": {
+          "blocked_cities": {
+            "title": "Blocked Cities",
+            "type": "integer"
+          },
+          "blocked_lines": {
+            "title": "Blocked Lines",
+            "type": "integer"
+          },
+          "blocked_variants": {
+            "title": "Blocked Variants",
+            "type": "integer"
+          },
+          "dataset_version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Version Id"
+          },
+          "issues": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "ready_cities": {
+            "title": "Ready Cities",
+            "type": "integer"
+          },
+          "ready_lines": {
+            "title": "Ready Lines",
+            "type": "integer"
+          },
+          "ready_variants": {
+            "title": "Ready Variants",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dataset_version_id",
+          "ready_cities",
+          "blocked_cities",
+          "ready_lines",
+          "blocked_lines",
+          "ready_variants",
+          "blocked_variants",
+          "issues"
+        ],
+        "title": "QualityResponse",
+        "type": "object"
+      },
+      "RailDataImportRequest": {
+        "properties": {
+          "graph_version": {
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "pbf_path": {
+            "format": "path",
+            "title": "Pbf Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pbf_path",
+          "graph_version"
+        ],
+        "title": "RailDataImportRequest",
+        "type": "object"
+      },
+      "RailDataImportResponse": {
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "graph_version": {
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "import_id": {
+            "title": "Import Id",
+            "type": "integer"
+          },
+          "pbf_checksum": {
+            "title": "Pbf Checksum",
+            "type": "string"
+          },
+          "station_count": {
+            "title": "Station Count",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "import_id",
+          "status",
+          "graph_version",
+          "pbf_checksum",
+          "station_count",
+          "error_code",
+          "error_message"
+        ],
+        "title": "RailDataImportResponse",
+        "type": "object"
+      },
+      "RailDataStatusResponse": {
+        "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "maxItems": 4,
+                "minItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          },
+          "dataset_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Status"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "extract_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extract Region"
+          },
+          "graph_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Version"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
+          },
+          "pbf_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pbf Checksum"
+          },
+          "profile_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Version"
+          },
+          "profiles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Profiles",
+            "type": "array"
+          },
+          "rail_dataset_version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rail Dataset Version Id"
+          },
+          "sidecar_available": {
+            "title": "Sidecar Available",
+            "type": "boolean"
+          },
+          "sidecar_graph_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Graph Version"
+          },
+          "sidecar_pbf_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Pbf Checksum"
+          },
+          "sidecar_profile_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Profile Version"
+          },
+          "source_timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Timestamp"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "station_count": {
+            "title": "Station Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "disabled",
+              "not_configured",
+              "importing",
+              "unavailable",
+              "version_mismatch",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "enabled",
+          "sidecar_available",
+          "rail_dataset_version_id",
+          "dataset_status",
+          "station_count",
+          "graph_version",
+          "profile_version",
+          "sidecar_graph_version",
+          "sidecar_profile_version",
+          "sidecar_pbf_checksum",
+          "pbf_checksum",
+          "source_url",
+          "source_timestamp",
+          "extract_region",
+          "license",
+          "profiles",
+          "bbox",
+          "error_code",
+          "error_message"
+        ],
+        "title": "RailDataStatusResponse",
+        "type": "object"
+      },
+      "RailDatasetDifferenceResponse": {
+        "properties": {
+          "added_station_count": {
+            "title": "Added Station Count",
+            "type": "integer"
+          },
+          "affected_journey_count": {
+            "title": "Affected Journey Count",
+            "type": "integer"
+          },
+          "changed_station_count": {
+            "title": "Changed Station Count",
+            "type": "integer"
+          },
+          "from_graph_version": {
+            "title": "From Graph Version",
+            "type": "string"
+          },
+          "from_station_count": {
+            "title": "From Station Count",
+            "type": "integer"
+          },
+          "removed_station_count": {
+            "title": "Removed Station Count",
+            "type": "integer"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/RailStationDifferenceSample"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "to_graph_version": {
+            "title": "To Graph Version",
+            "type": "string"
+          },
+          "to_station_count": {
+            "title": "To Station Count",
+            "type": "integer"
+          },
+          "unchanged_station_count": {
+            "title": "Unchanged Station Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "from_graph_version",
+          "to_graph_version",
+          "from_station_count",
+          "to_station_count",
+          "added_station_count",
+          "removed_station_count",
+          "changed_station_count",
+          "unchanged_station_count",
+          "affected_journey_count",
+          "samples"
+        ],
+        "title": "RailDatasetDifferenceResponse",
+        "type": "object"
+      },
+      "RailJourneyLegCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Candidate Digest",
+            "type": "string"
+          },
+          "candidate_id": {
+            "maxLength": 160,
+            "minLength": 6,
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "end_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Station Id",
+            "type": "integer"
+          },
+          "mode": {
+            "const": "rail",
+            "title": "Mode",
+            "type": "string"
+          },
+          "route_hint": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Hint"
+          },
+          "start_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Start Station Id",
+            "type": "integer"
+          },
+          "train_no": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train No"
+          },
+          "train_type": {
+            "default": "OTHER",
+            "enum": [
+              "G",
+              "C",
+              "D",
+              "Z",
+              "T",
+              "K",
+              "Y",
+              "S",
+              "OTHER"
+            ],
+            "title": "Train Type",
+            "type": "string"
+          },
+          "travel_date": {
+            "format": "date",
+            "title": "Travel Date",
+            "type": "string"
+          },
+          "via_station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Via Station Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mode",
+          "travel_date",
+          "start_station_id",
+          "end_station_id",
+          "candidate_id",
+          "candidate_digest"
+        ],
+        "title": "RailJourneyLegCreate",
+        "type": "object"
+      },
+      "RailPathCandidateResponse": {
+        "properties": {
+          "can_commit": {
+            "title": "Can Commit",
+            "type": "boolean"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "digest": {
+            "title": "Digest",
+            "type": "string"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "geometry": {
+            "additionalProperties": true,
+            "title": "Geometry",
+            "type": "object"
+          },
+          "graph_version": {
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "mode": {
+            "const": "rail",
+            "default": "rail",
+            "title": "Mode",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "string"
+          },
+          "rail_dataset_version_id": {
+            "title": "Rail Dataset Version Id",
+            "type": "integer"
+          },
+          "routing_profile": {
+            "title": "Routing Profile",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "score_details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Score Details",
+            "type": "array"
+          },
+          "scoring_version": {
+            "title": "Scoring Version",
+            "type": "string"
+          },
+          "station_count": {
+            "title": "Station Count",
+            "type": "integer"
+          },
+          "station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Station Ids",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "way_ranges": {
+            "items": {
+              "$ref": "#/components/schemas/RailWayRangeResponse"
+            },
+            "title": "Way Ranges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "digest",
+          "rail_dataset_version_id",
+          "graph_version",
+          "profile_version",
+          "scoring_version",
+          "routing_profile",
+          "distance_m",
+          "duration_ms",
+          "station_count",
+          "station_ids",
+          "geometry",
+          "way_ranges",
+          "score",
+          "score_details",
+          "warnings",
+          "can_commit"
+        ],
+        "title": "RailPathCandidateResponse",
+        "type": "object"
+      },
+      "RailPathPreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "end_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Station Id",
+            "type": "integer"
+          },
+          "mode": {
+            "const": "rail",
+            "title": "Mode",
+            "type": "string"
+          },
+          "route_hint": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Hint"
+          },
+          "start_station_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Start Station Id",
+            "type": "integer"
+          },
+          "train_no": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train No"
+          },
+          "train_type": {
+            "default": "OTHER",
+            "enum": [
+              "G",
+              "C",
+              "D",
+              "Z",
+              "T",
+              "K",
+              "Y",
+              "S",
+              "OTHER"
+            ],
+            "title": "Train Type",
+            "type": "string"
+          },
+          "travel_date": {
+            "format": "date",
+            "title": "Travel Date",
+            "type": "string"
+          },
+          "via_station_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 30,
+            "title": "Via Station Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mode",
+          "travel_date",
+          "start_station_id",
+          "end_station_id"
+        ],
+        "title": "RailPathPreviewRequest",
+        "type": "object"
+      },
+      "RailRecomputeLegPreview": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/RailPathCandidateResponse"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "leg_no": {
+            "title": "Leg No",
+            "type": "integer"
+          },
+          "source_graph_version": {
+            "title": "Source Graph Version",
+            "type": "string"
+          },
+          "station_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Station Names",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "resolved",
+              "needs_review",
+              "unresolved"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_graph_version": {
+            "title": "Target Graph Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "leg_no",
+          "source_graph_version",
+          "target_graph_version",
+          "station_names",
+          "status",
+          "candidates"
+        ],
+        "title": "RailRecomputeLegPreview",
+        "type": "object"
+      },
+      "RailRecomputePreviewResponse": {
+        "properties": {
+          "journey_id": {
+            "title": "Journey Id",
+            "type": "integer"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/RailRecomputeLegPreview"
+            },
+            "title": "Legs",
+            "type": "array"
+          },
+          "target_graph_version": {
+            "title": "Target Graph Version",
+            "type": "string"
+          },
+          "target_profile_version": {
+            "title": "Target Profile Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "journey_id",
+          "target_graph_version",
+          "target_profile_version",
+          "legs"
+        ],
+        "title": "RailRecomputePreviewResponse",
+        "type": "object"
+      },
+      "RailRecomputeRequest": {
+        "properties": {
+          "selections": {
+            "items": {
+              "$ref": "#/components/schemas/RailRecomputeSelection"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Selections",
+            "type": "array"
+          },
+          "target_graph_version": {
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Target Graph Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_graph_version",
+          "selections"
+        ],
+        "title": "RailRecomputeRequest",
+        "type": "object"
+      },
+      "RailRecomputeSelection": {
+        "properties": {
+          "candidate_digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Candidate Digest",
+            "type": "string"
+          },
+          "candidate_id": {
+            "maxLength": 160,
+            "minLength": 6,
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "leg_no": {
+            "exclusiveMinimum": 0.0,
+            "title": "Leg No",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "leg_no",
+          "candidate_id",
+          "candidate_digest"
+        ],
+        "title": "RailRecomputeSelection",
+        "type": "object"
+      },
+      "RailStationDifferenceSample": {
+        "properties": {
+          "changed_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Changed Fields",
+            "type": "array"
+          },
+          "from_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Name"
+          },
+          "osm_id": {
+            "title": "Osm Id",
+            "type": "integer"
+          },
+          "osm_type": {
+            "title": "Osm Type",
+            "type": "string"
+          },
+          "to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Name"
+          }
+        },
+        "required": [
+          "osm_type",
+          "osm_id",
+          "from_name",
+          "to_name",
+          "changed_fields"
+        ],
+        "title": "RailStationDifferenceSample",
+        "type": "object"
+      },
+      "RailStationResponse": {
+        "properties": {
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "match_method": {
+            "title": "Match Method",
+            "type": "string"
+          },
+          "match_score": {
+            "title": "Match Score",
+            "type": "number"
+          },
+          "name_cn": {
+            "title": "Name Cn",
+            "type": "string"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          },
+          "osm_id": {
+            "title": "Osm Id",
+            "type": "integer"
+          },
+          "osm_type": {
+            "title": "Osm Type",
+            "type": "string"
+          },
+          "province_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Province Name"
+          },
+          "rail_dataset_version_id": {
+            "title": "Rail Dataset Version Id",
+            "type": "integer"
+          },
+          "station_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Station Code"
+          }
+        },
+        "required": [
+          "id",
+          "rail_dataset_version_id",
+          "osm_type",
+          "osm_id",
+          "name_cn",
+          "name_en",
+          "station_code",
+          "city_name",
+          "province_name",
+          "lon",
+          "lat",
+          "match_score",
+          "match_method"
+        ],
+        "title": "RailStationResponse",
+        "type": "object"
+      },
+      "RailWayRangeResponse": {
+        "properties": {
+          "end_index": {
+            "title": "End Index",
+            "type": "integer"
+          },
+          "osm_way_id": {
+            "title": "Osm Way Id",
+            "type": "integer"
+          },
+          "start_index": {
+            "title": "Start Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "start_index",
+          "end_index",
+          "osm_way_id"
+        ],
+        "title": "RailWayRangeResponse",
+        "type": "object"
+      },
+      "StationResponse": {
+        "properties": {
+          "city_id": {
+            "title": "City Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name_cn": {
+            "title": "Name Cn",
+            "type": "string"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          }
+        },
+        "required": [
+          "id",
+          "city_id",
+          "name_cn",
+          "name_en",
+          "lon",
+          "lat"
+        ],
+        "title": "StationResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "license": {
+      "identifier": "Apache-2.0",
+      "name": "Apache License 2.0"
+    },
+    "title": "Transit2Fog API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/cities": {
+      "get": {
+        "operationId": "list_cities_api_v1_cities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CityResponse"
+                  },
+                  "title": "Response List Cities Api V1 Cities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Cities",
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "/api/v1/cities/{city_id}/lines": {
+      "get": {
+        "operationId": "list_lines_api_v1_cities__city_id__lines_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "city_id",
+            "required": true,
+            "schema": {
+              "title": "City Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LineResponse"
+                  },
+                  "title": "Response List Lines Api V1 Cities  City Id  Lines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Lines",
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "/api/v1/cities/{city_id}/map": {
+      "get": {
+        "description": "Return imported line and station GeoJSON for one city viewport.",
+        "operationId": "city_map_api_v1_cities__city_id__map_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "city_id",
+            "required": true,
+            "schema": {
+              "title": "City Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Line Id"
+            }
+          },
+          {
+            "description": "WGS-84 min_lon,min_lat,max_lon,max_lat",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "WGS-84 min_lon,min_lat,max_lon,max_lat",
+              "title": "Bbox"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityMapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "City Map",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/cities/{city_id}/stations": {
+      "get": {
+        "operationId": "list_city_stations_api_v1_cities__city_id__stations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "city_id",
+            "required": true,
+            "schema": {
+              "title": "City Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StationResponse"
+                  },
+                  "title": "Response List City Stations Api V1 Cities  City Id  Stations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List City Stations",
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "/api/v1/config/public": {
+      "get": {
+        "description": "Return non-secret runtime settings needed by the browser UI.",
+        "operationId": "public_config_api_v1_config_public_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Public Config",
+        "tags": [
+          "configuration"
+        ]
+      }
+    },
+    "/api/v1/data/imports": {
+      "post": {
+        "operationId": "start_dataset_import_api_v1_data_imports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Dataset Import",
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/v1/data/imports/{import_id}": {
+      "get": {
+        "operationId": "get_dataset_import_api_v1_data_imports__import_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Dataset Import",
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/v1/data/imports/{import_id}/cancel": {
+      "post": {
+        "operationId": "cancel_dataset_import_api_v1_data_imports__import_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Dataset Import",
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/v1/data/quality": {
+      "get": {
+        "operationId": "quality_report_api_v1_data_quality_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Quality Report",
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/v1/data/status": {
+      "get": {
+        "description": "Return the newest active or in-progress dataset status.",
+        "operationId": "data_status_api_v1_data_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Data Status",
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/v1/exports/gpx": {
+      "post": {
+        "operationId": "download_gpx_api_v1_exports_gpx_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GPXRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Gpx",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/exports/preview": {
+      "post": {
+        "operationId": "preview_export_api_v1_exports_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Export",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/import-batches": {
+      "post": {
+        "operationId": "create_import_batch_api_v1_import_batches_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_import_batch_api_v1_import_batches_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/template.csv": {
+      "get": {
+        "operationId": "csv_template_api_v1_import_batches_template_csv_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Csv Template",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}": {
+      "delete": {
+        "operationId": "delete_import_batch_api_v1_import_batches__batch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      },
+      "get": {
+        "operationId": "get_import_batch_api_v1_import_batches__batch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}/commit": {
+      "post": {
+        "operationId": "commit_import_batch_api_v1_import_batches__batch_id__commit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Commit Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}/resolve": {
+      "post": {
+        "operationId": "resolve_import_batch_api_v1_import_batches__batch_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}/rows": {
+      "get": {
+        "operationId": "list_import_rows_api_v1_import_batches__batch_id__rows_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "resolved",
+                    "needs_review",
+                    "unresolved",
+                    "ignored",
+                    "committed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRowsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Import Rows",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}/rows/{row_id}": {
+      "patch": {
+        "operationId": "patch_import_row_api_v1_import_batches__batch_id__rows__row_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "row_id",
+            "required": true,
+            "schema": {
+              "title": "Row Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRowPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Import Row",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/journeys": {
+      "get": {
+        "operationId": "list_journeys_api_v1_journeys_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "city_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Line Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Journeys",
+        "tags": [
+          "journeys"
+        ]
+      },
+      "post": {
+        "operationId": "create_journey_api_v1_journeys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JourneyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Journey",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/journeys/{journey_id}": {
+      "delete": {
+        "operationId": "delete_journey_api_v1_journeys__journey_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Journey",
+        "tags": [
+          "journeys"
+        ]
+      },
+      "get": {
+        "operationId": "get_journey_api_v1_journeys__journey_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Journey",
+        "tags": [
+          "journeys"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_journey_api_v1_journeys__journey_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JourneyPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Journey",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/journeys/{journey_id}/rail-recompute": {
+      "post": {
+        "operationId": "confirm_rail_recompute_api_v1_journeys__journey_id__rail_recompute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RailRecomputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Rail Recompute",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/journeys/{journey_id}/rail-recompute/preview": {
+      "post": {
+        "operationId": "preview_rail_recompute_api_v1_journeys__journey_id__rail_recompute_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailRecomputePreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Rail Recompute",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/journeys/{journey_id}/re-resolve": {
+      "post": {
+        "operationId": "re_resolve_journey_api_v1_journeys__journey_id__re_resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "journey_id",
+            "required": true,
+            "schema": {
+              "title": "Journey Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Re Resolve Journey",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/lines/{line_id}/stations": {
+      "get": {
+        "operationId": "list_line_stations_api_v1_lines__line_id__stations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "title": "Line Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StationResponse"
+                  },
+                  "title": "Response List Line Stations Api V1 Lines  Line Id  Stations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Line Stations",
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "/api/v1/paths/preview": {
+      "post": {
+        "operationId": "preview_path_api_v1_paths_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PathPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Path",
+        "tags": [
+          "paths"
+        ]
+      }
+    },
+    "/api/v1/rail/data/compare": {
+      "get": {
+        "operationId": "compare_rail_datasets_api_v1_rail_data_compare_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from_graph_version",
+            "required": true,
+            "schema": {
+              "title": "From Graph Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_graph_version",
+            "required": true,
+            "schema": {
+              "title": "To Graph Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailDatasetDifferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compare Rail Datasets",
+        "tags": [
+          "rail data"
+        ]
+      }
+    },
+    "/api/v1/rail/data/imports": {
+      "post": {
+        "operationId": "start_rail_data_import_api_v1_rail_data_imports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RailDataImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailDataImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Rail Data Import",
+        "tags": [
+          "rail data"
+        ]
+      }
+    },
+    "/api/v1/rail/data/imports/{import_id}": {
+      "get": {
+        "operationId": "get_rail_data_import_api_v1_rail_data_imports__import_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailDataImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Rail Data Import",
+        "tags": [
+          "rail data"
+        ]
+      }
+    },
+    "/api/v1/rail/data/status": {
+      "get": {
+        "operationId": "rail_data_status_api_v1_rail_data_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailDataStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Rail Data Status",
+        "tags": [
+          "rail data"
+        ]
+      }
+    },
+    "/api/v1/rail/stations/search": {
+      "get": {
+        "operationId": "search_rail_stations_api_v1_rail_stations_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rail_dataset_version_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rail Dataset Version Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "province_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Province Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RailStationResponse"
+                  },
+                  "title": "Response Search Rail Stations Api V1 Rail Stations Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Rail Stations",
+        "tags": [
+          "rail stations"
+        ]
+      }
+    },
+    "/api/v1/stations/search": {
+      "get": {
+        "operationId": "search_stations_api_v1_stations_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "title": "City Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Line Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StationResponse"
+                  },
+                  "title": "Response Search Stations Api V1 Stations Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Stations",
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthcheck_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthcheck",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

@@ -346,6 +346,7 @@ describe("Transit2Fog app shell", () => {
   it("previews and saves a selected journey candidate", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("heading", { name: "添加一段真实乘坐记录" });
 
     const homeLinks = screen.getAllByRole("link", { name: "Transit2Fog 首页" });
     expect(homeLinks).toHaveLength(2);
@@ -373,7 +374,7 @@ describe("Transit2Fog app shell", () => {
   it("sorts metro lines by their natural Chinese line names", async () => {
     renderApp(<App />);
 
-    const line = screen.getByRole("combobox", { name: "线路" });
+    const line = await screen.findByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
 
     expect(
@@ -394,7 +395,7 @@ describe("Transit2Fog app shell", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    const startStation = screen.getByRole("combobox", { name: "起点站" });
+    const startStation = await screen.findByRole("combobox", { name: "起点站" });
     const endStation = screen.getByRole("combobox", { name: "终点站" });
     await waitFor(() => expect(startStation).toBeEnabled());
 
@@ -426,7 +427,7 @@ describe("Transit2Fog app shell", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    const line = screen.getByRole("combobox", { name: "线路" });
+    const line = await screen.findByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
     await user.selectOptions(line, "auto");
 
@@ -472,7 +473,7 @@ describe("Transit2Fog app shell", () => {
       .mockImplementation(() => undefined);
     renderApp(<App />);
 
-    const previewButton = screen.getByRole("button", { name: "预览路径" });
+    const previewButton = await screen.findByRole("button", { name: "预览路径" });
     await waitFor(() => expect(previewButton).toBeEnabled());
     await user.click(previewButton);
     await user.click(screen.getByRole("button", { name: "导出 GPX" }));
@@ -499,7 +500,7 @@ describe("Transit2Fog app shell", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
+    await user.click(await screen.findByRole("tab", { name: "铁路 / 高铁" }));
     expect(
       screen.getByRole("heading", { name: "添加一段真实铁路乘坐记录" }),
     ).toBeInTheDocument();
@@ -579,11 +580,23 @@ describe("Transit2Fog app shell", () => {
           }),
         );
       }
+      if (url.includes("/api/v1/cities/1/map")) {
+        return Promise.resolve(jsonResponse(CITY_MAP));
+      }
+      if (url.endsWith("/api/v1/cities")) {
+        return Promise.resolve(jsonResponse(CITIES));
+      }
+      if (url.includes("/api/v1/cities/1/lines")) {
+        return Promise.resolve(jsonResponse(LINES));
+      }
+      if (url.includes("/api/v1/lines/2/stations")) {
+        return Promise.resolve(jsonResponse(STATIONS));
+      }
       return Promise.resolve(jsonResponse(DATA_STATUS));
     });
     renderApp(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
+    await user.click(await screen.findByRole("tab", { name: "铁路 / 高铁" }));
     expect(await screen.findByText("铁路功能暂不可用")).toBeInTheDocument();
 
     const date = screen.getByLabelText("乘坐日期（必填）");
@@ -625,10 +638,56 @@ describe("Transit2Fog app shell", () => {
     );
     await user.click(screen.getAllByRole("link", { name: "CSV 导入" })[0]);
 
-    expect(screen.getByRole("heading", { name: "CSV 导入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "CSV 导入" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "选择 CSV 文件" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "下载模板" })).toBeInTheDocument();
     expect(screen.getByText("选择一个 CSV 文件")).toBeInTheDocument();
+  });
+
+  it("loads journey pages from the API", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        input instanceof Request
+          ? input.url
+          : input instanceof URL
+            ? input.href
+            : input;
+      if (url.includes("/api/v1/config/public")) {
+        return Promise.resolve(jsonResponse(PUBLIC_CONFIG));
+      }
+      if (url.includes("/api/v1/rail/data/status")) {
+        return Promise.resolve(jsonResponse(RAIL_STATUS));
+      }
+      if (url.includes("/api/v1/journeys?")) {
+        const offset = Number(new URL(url, "http://localhost").searchParams.get("offset"));
+        const secondPage = offset === 20;
+        return Promise.resolve(
+          jsonResponse({
+            items: [
+              {
+                ...SAVED_JOURNEY,
+                id: secondPage ? 21 : 1,
+                journey_code: secondPage ? "page-trip-21" : "page-trip-01",
+              },
+            ],
+            total: 21,
+            limit: 20,
+            offset,
+            has_more: !secondPage,
+          }),
+        );
+      }
+      return Promise.resolve(jsonResponse(DATA_STATUS));
+    });
+    renderApp(<App />, "/journeys");
+
+    expect(await screen.findByText("page-trip-01")).toBeInTheDocument();
+    expect(screen.getByText("第 1–1 条，共 21 条")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "下一页" }));
+    expect(await screen.findByText("page-trip-21")).toBeInTheDocument();
+    expect(screen.getByText("第 21–21 条，共 21 条")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "下一页" })).toBeDisabled();
   });
 
   it("previews and confirms an immutable railway journey recompute", async () => {
@@ -665,9 +724,15 @@ describe("Transit2Fog app shell", () => {
             }),
           );
         }
-        if (url.endsWith("/api/v1/journeys")) {
+        if (url.includes("/api/v1/journeys?")) {
           return Promise.resolve(
-            jsonResponse({ items: [SAVED_RAIL_JOURNEY], total: 1 }),
+            jsonResponse({
+              items: [SAVED_RAIL_JOURNEY],
+              total: 1,
+              limit: 20,
+              offset: 0,
+              has_more: false,
+            }),
           );
         }
         return Promise.resolve(jsonResponse(DATA_STATUS));
