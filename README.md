@@ -18,6 +18,17 @@ GPX 1.1（WGS‑84）
 支持 GPX 轨迹导入的应用
 ```
 
+## 平台支持
+
+| 平台 | 原生入口 | 当前状态 |
+|---|---|---|
+| Windows 10/11 x64 | PowerShell 7：`.\transit2fog.ps1 <command>` | 核心应用与最小铁路 fixture 已完成实机验证；不依赖 WSL、Git Bash 或 GNU Make |
+| macOS | Makefile：`make <target>` | 首个验收平台，继续保留 POSIX shell 工作流 |
+
+2026-08-31 的 Windows 验证基线：核心 `check` 为 83 项后端测试、9 项前端测试、Ruff、Mypy、ESLint 与生产构建全通过；桌面/移动 Chromium E2E 为 20/20。铁路侧使用项目内 Temurin 21.0.12.1+1，OpenRailRouting 34/34 测试通过，Cologne fixture 路由为 13,706.7 米/172 点，当前与兼容 metadata 端点身份一致，验收退出后 8989/8990 均释放。
+
+Cologne fixture 只用于验证 Windows JDK、构建、路由和进程清理链路，不是中国正式铁路图，也不会自动设为 `active`。实际录入铁路行程前仍需选择、构建并验证长三角或全国图。
+
 ## 实际运行截图
 
 以下截图来自本地真实运行环境：地铁页面使用已导入的 46 城数据，铁路页面使用北京南—上海虹桥公开验收样例；截图过程不会保存或改写行程。
@@ -130,7 +141,7 @@ make dev
 
 ## 铁路最短可用路径
 
-铁路数据下载已经脚本化，但首次使用还需要构建 OpenRailRouting sidecar 和本地图。Java 17+ 可以运行，Java 21 是当前验证基线；系统 Maven 不是必需项，脚本会下载并校验固定版本。
+铁路数据下载已经脚本化，但首次使用还需要构建 OpenRailRouting sidecar 和本地图。Java 17+ 可以运行，Windows 当前验证基线为项目内 Temurin 21.0.12.1+1；系统 Maven 和系统级 JDK 安装都不是必需项，脚本会下载并校验固定版本。
 
 ### 1. 先选择图范围
 
@@ -151,7 +162,8 @@ Windows PowerShell 7：
 .\transit2fog.ps1 setup
 .\transit2fog.ps1 setup-java
 .\transit2fog.ps1 doctor-rail
-.\transit2fog.ps1 rail-bootstrap
+.\transit2fog.ps1 rail-fixture
+.\transit2fog.ps1 rail-fixture-verify
 ```
 
 macOS：
@@ -161,6 +173,8 @@ make setup
 make doctor-rail
 make rail-bootstrap
 ```
+
+Windows 的 `setup-java` 会把固定版本 JDK 安装到被忽略的项目数据目录，不修改系统 `PATH`、`JAVA_HOME` 或注册表。`rail-fixture` 会完成固定 OpenRailRouting/GraphHopper 构建及最小图生成；`rail-fixture-verify` 会启动 sidecar、验证路由与两个 metadata 端点，再按已确认的进程树停止服务并检查端口释放。
 
 选择长三角轻量图：
 
