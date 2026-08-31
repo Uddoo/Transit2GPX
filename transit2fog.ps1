@@ -464,11 +464,11 @@ function Invoke-ProjectTask {
     param([Parameter(Mandatory)][string[]]$Arguments)
 
     $uv = Get-RequiredCommand 'uv'
-    Invoke-Native $uv @(
+    $uvArguments = @(
         'run', '--project', $script:BackendDir,
-        'python', (Join-Path $script:ProjectDir 'scripts\project.py'),
-        $Arguments
-    )
+        'python', (Join-Path $script:ProjectDir 'scripts\project.py')
+    ) + $Arguments
+    Invoke-Native -FilePath $uv -Arguments $uvArguments
 }
 
 function Invoke-Setup { Invoke-ProjectTask @('setup') }
