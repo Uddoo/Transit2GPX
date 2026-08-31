@@ -26,6 +26,7 @@ from app.rail.sidecar import (
 )
 
 logger = logging.getLogger(__name__)
+_WINDOWS_CREATE_NEW_PROCESS_GROUP = 0x00000200
 
 
 class RailSidecarSupervisor:
@@ -117,7 +118,7 @@ def _spawn_sidecar(
             stdin=subprocess.DEVNULL,
             stdout=log_stream,
             stderr=subprocess.STDOUT,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            creationflags=_WINDOWS_CREATE_NEW_PROCESS_GROUP,
         )
     return subprocess.Popen(
         command,

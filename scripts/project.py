@@ -13,6 +13,10 @@ PROJECT_DIR = Path(__file__).resolve().parents[1]
 BACKEND_DIR = PROJECT_DIR / "backend"
 FRONTEND_DIR = PROJECT_DIR / "frontend"
 
+# Keep child Python tools deterministic on Windows runners and non-UTF-8 locales.
+os.environ["PYTHONUTF8"] = "1"
+os.environ["PYTHONIOENCODING"] = "utf-8"
+
 
 def _required_command(name: str) -> str:
     command = shutil.which(name)
