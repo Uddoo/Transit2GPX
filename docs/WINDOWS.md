@@ -65,7 +65,15 @@ pwsh -NoLogo -NoProfile -File .\transit2fog.ps1 doctor
 .\transit2fog.ps1 start
 ```
 
-服务默认只监听 `127.0.0.1:8765`。脚本不会创建 Windows 服务、防火墙规则、登录启动项或局域网监听。
+服务默认只监听 `127.0.0.1:8765`。铁路图已激活时，`.\transit2fog.ps1 start-rail` 会在同一进程树中监督 loopback sidecar。脚本不会创建 Windows 服务、防火墙规则、登录启动项或局域网监听。
+
+生成用户级安装包：
+
+```powershell
+.\transit2fog.ps1 package
+```
+
+发布 ZIP 提供 `install.ps1`，默认安装到 `%LOCALAPPDATA%\Programs\Transit2Fog`，不会覆盖应用数据；完整格式、签名限制和 sidecar JAR 选项见 [`PACKAGING.md`](PACKAGING.md)。
 
 ## 4. 检查与测试
 
@@ -139,20 +147,15 @@ SQLite URL 建议使用正斜杠。不要把 Windows 路径写成 `sqlite://D:\.
 .\transit2fog.ps1 rail-fixture-verify
 ```
 
-完成建图后使用两个 PowerShell 7 终端：
+新图首次验证与激活时，可用诊断命令 `rail-yangtze-start` 临时启动明确图版本，并在另一终端运行 `rail-yangtze-activate`。激活完成后，日常运行不再需要 sidecar 终端：
 
 ```powershell
-# 终端 A
-.\transit2fog.ps1 rail-yangtze-start
-```
-
-```powershell
-# 终端 B；首次运行或切换图版本时先验证并激活
-.\transit2fog.ps1 rail-yangtze-activate
 .\transit2fog.ps1 dev-rail
+# 或生产模式
+.\transit2fog.ps1 start-rail
 ```
 
-全国图把命令中的 `yangtze` 换为 `china`。构建文件默认位于仓库下被忽略的 `data\rail-routing`；也可在两个终端中设置完全相同的外部目录：
+主进程会检查 JAR、active graph、PBF checksum 和四段版本身份，复用匹配的既有 sidecar，并回收自己启动的 Java 进程。全国图把命令中的 `yangtze` 换为 `china`。构建文件默认位于仓库下被忽略的 `data\rail-routing`；也可在启动前设置外部目录：
 
 ```powershell
 $env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
@@ -172,7 +175,7 @@ $env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
 
 ## 7. 命令对应关系
 
-Windows 的 `.\transit2fog.ps1 <command>` 与 macOS 的 `make <target>` 使用相同的命令名，包括 `doctor`、`setup`、`dev`、`dev-rail`、`build`、`start`、`check`、`test`、`e2e`、`db-upgrade`、`rail-bootstrap`、`rail-yangtze-*`、`rail-china-*` 和 `rail-rollback`。
+Windows 的 `.\transit2fog.ps1 <command>` 与 macOS 的 `make <target>` 使用相同的命令名，包括 `doctor`、`setup`、`dev`、`dev-rail`、`build`、`start`、`start-rail`、`package`、`check`、`test`、`e2e`、`db-upgrade`、`rail-bootstrap`、`rail-yangtze-*`、`rail-china-*` 和 `rail-rollback`。
 
 两个需要参数的命令使用 PowerShell 命名参数：
 

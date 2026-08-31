@@ -12,7 +12,7 @@ Transit2Fog 采用本地单体服务配合浏览器前端。前端负责录入�
                         │ REST / GeoJSON
 ┌───────────────────────▼──────────────────────┐
 │ FastAPI                                      │
-│ API │ Importer │ Matcher │ Resolver │ Exporter│
+│ API │ Services │ Tasks │ Matcher │ Resolver  │
 └───────────────────────┬──────────────────────┘
                         │ SQLAlchemy
 ┌───────────────────────▼──────────────────────┐
@@ -70,7 +70,9 @@ sidecar 不是 metro-only 模式的启动依赖。铁路图未安装、建图中
 3. 单一命令启动 `http://127.0.0.1:8765`。
 4. 数据库、缓存与日志位于可配置的应用数据目录，不写入源码目录。
 
-铁路模式额外启动 OpenRailRouting Java 进程或受监督 sidecar，端口只绑定 `127.0.0.1`。FastAPI 在启动时探测其状态，但不得因 sidecar 缺失而阻止地铁模式启动。PBF 与 `graph-cache/<version>` 位于应用数据目录，不提交源码仓库。
+铁路模式由 FastAPI 生命周期内的 supervisor 启动 OpenRailRouting Java sidecar，端口只绑定 `127.0.0.1`。启动前验证 active selector、graph metadata、PBF SHA-256、Profile/commit 身份；已有匹配进程只复用不接管，自启动进程在退出时回收并把输出写入应用数据日志。sidecar 缺失不得阻止地铁模式启动。PBF 与 `graph-cache/<version>` 位于应用数据目录，不提交源码仓库。
+
+发布包由 PyInstaller 封装 production SPA、API、迁移、地理运行库和铁路配置，可选内置固定 sidecar JAR，但不内置大型 PBF、graph cache 或用户数据。Windows 生成用户级 ZIP 安装目录，macOS 生成 `.pkg`/`.tar.gz`；启动器先执行 Alembic，再打开 loopback Web UI。
 
 生产服务默认不得监听 `0.0.0.0`。若未来允许局域网访问，必须作为显式配置并重新评估认证与 CSRF 风险。
 
@@ -83,6 +85,8 @@ backend/app/
 ├── api/              # FastAPI routers、请求/响应 schema
 ├── core/             # 配置、日志、错误、应用生命周期
 ├── db/               # engine、session、ORM、迁移集成
+├── services/         # 查询聚合、空间过滤、导入任务用例
+├── tasks/            # SQLite 持久化任务队列与恢复执行器
 ├── domain/           # 不依赖 FastAPI/SQLAlchemy 的领域类型
 ├── importers/        # CPTOND 发现、读取、规范化、质量门禁
 ├── geometry/         # CRS、edge 构建、加密、连接与校验
@@ -98,7 +102,7 @@ backend/app/
 
 - `domain` 不引用 Web 或数据库框架。
 - `geometry` 输入输出显式标记坐标系和 `(lon, lat)` 约定。
-- API 不直接拼 SQL 或执行 Shapely 运算。
+- API 只处理 HTTP schema 和错误映射；批量查询、RTree 过滤与长任务编排进入 `services`。
 - 导出只读取已保存的 `journey_leg_edge`，不临时重新规划。
 - 铁路导出只读取已保存的 `rail_journey_edge_snapshot`，不临时调用 sidecar。
 - Provider 必须输出同一候选协议：版本、摘要、有序来源引用、完整几何、评分和警告。
@@ -120,7 +124,7 @@ frontend/src/
 └── styles/           # tokens、全局样式、响应式规则
 ```
 
-服务端状态使用查询缓存管理；未提交表单/审核选择保留在对应 feature 内。不得复制一套线路拓扑到前端自行解析。
+服务端状态使用查询缓存管理；未提交表单/审核选择保留在对应 feature 内。五个顶层业务路由均通过 `React.lazy`/`Suspense` 按需加载，构建 manifest 门禁保证它们保持独立 dynamic entry，并限制主入口体积。不得复制一套线路拓扑到前端自行解析。
 
 ## 6. 数据导入流水线
 
@@ -140,6 +144,8 @@ frontend/src/
 ```
 
 导入使用 staging 表或临时数据库。只有整版处理完成后才切换为可用版本，避免用户看到半导入状态。
+
+CPTOND 与铁路 PBF 导入先写入 `app_task`，再由单线程 daemon 执行器领取。任务在 SQLite 中记录 queued/running/succeeded/failed/cancelled、尝试次数和错误摘要；服务启动时把遗留 running 任务恢复为 queued。CPTOND 恢复前会清理未完成城市后从同一 checksum 重新执行，铁路索引则按不可变 PBF 身份重建。进程崩溃不会把任务仅留在内存队列中。
 
 ## 7. 几何与拓扑
 
@@ -201,6 +207,7 @@ frontend/src/
 - 下载响应对文件名进行清理，防止 header 注入。
 - 日志不记录完整乘车历史、上传内容或本地绝对路径。
 - 数据库写操作均使用事务；导入取消后清理 staging 数据。
+- FTS5/RTree 由触发器同步；铁路站名搜索走 `rail_station_fts`，地图视口先经 `station_spatial` 与 `route_edge_spatial` 缩小候选。
 
 ## 11. 目标仓库结构
 

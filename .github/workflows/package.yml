@@ -1,0 +1,79 @@
+name: Install packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.11.26
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install dependencies
+        run: |
+          uv sync --project backend --dev --frozen
+          npm ci --prefix frontend
+      - name: Build pinned sidecar on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\transit2fog.ps1 rail-bootstrap
+      - name: Build pinned sidecar on macOS
+        if: runner.os == 'macOS'
+        run: make rail-bootstrap
+      - name: Build Windows install package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\transit2fog.ps1 package `
+            -SidecarJar .\data\rail-routing\dist\openrailrouting.jar
+      - name: Build macOS install package
+        if: runner.os == 'macOS'
+        run: |
+          make package SIDECAR_JAR="$PWD/data/rail-routing/dist/openrailrouting.jar"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: transit2fog-${{ runner.os }}
+          path: release/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish tagged packages
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: transit2fog-*
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*

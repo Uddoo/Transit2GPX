@@ -1,5 +1,9 @@
 # Transit2Fog
 
+[![CI](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml/badge.svg)](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml)
+
+当前稳定版本：**1.0.0**。发布变更见 [`CHANGELOG.md`](CHANGELOG.md)。
+
 Transit2Fog 是一个本地优先的中国地铁与国铁轨迹工具：用户按真实乘坐区间选择或导入行程，应用解析对应线路几何、展示候选路径供确认，并导出标准 WGS‑84 GPX 1.1 轨迹文件。
 
 导出的文件使用标准 `<trk>` / `<trkseg>` 轨迹结构，可用于任何支持导入 GPX 1.1 轨迹的地图、户外、旅行记录或轨迹管理应用。《世界迷雾》（Fog of World）只是兼容应用示例之一，并非唯一目标。地铁几何来自 CPTOND；铁路能力组合用户提供的乘车事实、OpenStreetMap 铁路几何与 OpenRailRouting 候选路径。
@@ -25,9 +29,11 @@ GPX 1.1（WGS‑84）
 | Windows 10/11 x64 | PowerShell 7：`.\transit2fog.ps1 <command>` | 核心应用与最小铁路 fixture 已完成实机验证；不依赖 WSL、Git Bash 或 GNU Make |
 | macOS | Makefile：`make <target>` | 首个验收平台，继续保留 POSIX shell 工作流 |
 
-2026-08-31 的 Windows 验证基线：核心 `check` 为 83 项后端测试、9 项前端测试、Ruff、Mypy、ESLint 与生产构建全通过；桌面/移动 Chromium E2E 为 20/20。铁路侧使用项目内 Temurin 21.0.12.1+1，OpenRailRouting 34/34 测试通过，Cologne fixture 路由为 13,706.7 米/172 点，当前与兼容 metadata 端点身份一致，验收退出后 8989/8990 均释放。
+2026-08-31 的 Windows 验证基线：核心 `check` 为 105 项后端测试、10 项前端测试、Ruff、Mypy、OpenAPI 漂移检查、ESLint 与生产构建全通过；后端覆盖率 85.33%，前端 statements/branches/functions/lines 为 66.01%/77.02%/60.64%/66.01%。桌面/移动 Chromium Mock E2E 为 20/20，另有 1 项真实 FastAPI + 临时 SQLite + 生产前端 E2E；约 124 MB 的完整 Windows 包也通过隔离迁移、地理库、API、安装和卸载 smoke test。铁路侧使用项目内 Temurin 21.0.12.1+1，OpenRailRouting 34/34 测试通过，Cologne fixture 路由为 13,706.7 米/172 点，当前与兼容 metadata 端点身份一致，验收退出后 8989/8990 均释放。
 
 Cologne fixture 只用于验证 Windows JDK、构建、路由和进程清理链路，不是中国正式铁路图，也不会自动设为 `active`。实际录入铁路行程前仍需选择、构建并验证长三角或全国图。
+
+带 production SPA、Alembic 和可选 sidecar JAR 的 Windows/macOS 安装包可由 `make package` 或 `.\transit2fog.ps1 package` 生成；tag 发布工作流会构建、隔离 smoke test 并上传带 SHA-256 的平台产物。详见[安装包文档](docs/PACKAGING.md)。
 
 ## 实际运行截图
 
@@ -71,11 +77,13 @@ Cologne fixture 只用于验证 Windows JDK、构建、路由和进程清理链�
 - [视觉与交互设计系统](docs/DESIGN_SYSTEM.md)：概念图、tokens、组件和响应式规则。
 - [开发与运行](docs/DEVELOPMENT.md)：安装、开发、生产启动和质量检查。
 - [Windows 原生运行](docs/WINDOWS.md)：PowerShell 7 命令、路径写法、铁路环境与故障排查。
+- [安装包与一体化铁路运行](docs/PACKAGING.md)：独立安装产物、打包 smoke test、sidecar 监督与数据边界。
 - [交付路线图](docs/ROADMAP.md)：当前进度、实施阶段、测试矩阵与完成标准。
 - [已知限制](docs/KNOWN_LIMITATIONS.md)：当前验收缺口和发布前待办。
 - [v1.0 验收审计](docs/V1_AUDIT.md)：逐条完成状态、测试证据与最后外部阻断项。
 - [Fog of World 实机验收](docs/FOG_ACCEPTANCE.md)：两份真实数据 GPX 的安全导入步骤、通过标准与结果记录模板。
 - [Fog of World 铁路实机验收](docs/RAIL_FOG_ACCEPTANCE.md)：北京南—上海虹桥全国铁路 GPX 的固定哈希、抽查步骤与关闭条件。
+- [Apache License 2.0](LICENSE)：Transit2Fog 项目代码许可证。
 - [数据与第三方署名](ATTRIBUTION.md)：CPTOND、Science Data Bank、OpenStreetMap、Geofabrik 与 OpenRailRouting 的署名边界。
 
 ## 10 分钟地铁上手
@@ -210,59 +218,27 @@ make rail-china-graph
 
 下载支持断点续传，并按仓库固定 manifest 校验摘要；PBF、graph 和构建产物都保存在被忽略的 `data/` 目录。
 
-### 3. 用两个终端启动
+### 3. 验证、激活并一体化启动
 
-长三角路径：
+新图首次激活时仍需临时启动该明确版本，以便固定样本验证其身份；完成 `*-activate` 后即可关闭临时 sidecar。详细步骤见 [`rail-routing/README.md`](rail-routing/README.md)。后续日常运行只需一个命令，FastAPI 会启动、验证并监督 active sidecar：
 
 Windows PowerShell 7：
 
 ```powershell
-# 终端 A
-.\transit2fog.ps1 rail-yangtze-start
-
-# 终端 B
-.\transit2fog.ps1 rail-yangtze-activate
 .\transit2fog.ps1 dev-rail
+# 生产模式：.\transit2fog.ps1 start-rail
 ```
 
 macOS：
 
 ```bash
-# 终端 A：保持 sidecar 运行
-make rail-yangtze-start
-
-# 终端 B：首次运行时验证并激活，然后启动应用
-make rail-yangtze-activate
 make dev-rail
+# 生产模式：make start-rail
 ```
 
-全国路径只需替换命令名：
+主进程只绑定 loopback，复用身份一致的既有 sidecar，并只在退出时回收自己启动的 Java 进程。sidecar 启动失败不会阻断地铁功能；诊断写入应用数据目录的 `logs/rail-sidecar.log`。安装包、进程身份校验和外部 graph/PBF 布局见 [`docs/PACKAGING.md`](docs/PACKAGING.md)。
 
-Windows PowerShell 7：
-
-```powershell
-# 终端 A
-.\transit2fog.ps1 rail-china-start
-
-# 终端 B
-.\transit2fog.ps1 rail-china-activate
-.\transit2fog.ps1 dev-rail
-```
-
-macOS：
-
-```bash
-# 终端 A
-make rail-china-start
-
-# 终端 B
-make rail-china-activate
-make dev-rail
-```
-
-`*-activate` 会先运行对应的固定样本验证，再原子切换 `active`。Windows 使用无需管理员或开发者模式的原子 JSON selector，既有 macOS 符号链接 selector 仍可读取。已经验证并激活过同一图版本时，终端 B 可直接运行 `dev-rail`。应用位于 `http://127.0.0.1:5173`；sidecar 只监听 `127.0.0.1:8989`，不要直接暴露给局域网。完整的版本锁定、区域图、自定义 PBF 和回滚说明见 [`rail-routing/README.md`](rail-routing/README.md)。
-
-如果已有图位于旧验收目录或其他自定义位置，请在两个终端先设置相同路径，再运行上述命令；`make doctor-rail` 会显示它实际检查到的 JAR 和 `active` 图：
+如果已有图位于旧验收目录或其他自定义位置，请在启动前设置工作目录与图目录；`make doctor-rail` 会显示它实际检查到的 JAR 和 `active` 图：
 
 Windows PowerShell 7：
 

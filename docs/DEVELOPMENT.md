@@ -62,7 +62,19 @@ macOS：
 make start
 ```
 
-命令会构建前端、运行 Alembic，然后由 FastAPI 在 `http://127.0.0.1:8765` 同时托管 API 和 SPA。默认不监听局域网地址。
+命令会构建前端、运行 Alembic，然后由 FastAPI 在 `http://127.0.0.1:8765` 同时托管 API 和 SPA。默认不监听局域网地址。铁路 production 使用 `start-rail`，无需另开 sidecar 终端。
+
+## 安装包
+
+```powershell
+.\transit2fog.ps1 package
+```
+
+```bash
+make package
+```
+
+该命令生成 PyInstaller 独立运行目录、平台安装产物和 SHA-256，并在隔离临时数据库执行打包 smoke test。`SIDECAR_JAR`/`-SidecarJar` 可把固定构建的 OpenRailRouting JAR 与完整第三方声明一并放入包中。tag 工作流会在 Windows/macOS 构建该完整变体。详见 [`PACKAGING.md`](PACKAGING.md)。
 
 ## 质量检查
 
@@ -80,7 +92,25 @@ make check
 make e2e
 ```
 
-`make check` 包含后端 Ruff、Mypy、pytest，以及前端 ESLint、Vitest 和生产构建。`make e2e` 使用 Playwright 在桌面 Chromium 和移动 Chromium 运行核心流程。
+`make check` 包含后端 Ruff、Mypy、pytest，以及前端 OpenAPI 产物漂移检查、ESLint、Vitest 覆盖率和生产构建。后端行覆盖率不得低于 85%；前端 statements/branches/functions/lines 阈值分别为 65%/75%/60%/65%。
+
+`make e2e` 先在桌面和移动 Chromium 运行隔离的浏览器 Mock 场景，再运行一个不拦截 API 的真实全栈场景。后者启动生产构建、真实 FastAPI 和迁移到最新版本的临时 SQLite，播种最小合成地铁网络，验证路径预览、行程持久化和 GPX 下载；不会读取或修改用户数据库。
+
+Makefile、PowerShell 入口和兼容 shell 脚本统一委托给 `scripts/project.py`；setup、build、dev、start、package、check、test、e2e、数据库升级、备份和真实数据验证不再分别维护不同命令序列。可直接调试统一入口，例如：
+
+```bash
+uv run --project backend python scripts/project.py backend-check
+```
+
+### OpenAPI 前端类型
+
+FastAPI OpenAPI 快照提交在 `frontend/openapi.json`，生成的 TypeScript 类型提交在 `frontend/src/api/generated.ts`。后端 API schema 改动后，从仓库根目录运行：
+
+```bash
+npm run api:generate --prefix frontend
+```
+
+`api:generate` 使用隔离临时数据目录导出 schema，不会连接现有应用数据库。`make check` 中的 `api:check` 会同时检查 OpenAPI 快照和 TypeScript 产物；任一文件未重新生成都会使质量门禁失败。业务侧需要额外约束 GeoJSON 或判别联合时，在 `frontend/src/api/client.ts` 中基于生成的 schema 做窄化，不再重复手写整个响应结构。
 
 下文为简洁起见主要使用 Make target；Windows 的命令名保持一致，写作 `.\transit2fog.ps1 <target>`。完整 Windows 路径、环境变量和铁路说明见 [`WINDOWS.md`](WINDOWS.md)。`validate-real-data` 在 Windows 使用 `-CptondDir`，自定义铁路建图使用 `-PbfPath` 与 `-GraphVersion`。
 
@@ -156,7 +186,7 @@ CPTOND-2025/
 ```
 
 导入器会先审计字段、CRS、sidecar 与 SHA-256，再统一转换为 EPSG:4326 并构建 route-aware edges。重复导入相同版本与 checksum 会复用已有数据版本。
-导入进度按城市持久化；刷新设置页后仍可观察或取消。新版本导入期间旧 ready 数据继续提供查询，失败或取消会清理新版本的 staging 城市；只有全部处理结束且至少一个城市通过质量门禁后，才原子切换 active 数据版本。
+导入进度按城市持久化；刷新设置页后仍可观察或取消。导入任务本身也写入 SQLite 的 `app_task`：服务异常退出后，下一次启动会恢复未完成任务，而不是依赖响应结束后的内存回调。新版本导入期间旧 ready 数据继续提供查询，失败或取消会清理新版本的 staging 城市；只有全部处理结束且至少一个城市通过质量门禁后，才原子切换 active 数据版本。
 
 ### Science Data Bank 时序数据集
 

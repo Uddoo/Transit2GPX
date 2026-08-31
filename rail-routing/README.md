@@ -53,8 +53,8 @@ make rail-fixture-smoke
 
 The pinned regional manifest downloads and verifies the 2026-08-15 Shanghai,
 Jiangsu, Zhejiang, and Anhui Geofabrik extracts before atomically merging them.
-Build the immutable graph, then use two terminals to start, validate, activate,
-and run Transit2Fog:
+Build the immutable graph, then use two terminals once to start, validate, and
+activate the new graph:
 
 ```sh
 make rail-yangtze-data
@@ -65,7 +65,14 @@ make rail-yangtze-start
 
 # Terminal B
 make rail-yangtze-activate
+```
+
+After activation, stop terminal A. Daily development or production uses the
+managed sidecar in the same process tree:
+
+```sh
 make dev-rail
+make start-rail
 ```
 
 The validator rejects missing China profiles, invalid WGS-84 geometry,
@@ -98,7 +105,8 @@ OpenRailRouting exits successfully.
 
 The pinned China manifest, immutable build metadata, and eight-route acceptance
 set are tracked under `rail-routing/data/`. Large PBF, graph, database, and
-validation outputs remain ignored. Build first, then use two terminals:
+validation outputs remain ignored. Build first, then use two terminals once for
+validation and activation:
 
 ```sh
 make rail-china-data
@@ -109,10 +117,10 @@ make rail-china-start
 
 # Terminal B
 make rail-china-activate
-make dev-rail
 ```
 
-Activation refuses a report whose graph/PBF/Profile/commit identity differs
+After activation, `make dev-rail` or `make start-rail` starts and supervises the
+identity-checked sidecar automatically. Activation refuses a report whose graph/PBF/Profile/commit identity differs
 from the immutable graph metadata. New activations atomically update
 `active.json` and `previous.json`, whose values are restricted to a safe,
 single graph-version name. Existing safe relative `active` and `previous`
