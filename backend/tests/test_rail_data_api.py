@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from lxml import etree
 from shapely import wkb
 from shapely.geometry import Point
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -190,6 +190,21 @@ def test_active_graph_pointer_resolves_to_immutable_version(tmp_path: Path) -> N
     metadata = load_graph_metadata(tmp_path, "active")
 
     assert metadata["graph_version"] == graph_version
+
+
+def test_active_graph_metadata_must_match_selected_directory(tmp_path: Path) -> None:
+    graph_version = "china-20260815-r3.1"
+    _write_graph_metadata(tmp_path, graph_version)
+    metadata_path = tmp_path / graph_version / "transit2fog-graph.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["graph_version"] = "different-version"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    (tmp_path / "active.json").write_text(
+        json.dumps({"graph_version": graph_version}), encoding="utf-8"
+    )
+
+    with pytest.raises(RailImportError, match="所选目录版本不一致"):
+        load_graph_metadata(tmp_path, "active")
 
 
 def test_legacy_graph_metadata_filename_remains_readable(tmp_path: Path) -> None:
@@ -489,12 +504,32 @@ def test_rail_station_search_supports_name_pinyin_code_and_alias(
 ) -> None:
     dataset_id, station_ids = _seed_rail_stations(db)
 
-    response = client.get(
-        "/api/v1/rail/stations/search",
-        params={"q": query, "rail_dataset_version_id": dataset_id},
-    )
+    from app.db.session import engine
+
+    statements: list[str] = []
+
+    def capture_statement(
+        connection,
+        cursor,
+        statement,
+        parameters,
+        context,
+        executemany,  # type: ignore[no-untyped-def]
+    ) -> None:
+        del connection, cursor, parameters, context, executemany
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", capture_statement)
+    try:
+        response = client.get(
+            "/api/v1/rail/stations/search",
+            params={"q": query, "rail_dataset_version_id": dataset_id},
+        )
+    finally:
+        event.remove(engine, "before_cursor_execute", capture_statement)
 
     assert response.status_code == 200
+    assert any("rail_station_fts MATCH" in statement for statement in statements)
     assert response.json()[0]["id"] == station_ids["上海虹桥"]
     assert response.json()[0]["match_score"] >= 96
 

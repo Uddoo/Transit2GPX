@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,10 +16,9 @@ from app.db.models import (
     RailJourneyEdgeSnapshot,
     RailStation,
 )
-from app.db.session import SessionLocal, get_db
+from app.db.session import get_db
 from app.rail.importer import (
     RailImportError,
-    execute_rail_import,
     load_graph_metadata,
     prepare_rail_dataset,
     rail_station_count,
@@ -29,6 +28,7 @@ from app.rail.sidecar import (
     RailSidecarError,
     fetch_sidecar_info,
 )
+from app.services.import_jobs import enqueue_rail_import
 
 router = APIRouter(prefix="/rail/data", tags=["rail data"])
 
@@ -162,25 +162,6 @@ def _import_response(
         error_code=str(error["code"]) if error else None,
         error_message=str(error.get("message")) if error else None,
     )
-
-
-def _run_import(dataset_id: int, pbf_path: Path) -> None:
-    with SessionLocal() as db:
-        try:
-            execute_rail_import(db, dataset_id=dataset_id, pbf_path=pbf_path)
-        except Exception as error:  # background jobs must persist their failure
-            db.rollback()
-            dataset = db.get(RailDatasetVersion, dataset_id)
-            if dataset is not None:
-                dataset.status = "failed"
-                dataset.quality_flags_json = [
-                    {
-                        "code": "rail_import_failed",
-                        "message": str(error),
-                        "error_type": type(error).__name__,
-                    }
-                ]
-                db.commit()
 
 
 @router.get("/status", response_model=RailDataStatusResponse)
@@ -443,7 +424,6 @@ def compare_rail_datasets(
 )
 def start_rail_data_import(
     request: RailDataImportRequest,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> RailDataImportResponse:
     settings = get_settings()
@@ -467,7 +447,11 @@ def start_rail_data_import(
             message=str(error),
         ) from error
     if dataset.status in {"staging", "failed"}:
-        background_tasks.add_task(_run_import, dataset.id, pbf_path)
+        enqueue_rail_import(
+            dataset.id,
+            pbf_path=pbf_path,
+            expected_checksum=dataset.pbf_checksum,
+        )
     return _import_response(db, dataset)
 
 

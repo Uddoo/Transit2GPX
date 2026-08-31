@@ -539,6 +539,32 @@ class RailJourneyEdgeSnapshot(Base):
     )
 
 
+class AppTask(Base):
+    __tablename__ = "app_task"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'running', 'succeeded', 'failed', 'cancelled')",
+            name="ck_app_task_status",
+        ),
+        Index("ix_app_task_status_id", "status", "id"),
+        Index("ix_app_task_resource", "kind", "resource_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    kind: Mapped[str] = mapped_column(String(60), nullable=False)
+    resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    payload_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_type: Mapped[str | None] = mapped_column(String(160))
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+
 class ImportBatch(Base):
     __tablename__ = "import_batch"
     __table_args__ = (

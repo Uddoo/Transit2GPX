@@ -12,6 +12,10 @@ from sqlalchemy.orm import Session
 from app.core.errors import APIError
 from app.db.models import City, DatasetVersion, Line, RouteStop, RouteVariant, Station
 from app.db.session import get_db
+from app.services.spatial_queries import (
+    route_variant_ids_in_bbox,
+    station_ids_in_bbox,
+)
 
 router = APIRouter(prefix="/cities", tags=["map"])
 
@@ -121,9 +125,11 @@ def city_map(
     )
     min_lon, min_lat, max_lon, max_lat = selected_bbox
 
+    visible_variants = route_variant_ids_in_bbox(selected_bbox)
     line_query = (
         select(RouteVariant, Line)
         .join(Line, Line.id == RouteVariant.line_id)
+        .join(visible_variants, visible_variants.c.id == RouteVariant.id)
         .where(
             Line.city_id == city.id,
             Line.status == "ready",
@@ -163,9 +169,9 @@ def city_map(
             }
         )
 
-    station_query = _station_query(city.id, line_id).where(
-        Station.lon.between(min_lon, max_lon),
-        Station.lat.between(min_lat, max_lat),
+    visible_stations = station_ids_in_bbox(selected_bbox)
+    station_query = _station_query(city.id, line_id).join(
+        visible_stations, visible_stations.c.id == Station.id
     )
     stations = db.scalars(station_query.order_by(Station.name_cn, Station.id)).all()
     station_features = [

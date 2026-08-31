@@ -11,13 +11,12 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pyproj import Geod
 from shapely.geometry import LineString
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.api.paths import RailPathCandidateResponse, rail_candidate_response
 from app.core.errors import APIError
 from app.db.models import (
-    City,
     Journey,
     JourneyLeg,
     JourneyLegEdge,
@@ -27,7 +26,6 @@ from app.db.models import (
     RailJourneyLegDetail,
     RailJourneyStop,
     RailStation,
-    RouteEdge,
     Station,
 )
 from app.db.session import get_db
@@ -46,6 +44,11 @@ from app.rail.resolver import (
     ready_rail_dataset,
 )
 from app.routing.resolver import ResolvedCandidate
+from app.services.journey_queries import (
+    JourneyQueryContext,
+    load_journey_context,
+    select_journey_page,
+)
 
 router = APIRouter(prefix="/journeys", tags=["journeys"])
 _GEOD = Geod(ellps="WGS84")
@@ -163,6 +166,9 @@ class JourneyResponse(BaseModel):
 class JourneyListResponse(BaseModel):
     items: list[JourneyResponse]
     total: int
+    limit: int
+    offset: int
+    has_more: bool
 
 
 class RailRecomputeLegPreview(BaseModel):
@@ -369,31 +375,23 @@ def _rail_recompute_context(db: Session, leg: JourneyLeg) -> _RailRecomputeConte
     )
 
 
-def _rail_leg_response(db: Session, leg: JourneyLeg) -> JourneyLegResponse:
-    detail = db.get(RailJourneyLegDetail, leg.id)
-    stop_rows = db.execute(
-        select(RailJourneyStop, RailStation)
-        .join(RailStation, RailStation.id == RailJourneyStop.station_id)
-        .where(RailJourneyStop.journey_leg_id == leg.id)
-        .order_by(RailJourneyStop.stop_sequence)
-    ).all()
-    snapshots = db.scalars(
-        select(RailJourneyEdgeSnapshot)
-        .where(RailJourneyEdgeSnapshot.journey_leg_id == leg.id)
-        .order_by(RailJourneyEdgeSnapshot.order_no)
-    ).all()
+def _rail_leg_response(
+    leg: JourneyLeg, context: JourneyQueryContext
+) -> JourneyLegResponse:
+    detail = context.rail_details.get(leg.id)
+    stops = context.rail_stations_by_leg.get(leg.id, [])
+    snapshots = context.rail_snapshots_by_leg.get(leg.id, [])
     dataset = (
-        db.get(RailDatasetVersion, snapshots[0].rail_dataset_version_id)
+        context.rail_datasets.get(snapshots[0].rail_dataset_version_id)
         if snapshots
         else None
     )
-    if detail is None or dataset is None or len(stop_rows) < 2 or not snapshots:
+    if detail is None or dataset is None or len(stops) < 2 or not snapshots:
         raise APIError(
             status_code=500,
             code="journey_reference_missing",
             message="铁路行程引用的站序或几何快照不完整。",
         )
-    stops = [station for _, station in stop_rows]
     return JourneyLegResponse(
         id=leg.id,
         leg_no=leg.leg_no,
@@ -434,9 +432,9 @@ def _rail_leg_response(db: Session, leg: JourneyLeg) -> JourneyLegResponse:
     )
 
 
-def _leg_response(db: Session, leg: JourneyLeg) -> JourneyLegResponse:
+def _leg_response(leg: JourneyLeg, context: JourneyQueryContext) -> JourneyLegResponse:
     if leg.transport_mode == "rail":
-        return _rail_leg_response(db, leg)
+        return _rail_leg_response(leg, context)
     if (
         leg.transport_mode != "metro"
         or leg.dataset_version_id is None
@@ -451,16 +449,11 @@ def _leg_response(db: Session, leg: JourneyLeg) -> JourneyLegResponse:
             code="journey_transport_not_supported",
             message="这条行程包含当前页面尚未支持的交通方式。",
         )
-    city = db.get(City, leg.city_id)
-    line = db.get(Line, leg.line_id)
-    start = db.get(Station, leg.start_station_id)
-    end = db.get(Station, leg.end_station_id)
-    edge_rows = db.execute(
-        select(JourneyLegEdge, RouteEdge.distance_m)
-        .join(RouteEdge, RouteEdge.id == JourneyLegEdge.route_edge_id)
-        .where(JourneyLegEdge.journey_leg_id == leg.id)
-        .order_by(JourneyLegEdge.order_no)
-    ).all()
+    city = context.cities.get(leg.city_id)
+    line = context.lines.get(leg.line_id)
+    start = context.stations.get(leg.start_station_id)
+    end = context.stations.get(leg.end_station_id)
+    edge_rows = context.metro_edges_by_leg.get(leg.id, [])
     if city is None or line is None or start is None or end is None:
         raise APIError(
             status_code=500,
@@ -490,13 +483,14 @@ def _leg_response(db: Session, leg: JourneyLeg) -> JourneyLegResponse:
     )
 
 
-def _journey_response(db: Session, journey: Journey) -> JourneyResponse:
-    legs = db.scalars(
-        select(JourneyLeg)
-        .where(JourneyLeg.journey_id == journey.id)
-        .order_by(JourneyLeg.leg_no)
-    ).all()
-    leg_responses = [_leg_response(db, leg) for leg in legs]
+def _journey_response(
+    db: Session,
+    journey: Journey,
+    context: JourneyQueryContext | None = None,
+) -> JourneyResponse:
+    loaded = context or load_journey_context(db, [journey])
+    legs = loaded.legs_by_journey.get(journey.id, [])
+    leg_responses = [_leg_response(leg, loaded) for leg in legs]
     return JourneyResponse(
         id=journey.id,
         journey_code=journey.journey_code,
@@ -743,7 +737,7 @@ def list_journeys(
     city_id: int | None = None,
     line_id: int | None = None,
     q: str | None = None,
-    limit: int = 100,
+    limit: int = 20,
     offset: int = 0,
     db: Session = Depends(get_db),
 ) -> JourneyListResponse:
@@ -753,26 +747,21 @@ def list_journeys(
             code="invalid_pagination",
             message="分页参数超出允许范围。",
         )
-    statement = select(Journey).order_by(Journey.traveled_at.desc(), Journey.id.desc())
-    if city_id is not None or line_id is not None:
-        statement = statement.join(JourneyLeg)
-        if city_id is not None:
-            statement = statement.where(JourneyLeg.city_id == city_id)
-        if line_id is not None:
-            statement = statement.where(JourneyLeg.line_id == line_id)
-        statement = statement.distinct()
-    if q:
-        pattern = f"%{q.strip()}%"
-        statement = statement.where(
-            Journey.journey_code.ilike(pattern) | Journey.note.ilike(pattern)
-        )
-    journeys = db.scalars(statement.offset(offset).limit(limit)).all()
-    count_statement = select(func.count()).select_from(
-        statement.order_by(None).subquery()
+    journeys, total = select_journey_page(
+        db,
+        city_id=city_id,
+        line_id=line_id,
+        query=q,
+        limit=limit,
+        offset=offset,
     )
-    total = int(db.scalar(count_statement) or 0)
+    context = load_journey_context(db, journeys)
     return JourneyListResponse(
-        items=[_journey_response(db, journey) for journey in journeys], total=total
+        items=[_journey_response(db, journey, context) for journey in journeys],
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + len(journeys) < total,
     )
 
 

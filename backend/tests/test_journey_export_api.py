@@ -3,9 +3,10 @@ from __future__ import annotations
 from factories import seed_linear_network, seed_transfer_network
 from fastapi.testclient import TestClient
 from lxml import etree
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from app.db.models import RouteEdge, RouteVariant
+from app.db.models import Journey, JourneyLeg, JourneyLegEdge, RouteEdge, RouteVariant
 
 
 def _path_candidate(
@@ -124,6 +125,79 @@ def test_preview_save_list_and_gpx_export(client: TestClient, db: Session) -> No
     points = root.findall(".//{http://www.topografix.com/GPX/1/1}trkpt")
     assert len(points) > 100
     assert root.findall(".//{http://www.topografix.com/GPX/1/1}time") == []
+
+
+def test_journey_list_is_paginated_without_n_plus_one_queries(
+    client: TestClient, db: Session
+) -> None:
+    network = seed_linear_network(db)
+    for index in range(25):
+        journey = Journey(
+            journey_code=f"page-trip-{index:02d}",
+            traveled_at=None,
+            source_type="manual",
+            note=f"分页 {index}",
+        )
+        db.add(journey)
+        db.flush()
+        leg = JourneyLeg(
+            journey_id=journey.id,
+            leg_no=1,
+            transport_mode="metro",
+            dataset_version_id=network.dataset_id,
+            city_id=network.city_id,
+            line_id=network.line_id,
+            route_variant_id=network.variant_id,
+            start_station_id=network.station_ids[0],
+            end_station_id=network.station_ids[-1],
+            direction="正向",
+            resolution_status="resolved",
+            candidate_digest=f"sha256:{index:064x}",
+        )
+        db.add(leg)
+        db.flush()
+        for order_no, edge_id in enumerate(network.edge_ids, start=1):
+            db.add(
+                JourneyLegEdge(
+                    journey_leg_id=leg.id,
+                    route_edge_id=edge_id,
+                    order_no=order_no,
+                    reversed=False,
+                )
+            )
+    db.commit()
+
+    from app.db.session import engine
+
+    select_statements: list[str] = []
+
+    def capture_selects(
+        connection,
+        cursor,
+        statement,
+        parameters,
+        context,
+        executemany,  # type: ignore[no-untyped-def]
+    ) -> None:
+        del connection, cursor, parameters, context, executemany
+        if statement.lstrip().upper().startswith("SELECT"):
+            select_statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", capture_selects)
+    try:
+        response = client.get("/api/v1/journeys?limit=10&offset=10")
+    finally:
+        event.remove(engine, "before_cursor_execute", capture_selects)
+
+    assert response.status_code == 200
+    page = response.json()
+    assert page["total"] == 25
+    assert page["limit"] == 10
+    assert page["offset"] == 10
+    assert page["has_more"] is True
+    assert len(page["items"]) == 10
+    assert all(item["distance_m"] == 9600 for item in page["items"])
+    assert len(select_statements) <= 7
 
 
 def test_stale_candidate_is_rejected(client: TestClient, db: Session) -> None:

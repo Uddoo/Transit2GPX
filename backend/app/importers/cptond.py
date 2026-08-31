@@ -859,6 +859,23 @@ def _import_into_session(
     db.commit()
 
 
+def clear_dataset_cities(db: Session, dataset_id: int) -> None:
+    """Delete an unpublished dataset graph in foreign-key-safe order."""
+
+    city_ids = select(City.id).where(City.dataset_version_id == dataset_id)
+    variant_ids = select(RouteVariant.id).where(
+        RouteVariant.dataset_version_id == dataset_id
+    )
+    db.execute(delete(RouteEdge).where(RouteEdge.route_variant_id.in_(variant_ids)))
+    db.execute(delete(RouteStop).where(RouteStop.route_variant_id.in_(variant_ids)))
+    db.execute(
+        delete(RouteVariant).where(RouteVariant.dataset_version_id == dataset_id)
+    )
+    db.execute(delete(Line).where(Line.city_id.in_(city_ids)))
+    db.execute(delete(Station).where(Station.city_id.in_(city_ids)))
+    db.execute(delete(City).where(City.dataset_version_id == dataset_id))
+
+
 def create_dataset_import(
     audit: DatasetAudit, source_version: str
 ) -> DatasetImportHandle:
@@ -872,7 +889,7 @@ def create_dataset_import(
         )
         if existing is not None:
             if existing.status in {"failed", "cancelled"}:
-                db.execute(delete(City).where(City.dataset_version_id == existing.id))
+                clear_dataset_cities(db, existing.id)
                 existing.status = "staging"
                 existing.completed_at = None
                 existing.route_count = audit.route_count
@@ -930,7 +947,7 @@ def run_dataset_import(dataset_id: int, audit: DatasetAudit) -> None:
             was_cancelled = False
             if dataset is not None:
                 was_cancelled = dataset.status == "cancelled"
-                db.execute(delete(City).where(City.dataset_version_id == dataset_id))
+                clear_dataset_cities(db, dataset_id)
                 dataset.status = "cancelled" if was_cancelled else "failed"
                 dataset.completed_at = datetime.now(UTC)
                 dataset.error_code = (

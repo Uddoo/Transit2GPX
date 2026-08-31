@@ -72,7 +72,7 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _active_graph_path(graph_root: Path) -> Path:
+def active_graph_path(graph_root: Path) -> Path:
     legacy_selector = graph_root / "active"
     json_selector = graph_root / "active.json"
     legacy_exists = legacy_selector.exists() or legacy_selector.is_symlink()
@@ -114,14 +114,21 @@ def _active_graph_path(graph_root: Path) -> Path:
     return resolved
 
 
-def load_graph_metadata(graph_root: Path, graph_version: str) -> dict[str, Any]:
-    if not _GRAPH_VERSION_RE.fullmatch(graph_version):
+def resolve_graph_path(graph_root: Path, graph_version: str) -> Path:
+    if not _GRAPH_VERSION_RE.fullmatch(graph_version) or graph_version.startswith("."):
         raise RailImportError("铁路图版本名包含不允许的字符。")
     graph_path = (
-        _active_graph_path(graph_root)
+        active_graph_path(graph_root)
         if graph_version == "active"
-        else graph_root / graph_version
+        else (graph_root / graph_version).resolve(strict=False)
     )
+    if graph_path.parent != graph_root.resolve() or not graph_path.is_dir():
+        raise RailImportError("铁路图版本目录不存在或超出图数据目录。")
+    return graph_path
+
+
+def load_graph_metadata(graph_root: Path, graph_version: str) -> dict[str, Any]:
+    graph_path = resolve_graph_path(graph_root, graph_version)
     metadata_path = graph_path / "transit2fog-graph.json"
     if not metadata_path.exists():
         metadata_path = graph_path / "metro2fog-graph.json"
@@ -129,10 +136,8 @@ def load_graph_metadata(graph_root: Path, graph_version: str) -> dict[str, Any]:
         payload: Any = json.loads(metadata_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise RailImportError("铁路图元数据不存在或不是有效 JSON。") from error
-    if not isinstance(payload, dict) or (
-        graph_version != "active" and payload.get("graph_version") != graph_version
-    ):
-        raise RailImportError("铁路图元数据与请求版本不一致。")
+    if not isinstance(payload, dict) or payload.get("graph_version") != graph_path.name:
+        raise RailImportError("铁路图元数据与所选目录版本不一致。")
     if not isinstance(
         payload.get("graph_version"), str
     ) or not _GRAPH_VERSION_RE.fullmatch(payload["graph_version"]):

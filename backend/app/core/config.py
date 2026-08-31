@@ -8,6 +8,8 @@ from platformdirs import user_data_path
 from pydantic import AliasChoices, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.resources import resource_path
+
 
 def _environment_alias(name: str) -> AliasChoices:
     return AliasChoices(f"TRANSIT2FOG_{name}", f"METRO2FOG_{name}")
@@ -83,6 +85,42 @@ class Settings(BaseSettings):
         le=30.0,
         validation_alias=_environment_alias("RAIL_SIDECAR_TIMEOUT_SECONDS"),
     )
+    rail_sidecar_managed: bool = Field(
+        default=False,
+        validation_alias=_environment_alias("RAIL_SIDECAR_MANAGED"),
+    )
+    rail_sidecar_startup_seconds: float = Field(
+        default=60.0,
+        ge=1.0,
+        le=300.0,
+        validation_alias=_environment_alias("RAIL_SIDECAR_STARTUP_SECONDS"),
+    )
+    rail_sidecar_admin_port: int = Field(
+        default=8990,
+        ge=1,
+        le=65535,
+        validation_alias=_environment_alias("RAIL_SIDECAR_ADMIN_PORT"),
+    )
+    rail_sidecar_jar: Path | None = Field(
+        default=None,
+        validation_alias=_environment_alias("RAIL_SIDECAR_JAR"),
+    )
+    rail_sidecar_config: Path | None = Field(
+        default=None,
+        validation_alias=_environment_alias("RAIL_SIDECAR_CONFIG"),
+    )
+    rail_pbf_path: Path | None = Field(
+        default=None,
+        validation_alias=_environment_alias("RAIL_PBF_PATH"),
+    )
+    rail_java_home: Path | None = Field(
+        default=None,
+        validation_alias=_environment_alias("RAIL_JAVA_HOME"),
+    )
+    rail_java_opts: str = Field(
+        default="-Xms256m -Xmx2500m",
+        validation_alias=_environment_alias("RAIL_JAVA_OPTS"),
+    )
     rail_graph_version: str | None = Field(
         default=None,
         validation_alias=_environment_alias("RAIL_GRAPH_VERSION"),
@@ -109,7 +147,7 @@ class Settings(BaseSettings):
     def resolved_frontend_dist(self) -> Path:
         if self.frontend_dist:
             return self.frontend_dist.resolve()
-        return Path(__file__).resolve().parents[3] / "frontend" / "dist"
+        return resource_path("frontend", "dist")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -117,6 +155,25 @@ class Settings(BaseSettings):
         if self.rail_graph_root:
             return self.rail_graph_root.resolve()
         return (self.data_dir / "rail-routing" / "graphs").resolve()
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def resolved_rail_sidecar_jar(self) -> Path:
+        if self.rail_sidecar_jar:
+            return self.rail_sidecar_jar.resolve()
+        bundled = resource_path("rail-routing", "openrailrouting.jar")
+        if bundled.is_file():
+            return bundled
+        return (
+            self.data_dir / "rail-routing" / "dist" / "openrailrouting.jar"
+        ).resolve()
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def resolved_rail_sidecar_config(self) -> Path:
+        if self.rail_sidecar_config:
+            return self.rail_sidecar_config.resolve()
+        return resource_path("rail-routing", "config.yml")
 
     def ensure_runtime_directories(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)

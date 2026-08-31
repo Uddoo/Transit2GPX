@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import date
 from hashlib import sha256
 from pathlib import Path
@@ -9,7 +10,7 @@ import pytest
 from factories import seed_linear_network
 from fastapi.testclient import TestClient
 from shapely.geometry import LineString
-from sqlalchemy import func, select, text
+from sqlalchemy import event, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -34,7 +35,7 @@ def test_first_run_creates_complete_domain_schema(client: TestClient) -> None:
     database_path = Path(
         get_settings().resolved_database_url.removeprefix("sqlite:///")
     )
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         table_names = {
             row[0]
             for row in connection.execute(
@@ -66,15 +67,69 @@ def test_first_run_creates_complete_domain_schema(client: TestClient) -> None:
         "rail_journey_leg_detail",
         "rail_journey_stop",
         "rail_journey_edge_snapshot",
+        "app_task",
         "import_batch",
         "import_row",
     } <= table_names
-    assert {"station_fts", "station_spatial", "route_edge_spatial"} <= table_names
+    assert {
+        "station_fts",
+        "rail_station_fts",
+        "station_spatial",
+        "route_edge_spatial",
+    } <= table_names
     assert {
         "station_fts_insert",
+        "rail_station_fts_insert",
+        "rail_station_alias_fts_insert",
         "station_spatial_insert",
         "route_edge_spatial_insert",
     } <= trigger_names
+
+
+def test_city_map_returns_seeded_geojson(client: TestClient, db: Session) -> None:
+    network = seed_linear_network(db)
+
+    from app.db.session import engine
+
+    statements: list[str] = []
+
+    def capture_statement(
+        connection,
+        cursor,
+        statement,
+        parameters,
+        context,
+        executemany,  # type: ignore[no-untyped-def]
+    ) -> None:
+        del connection, cursor, parameters, context, executemany
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", capture_statement)
+    try:
+        response = client.get(
+            f"/api/v1/cities/{network.city_id}/map?line_id={network.line_id}"
+        )
+    finally:
+        event.remove(engine, "before_cursor_execute", capture_statement)
+
+    assert response.status_code == 200
+    assert any("route_edge_spatial" in statement for statement in statements)
+    assert any("station_spatial" in statement for statement in statements)
+    body = response.json()
+    assert body["city_id"] == network.city_id
+    assert body["dataset_version_id"] == network.dataset_id
+    assert body["bbox"] == [121.4, 31.18, 121.5, 31.22]
+    assert len(body["lines"]["features"]) == 1
+    assert body["lines"]["features"][0]["properties"]["name_cn"] == "测试线"
+    assert {
+        feature["properties"]["name_cn"] for feature in body["stations"]["features"]
+    } == {"甲站", "乙站", "丙站"}
+
+    invalid = client.get(
+        f"/api/v1/cities/{network.city_id}/map?bbox=121.5,31.18,121.4,31.22"
+    )
+    assert invalid.status_code == 422
+    assert invalid.json()["error"]["code"] == "invalid_bbox"
 
 
 def test_search_and_spatial_indexes_follow_domain_rows(
