@@ -1,5 +1,11 @@
 # 安装包与一体化铁路运行
 
+## 当前获取状态
+
+当前代码版本为 1.0.0，尚无正式 GitHub Release 安装包。可以先按[首次使用指南](GETTING_STARTED.md)运行源码，或按本文自行构建。
+
+2026-09-08 的[双平台构建](https://github.com/Uddoo/transit2fog/actions/runs/34192998619)已生成 Windows x64 ZIP、macOS arm64 PKG 与备用 TAR.GZ，并通过工作流内隔离 smoke test。它们仍是未签名的验证产物；文件选择、摘要、验证范围和发布前剩余事项见[发行说明草稿](RELEASE_DRAFT.md)。Actions artifact 有保留期限，不是长期下载入口。
+
 ## 1. 产物
 
 发布工作流 `.github/workflows/package.yml` 在 Windows x64 与 macOS runner 上使用锁定的 Python、Node.js、OpenRailRouting 和 GraphHopper 版本生成：

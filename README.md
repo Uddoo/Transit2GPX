@@ -1,74 +1,117 @@
+<div align="center">
+
 # Transit2Fog
 
-[![CI](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml/badge.svg)](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml)
+**把坐过的地铁和火车，变成地图上的足迹。**
 
-当前稳定版本：**1.0.0**。发布变更见 [`CHANGELOG.md`](CHANGELOG.md)。
+选择实际乘坐的起终点，预览并确认线路，导出 GPX。在世界迷雾等支持 GPX 的应用中，补上旅途中没能记录的轨迹。
 
-Transit2Fog 是一个本地优先的中国地铁与国铁轨迹工具：用户按真实乘坐区间选择或导入行程，应用解析对应线路几何、展示候选路径供确认，并导出标准 WGS‑84 GPX 1.1 轨迹文件。
+[![CI](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml/badge.svg)](https://github.com/Uddoo/transit2fog/actions/workflows/ci.yml) [![License: Apache 2.0](https://img.shields.io/badge/code-Apache_2.0-079aa4)](LICENSE)
 
-导出的文件使用标准 `<trk>` / `<trkseg>` 轨迹结构，可用于任何支持导入 GPX 1.1 轨迹的地图、户外、旅行记录或轨迹管理应用。《世界迷雾》（Fog of World）只是兼容应用示例之一，并非唯一目标。地铁几何来自 CPTOND；铁路能力组合用户提供的乘车事实、OpenStreetMap 铁路几何与 OpenRailRouting 候选路径。
+**[开始使用](docs/GETTING_STARTED.md) · [查看演示](#从选站到导出) · [支持范围](#开始前你需要知道) · [发行包状态](docs/PACKAGING.md)**
 
-```text
-CPTOND 地铁数据
-       ↓
-本地、带线路语义的地铁拓扑库
-       ↓
-地图选站 / 手动录入 / CSV 导入与审核
-       ↓
-路径候选、歧义确认、行程保存
-       ↓
-GPX 1.1（WGS‑84）
-       ↓
-支持 GPX 轨迹导入的应用
-```
+Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 
-## 平台支持
+</div>
 
-| 平台 | 原生入口 | 当前状态 |
+![上海地铁 6 号线：选择实际乘坐区间，在地图上预览候选轨迹](docs/images/metro-route-preview-v2.png)
+
+*真实应用截图 · 上海地铁 6 号线 · 28 站 / 32.6 km。使用隔离演示数据，数据预处理与素材来源见[说明](docs/MEDIA.md)。*
+
+## 从选站到导出
+
+**选好起终点 → 确认候选线路 → 保存并导出 GPX。**
+
+<details>
+<summary><strong>播放 20 秒操作演示</strong>（动图，可折叠停止观看）</summary>
+
+![真实操作演示：选择上海地铁6号线起终点，预览32.6公里候选，保存行程并生成GPX](docs/images/metro-demo.gif)
+
+[观看 MP4 版本](docs/images/metro-demo.mp4) · [素材与数据说明](docs/MEDIA.md)
+
+演示只展示环境与数据准备完成后的操作；不包含首次下载、导入和依赖安装时间。
+
+</details>
+
+- **补上实际坐过的区间。** 支持中国地铁与国铁行程；按起终点生成候选，不把整条线路算作你的足迹。
+- **每条路线由你确认。** 环线、支线与多条铁路候选都可预览，有歧义时明确提示。
+- **把轨迹带到自己的应用。** 输出标准 GPX 1.1；可用于世界迷雾等支持 GPX 轨迹导入的应用。
+
+### 多条铁路候选，确认自己坐过的路线
+
+以下保留此前的真实验收截图，界面版本与本次地铁演示不同。北京南—上海虹桥示例：比较线路、距离与警告，再决定保存哪条候选。铁路候选不等于列车实际运行路径。
+
+![北京南至上海虹桥：在地图中比较铁路候选路径](docs/images/railway-candidates.jpg)
+
+<details>
+<summary><strong>查看 GPX 导出设置</strong>：逐次行程与去重覆盖两种方式</summary>
+
+保存每次乘坐记录可选 journey；汇总同一数据版本下走过的区间可选 coverage。地铁与铁路可分别设置采样间距。
+
+![本次上海地铁演示的 GPX 导出设置：1 条行程、27 个区间、32.6 公里](docs/images/gpx-export-v2.png)
+
+</details>
+
+<a id="10-分钟地铁上手"></a>
+
+## 开始使用
+
+**第一次建议先完成一条地铁行程。** 环境与数据准备好后，只需选站、预览、确认并导出；铁路可在之后按需配置。
+
+| 你想做什么 | 从这里开始 |
+|---|---|
+| 第一次运行，导出一条地铁轨迹 | [首次使用指南](docs/GETTING_STARTED.md) |
+| 配置铁路行程与本地图 | [铁路准备步骤](docs/GETTING_STARTED.md#铁路最短可用路径) |
+| 使用或构建桌面安装包 | [安装包说明与当前分发状态](docs/PACKAGING.md) |
+| 排查环境、数据或启动问题 | [Windows 指南](docs/WINDOWS.md) · [开发与运行](docs/DEVELOPMENT.md) |
+
+> **获取方式：** 当前代码版本为 **1.0.0**，GitHub 尚无已发布安装包。请先按源码指南运行，或按安装包文档自行构建；[Releases](https://github.com/Uddoo/transit2fog/releases) 将用于提供经过发布检查的正式产物。
+>
+> **数据准备：** 第三方地铁数据需自行下载；当前 Figshare v2 包存在字段兼容问题，已在[数据获取步骤](docs/GETTING_STARTED.md#2-获取一份地铁数据)说明。依赖与数据下载时间取决于网络，不承诺开箱即用。
+
+<a id="平台支持"></a>
+
+## 开始前你需要知道
+
+| 能力 | 当前支持 | 准备条件与边界 |
 |---|---|---|
-| Windows 10/11 x64 | PowerShell 7：`.\transit2fog.ps1 <command>` | 核心应用与最小铁路 fixture 已完成实机验证；不依赖 WSL、Git Bash 或 GNU Make |
-| macOS | Makefile：`make <target>` | 首个验收平台，继续保留 POSIX shell 工作流 |
+| 地铁行程 | 地图选站、手动录入、CSV 导入与审核 | 需先导入兼容地铁数据；已验收的 46 城属于特定数据快照，不代表实时线路更新 |
+| 铁路行程 | 手动/CSV 录入、候选比较、确认与保存 | 需另备 Java 17+ 和已验证的铁路图；不内置 12306 抓取 |
+| GPX 导出 | 地铁与铁路混合导出；journey / coverage | WGS‑84、GPX 1.1 轨迹；不同目标应用的导入规则可能不同 |
+| 本地运行 | Windows 10/11 x64、macOS | 源码运行需 Node.js 22+、npm 10+、uv 0.9+；Windows 另需 PowerShell 7 |
+| 隐私 | 乘车历史与导入文件在本机处理和保存 | 默认底图会请求 OpenStreetMap 在线瓦片，可关闭或配置合规的自托管服务 |
 
-2026-08-31 的 Windows 验证基线：核心 `check` 为 105 项后端测试、10 项前端测试、Ruff、Mypy、OpenAPI 漂移检查、ESLint 与生产构建全通过；后端覆盖率 85.33%，前端 statements/branches/functions/lines 为 66.01%/77.02%/60.64%/66.01%。桌面/移动 Chromium Mock E2E 为 20/20，另有 1 项真实 FastAPI + 临时 SQLite + 生产前端 E2E；约 124 MB 的完整 Windows 包也通过隔离迁移、地理库、API、安装和卸载 smoke test。铁路侧使用项目内 Temurin 21.0.12.1+1，OpenRailRouting 34/34 测试通过，Cologne fixture 路由为 13,706.7 米/172 点，当前与兼容 metadata 端点身份一致，验收退出后 8989/8990 均释放。
+平台验证证据见[带日期的验证记录](docs/PLATFORM_VALIDATION.md)，其余边界见[已知限制](docs/KNOWN_LIMITATIONS.md)。
 
-Cologne fixture 只用于验证 Windows JDK、构建、路由和进程清理链路，不是中国正式铁路图，也不会自动设为 `active`。实际录入铁路行程前仍需选择、构建并验证长三角或全国图。
+## 常见问题
 
-带 production SPA、Alembic 和可选 sidecar JAR 的 Windows/macOS 安装包可由 `make package` 或 `.\transit2fog.ps1 package` 生成；tag 发布工作流会构建、隔离 smoke test 并上传带 SHA-256 的平台产物。详见[安装包文档](docs/PACKAGING.md)。
+**没有实时 GPS 记录，也可以使用吗？**
 
-## 实际运行截图
+可以根据自己实际乘坐的起终点补录行程，再检查候选轨迹。它不会替你证明乘坐事实，也不会自动知道列车当日实际走过的线路。
 
-以下截图来自本地真实运行环境：地铁页面使用已导入的 46 城数据，铁路页面使用北京南—上海虹桥公开验收样例；截图过程不会保存或改写行程。
+**只能用于世界迷雾吗？**
 
-### 地铁线路候选
+输出使用标准 GPX 1.1 的 `<trk>` / `<trkseg>` 结构。世界迷雾是已有人工验收记录的兼容示例，其他应用请先用少量行程抽检。
 
-选择城市、线路和起终点后，地图展示沿真实线路几何生成的候选，并给出站数、距离与质量状态。
+**安装后会自带全国数据吗？**
 
-![上海地铁 6 号线候选路径预览](docs/images/metro-route-preview.jpg)
+不会。地铁数据需自行导入；铁路 PBF 与 graph 也需单独准备。安装程序与数据准备是两个步骤。
 
-### 铁路候选比较
+**可以完全离线使用吗？**
 
-铁路图重算会保留原行程，并把不同中国国铁 Profile 的距离、评分和警告并列展示，最终由用户确认。
+行程处理在本机进行；默认在线底图需要联网。关闭底图后可使用已准备好的本地数据进行相关操作，数据与依赖的首次获取仍需准备。
 
-![北京南至上海虹桥铁路候选比较](docs/images/railway-candidates.jpg)
+## 设计与信任
 
-### GPX 导出
+预览、保存和导出使用同一组不可变线路片段，避免结果漂移。原始数据保留版本、校验和、许可与质量记录；有阻断问题的线路不能导出。
 
-导出页支持 journey 与 coverage 两种语义，并分别配置地铁、铁路采样间距。
+代码采用 [Apache License 2.0](LICENSE)。第三方地理数据分别遵循其自身许可，详见[数据与第三方署名](ATTRIBUTION.md)。
 
-![地铁与铁路混合 GPX 导出设置](docs/images/gpx-export.jpg)
+## 深入了解与参与
 
-## 产品原则
-
-- 只补用户实际乘坐的站间区间，不擅自扩展到整条线路。
-- 环线、支线、同名站、模糊匹配等歧义必须由用户确认。
-- 预览、保存和导出引用同一组不可变 `route_edge`，避免结果漂移。
-- 内部存储、GeoJSON 和 GPX 都使用 WGS‑84；米制运算使用局部投影。
-- 以标准 GPX 1.1 作为应用间的兼容边界，不依赖目标应用的私有格式或数据库。
-- 默认仅监听 `127.0.0.1`，乘车历史和导入文件不离开本机。
-- 原始数据必须带版本、校验和、许可与质量记录；有问题的线路不得进入可导出状态。
-
-## 文档索引
-
+- [首次使用指南](docs/GETTING_STARTED.md)：环境、数据与地铁/铁路操作。
+- [平台验证记录](docs/PLATFORM_VALIDATION.md)：历史验证基线与本次构建证据。
+- [展示素材说明](docs/MEDIA.md)：真实截图、演示与分享封面的来源。
 - [产品需求](docs/PRODUCT.md)：目标用户、完整流程、功能与验收要求。
 - [系统架构](docs/ARCHITECTURE.md)：技术栈、模块边界、运行与数据流。
 - [数据与 API 契约](docs/DATA_API.md)：数据库模型、CSV、REST、GPX 和几何约束。
@@ -86,175 +129,9 @@ Cologne fixture 只用于验证 Windows JDK、构建、路由和进程清理链�
 - [Apache License 2.0](LICENSE)：Transit2Fog 项目代码许可证。
 - [数据与第三方署名](ATTRIBUTION.md)：CPTOND、Science Data Bank、OpenStreetMap、Geofabrik 与 OpenRailRouting 的署名边界。
 
-## 10 分钟地铁上手
 
-这条路径面向第一次使用项目的人；“10 分钟”不包含第三方数据和依赖的网络下载时间。当前支持 Windows 10/11 x64 与 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。Windows 还需要 PowerShell 7；不要求 WSL、Git Bash 或 GNU Make。
-
-### 1. 检查并安装环境
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 doctor
-.\transit2fog.ps1 setup
-```
-
-macOS：
-
-```bash
-make doctor
-make setup
-```
-
-`doctor` 只检查环境，不下载或修改数据；`setup` 根据锁文件安装 Python 和前端依赖。
-
-### 2. 获取一份地铁数据
-
-任选一个来源，下载后完整解压到仓库外目录：
-
-| 来源 | 适合场景 | 导入时应看到的主文件 |
-|---|---|---|
-| [CPTOND-2025 v2](https://doi.org/10.6084/m9.figshare.29377427) | 官方完整基线，CC BY 4.0 | `metro_routes.shp`、`metro_stops.shp` |
-| [Science Data Bank 46 城时序数据](https://doi.org/10.57760/sciencedb.33335) | Figshare 下载受限时的兼容替代源，CC BY-NC-SA 4.0 | `metro_routes.shp`、`metro_routes_segment_timeline.shp`、`metro_stations_timeline.shp` |
-
-不要只复制 `.shp`。每组 Shapefile 必须同时保留同名的 `.shx`、`.dbf`、`.prj`；文件可以位于所选目录的任意子层级。
-
-### 3. 启动并导入
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 dev
-```
-
-macOS：
-
-```bash
-make dev
-```
-
-1. 打开 `http://127.0.0.1:5173/settings/data`。
-2. 在“地铁数据”中填写解压目录的绝对路径，点击“导入数据目录”。
-3. 等待状态变为“真实地铁数据已就绪”，并确认阻断线路数量符合预期。
-4. 如果导入失败，先检查 Shapefile sidecar、CRS 和页面中的质量报告。
-
-### 4. 创建行程并导出 GPX
-
-1. 打开“添加行程”，选择城市、线路、起点和终点。
-2. 预览候选；环线、换乘或模糊结果需要人工确认。
-3. 保存后打开“导出”，先用少量行程生成 journey GPX 抽检，再按需生成 coverage GPX。
-4. 将 GPX 导入目标轨迹应用，确认轨迹没有错误直线或明显跳点；例如可使用《世界迷雾》。
-
-生产模式在 Windows 使用 `.\transit2fog.ps1 start`，在 macOS 使用 `make start`；二者都由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](docs/DEVELOPMENT.md)。
-
-## 铁路最短可用路径
-
-铁路数据下载已经脚本化，但首次使用还需要构建 OpenRailRouting sidecar 和本地图。Java 17+ 可以运行，Windows 当前验证基线为项目内 Temurin 21.0.12.1+1；系统 Maven 和系统级 JDK 安装都不是必需项，脚本会下载并校验固定版本。
-
-### 1. 先选择图范围
-
-| 方案 | 固定数据 | 验证集合 | 建议资源 | 适合场景 |
-|---|---|---|---|---|
-| 长三角轻量图 | 上海、江苏、浙江、安徽合并 PBF，参考成品约 223 MB | 4 条跨省/高普速线路 | 至少 3 GB 可用磁盘、4 GB 可用内存 | 首次体验、开发调试 |
-| 全国完整图 | 中国 PBF 约 1.58 GB，graph 约 187 MB | 8 条全国代表线路 | 至少 5 GB 可用磁盘、4 GB 可用内存 | 全国行程、正式使用 |
-
-全国图在验收机器上建图约 166 秒、峰值 RSS 约 1.46 GB；首次 bootstrap 还会下载并编译固定版本依赖，实际耗时取决于网络和机器。以上是保守准备建议，不是跨平台最低配置承诺。
-
-### 2. 首次准备
-
-先检查核心和铁路环境：
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 setup
-.\transit2fog.ps1 setup-java
-.\transit2fog.ps1 doctor-rail
-.\transit2fog.ps1 rail-fixture
-.\transit2fog.ps1 rail-fixture-verify
-```
-
-macOS：
-
-```bash
-make setup
-make doctor-rail
-make rail-bootstrap
-```
-
-Windows 的 `setup-java` 会把固定版本 JDK 安装到被忽略的项目数据目录，不修改系统 `PATH`、`JAVA_HOME` 或注册表。`rail-fixture` 会完成固定 OpenRailRouting/GraphHopper 构建及最小图生成；`rail-fixture-verify` 会启动 sidecar、验证路由与两个 metadata 端点，再按已确认的进程树停止服务并检查端口释放。
-
-选择长三角轻量图：
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 rail-yangtze-data
-.\transit2fog.ps1 rail-yangtze-graph
-```
-
-macOS：
-
-```bash
-make rail-yangtze-data
-make rail-yangtze-graph
-```
-
-或者选择全国完整图：
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 rail-china-data
-.\transit2fog.ps1 rail-china-graph
-```
-
-macOS：
-
-```bash
-make rail-china-data
-make rail-china-graph
-```
-
-下载支持断点续传，并按仓库固定 manifest 校验摘要；PBF、graph 和构建产物都保存在被忽略的 `data/` 目录。
-
-### 3. 验证、激活并一体化启动
-
-新图首次激活时仍需临时启动该明确版本，以便固定样本验证其身份；完成 `*-activate` 后即可关闭临时 sidecar。详细步骤见 [`rail-routing/README.md`](rail-routing/README.md)。后续日常运行只需一个命令，FastAPI 会启动、验证并监督 active sidecar：
-
-Windows PowerShell 7：
-
-```powershell
-.\transit2fog.ps1 dev-rail
-# 生产模式：.\transit2fog.ps1 start-rail
-```
-
-macOS：
-
-```bash
-make dev-rail
-# 生产模式：make start-rail
-```
-
-主进程只绑定 loopback，复用身份一致的既有 sidecar，并只在退出时回收自己启动的 Java 进程。sidecar 启动失败不会阻断地铁功能；诊断写入应用数据目录的 `logs/rail-sidecar.log`。安装包、进程身份校验和外部 graph/PBF 布局见 [`docs/PACKAGING.md`](docs/PACKAGING.md)。
-
-如果已有图位于旧验收目录或其他自定义位置，请在启动前设置工作目录与图目录；`make doctor-rail` 会显示它实际检查到的 JAR 和 `active` 图：
-
-Windows PowerShell 7：
-
-```powershell
-$env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
-$env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
-.\transit2fog.ps1 doctor-rail
-```
-
-macOS：
-
-```bash
-export RAIL_WORK_DIR=/absolute/path/to/rail-work
-export RAIL_GRAPH_ROOT=/absolute/path/to/graphs
-make doctor-rail
-```
+<details>
+<summary>数据源、标准与参考资料</summary>
 
 ## 数据与标准基线
 
@@ -279,3 +156,5 @@ make doctor-rail
 - [OpenStreetMap copyright 与 ODbL](https://www.openstreetmap.org/copyright)
 - [GPX 1.1 Schema](https://www.topografix.com/gpx/1/1/)
 - [兼容应用示例：Fog of World](https://fogofworld.app/)
+
+</details>
