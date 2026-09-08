@@ -10,7 +10,7 @@
 | [gpx-export-v2.png](images/gpx-export-v2.png) | 导出设置截图 | 同一隔离环境中实际保存的 1 条演示行程，27 个区间、32.6 km |
 | [metro-demo.gif](images/metro-demo.gif) | 可折叠的 20 秒演示 | Playwright 真实操作录像，经 FFmpeg 添加步骤字幕、转码并在结尾延长停留；3 fps、960px 宽 |
 | [metro-demo.mp4](images/metro-demo.mp4) | 较小体积的视频版本 | 同一真实录像；字幕位于新增的底部留白，不遮挡地图署名 |
-| [social-preview.png](images/social-preview.png) | GitHub 分享封面 | 内置 ImageGen 生成的品牌示意图；抽象线路不是实际地理数据或产品截图 |
+| [social-preview.png](images/social-preview.png) | README 顶部封面与 GitHub 分享封面 | 内置 ImageGen 生成的品牌示意图；抽象线路不是实际地理数据或产品截图 |
 
 地铁与导出截图采集视口为 1440 × 1100，保留页面内容与 OpenStreetMap 署名。原始演示约 14.48 秒，末尾停留延长至 20 秒；该时长不代表首次安装、下载或导入耗时。导出文件已实际下载，GPX 保留在本机演示工作目录，不作为个人乘坐记录发布。
 

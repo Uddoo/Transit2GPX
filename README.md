@@ -1,8 +1,8 @@
 <div align="center">
 
-# Transit2Fog
+<a id="transit2fog"></a>
 
-**把坐过的地铁和火车，变成地图上的足迹。**
+![Transit2Fog：把坐过的地铁和火车，变成地图上的足迹。](docs/images/social-preview.png)
 
 选择实际乘坐的起终点，预览并确认线路，导出 GPX。在世界迷雾等支持 GPX 的应用中，补上旅途中没能记录的轨迹。
 
