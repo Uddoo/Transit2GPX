@@ -854,6 +854,17 @@
             "title": "Encoding",
             "type": "string"
           },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
           "failed_rows": {
             "title": "Failed Rows",
             "type": "integer"
@@ -864,6 +875,10 @@
           },
           "id": {
             "title": "Id",
+            "type": "integer"
+          },
+          "processed_rows": {
+            "title": "Processed Rows",
             "type": "integer"
           },
           "resolved_rows": {
@@ -888,6 +903,8 @@
           "filename",
           "encoding",
           "total_rows",
+          "processed_rows",
+          "error_message",
           "resolved_rows",
           "review_rows",
           "failed_rows",
@@ -1374,6 +1391,59 @@
         "title": "JourneyCreate",
         "type": "object"
       },
+      "JourneyFilterOption": {
+        "properties": {
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "JourneyFilterOption",
+        "type": "object"
+      },
+      "JourneyFiltersResponse": {
+        "properties": {
+          "cities": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyFilterOption"
+            },
+            "title": "Cities",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyFilterOption"
+            },
+            "title": "Lines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cities",
+          "lines"
+        ],
+        "title": "JourneyFiltersResponse",
+        "type": "object"
+      },
       "JourneyLegResponse": {
         "properties": {
           "candidate_digest": {
@@ -1694,6 +1764,134 @@
         "title": "JourneyLegResponse",
         "type": "object"
       },
+      "JourneyLegSummary": {
+        "properties": {
+          "city_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Id"
+          },
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "end_station_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Station Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "leg_no": {
+            "title": "Leg No",
+            "type": "integer"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "line_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Name"
+          },
+          "start_station_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Station Name"
+          },
+          "train_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train No"
+          },
+          "train_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Type"
+          },
+          "transport_mode": {
+            "enum": [
+              "metro",
+              "rail"
+            ],
+            "title": "Transport Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "leg_no",
+          "transport_mode",
+          "city_id",
+          "city_name",
+          "line_id",
+          "line_name",
+          "start_station_name",
+          "end_station_name",
+          "train_no",
+          "train_type",
+          "distance_m"
+        ],
+        "title": "JourneyLegSummary",
+        "type": "object"
+      },
       "JourneyListResponse": {
         "properties": {
           "has_more": {
@@ -1702,7 +1900,14 @@
           },
           "items": {
             "items": {
-              "$ref": "#/components/schemas/JourneyResponse"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/JourneyResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/JourneySummaryResponse"
+                }
+              ]
             },
             "title": "Items",
             "type": "array"
@@ -1843,6 +2048,79 @@
           "legs"
         ],
         "title": "JourneyResponse",
+        "type": "object"
+      },
+      "JourneySummaryResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "distance_m": {
+            "title": "Distance M",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "journey_code": {
+            "title": "Journey Code",
+            "type": "string"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyLegSummary"
+            },
+            "title": "Legs",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "traveled_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traveled At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "journey_code",
+          "traveled_at",
+          "source_type",
+          "note",
+          "created_at",
+          "updated_at",
+          "distance_m",
+          "legs"
+        ],
+        "title": "JourneySummaryResponse",
         "type": "object"
       },
       "LineResponse": {
@@ -4046,6 +4324,48 @@
         ]
       }
     },
+    "/api/v1/import-batches/{batch_id}/cancel": {
+      "post": {
+        "operationId": "cancel_import_batch_api_v1_import_batches__batch_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
     "/api/v1/import-batches/{batch_id}/commit": {
       "post": {
         "operationId": "commit_import_batch_api_v1_import_batches__batch_id__commit_post",
@@ -4135,6 +4455,48 @@
           }
         },
         "summary": "Resolve Import Batch",
+        "tags": [
+          "csv-import"
+        ]
+      }
+    },
+    "/api/v1/import-batches/{batch_id}/resume": {
+      "post": {
+        "operationId": "resume_import_batch_api_v1_import_batches__batch_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBatchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Import Batch",
         "tags": [
           "csv-import"
         ]
@@ -4343,6 +4705,50 @@
           },
           {
             "in": "query",
+            "name": "summary",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Summary",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "traveled_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Traveled From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "traveled_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Traveled To"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -4424,6 +4830,27 @@
           }
         },
         "summary": "Create Journey",
+        "tags": [
+          "journeys"
+        ]
+      }
+    },
+    "/api/v1/journeys/filters": {
+      "get": {
+        "operationId": "journey_filters_api_v1_journeys_filters_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyFiltersResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Journey Filters",
         "tags": [
           "journeys"
         ]

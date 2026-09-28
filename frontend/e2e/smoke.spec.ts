@@ -135,6 +135,7 @@ const railRecomputeCandidate = {
 };
 
 async function mockReadyShell(page: Page) {
+  await page.route("**/api/v1/cities", route => route.fulfill({ json: [] }));
   await page.route("**/api/v1/config/public", (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -205,6 +206,9 @@ async function mockReadyShell(page: Page) {
       },
     }),
   );
+  await page.route("**/api/v1/journeys/filters", (route) => route.fulfill({ json: {
+    cities: [{ id: 1, name: "上海" }], lines: [{ id: 2, name: "2号线", city_id: 1 }],
+  }}));
   await page.route("https://tile.openstreetmap.org/**", (route) => route.abort());
 }
 
@@ -451,10 +455,14 @@ test("map station clicks save a map-sourced journey", async ({ page }) => {
   const stationMarkers = page.locator('.leaflet-overlay-pane path[fill="#ffffff"]');
   await expect(stationMarkers).toHaveCount(2);
   await stationMarkers.nth(1).dispatchEvent("click");
+  await expect(page.getByRole("combobox", { name: "起点站", exact: true })).toHaveValue("人民广场");
   await page.locator('.leaflet-overlay-pane path[fill="#ffffff"]').nth(0).dispatchEvent("click");
+  await expect(page.getByRole("combobox", { name: "起点站", exact: true })).toHaveValue("人民广场");
+  await expect(page.getByRole("combobox", { name: "终点站", exact: true })).toHaveValue("虹桥火车站");
   await page.getByRole("button", { name: "预览路径" }).click();
   await page.getByRole("button", { name: "保存行程" }).click();
   await expect.poll(() => savedBody?.source_type).toBe("map");
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   expect(savedBody?.legs?.[0]?.start_station_id).not.toBe(
     savedBody?.legs?.[0]?.end_station_id,
   );
@@ -589,15 +597,12 @@ test("journey list supports filtering and metadata editing", async ({ page }) =>
     if (request.method() === "GET" && url.pathname === "/api/v1/journeys") {
       await route.fulfill({
         contentType: "application/json",
-        json: {
-          items: [currentJourney],
-          total: 1,
-          limit: 20,
-          offset: 0,
-          has_more: false,
-        },
+        json: url.searchParams.get("q") ? { items: [], total: 0 } : { items: [currentJourney], total: 1 },
       });
       return;
+    }
+    if (request.method() === "GET" && url.pathname === "/api/v1/journeys/7") {
+      await route.fulfill({ json: currentJourney }); return;
     }
     if (request.method() === "PATCH" && url.pathname === "/api/v1/journeys/7") {
       const input = request.postDataJSON() as {
@@ -996,7 +1001,7 @@ test("CSV review exposes ambiguous candidates before commit", async ({ page }) =
 
 test("export filters saved journeys and downloads both GPX modes", async ({ page }) => {
   let previewBody: Record<string, unknown> | undefined;
-  await page.route("**/api/v1/journeys**", (route) =>
+  await page.route("**/api/v1/journeys?**", (route) =>
     route.fulfill({
       contentType: "application/json",
       json: {
@@ -1039,8 +1044,8 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   await page.goto("/exports");
   await expect(page.getByText("18.3 km")).toBeVisible();
   await page.getByLabel("仅勾选的行程").check();
-  await page.getByRole("checkbox", { name: /J-20260820-001/ }).check();
   await page.getByLabel("城市").selectOption("1");
+  await page.getByRole("checkbox", { name: /J-20260820-001/ }).check();
   await expect.poll(() => previewBody).toMatchObject({ city_id: 1, journey_ids: [7] });
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "生成 GPX" }).click();
@@ -1053,4 +1058,91 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const journeyDownload = await journeyDownloadPromise;
   expect(journeyDownload.suggestedFilename()).toBe("transit2fog.gpx");
+});
+
+test("journey pagination and server search reach records beyond the first hundred", async ({ page }) => {
+  const records = Array.from({ length: 125 }, (_, index) => ({ ...journey, id: index + 1, journey_code: `trip-${index + 1}`, note: index === 124 ? "旧记录专用备注" : null }));
+  let detailRequests = 0;
+  await page.route("**/api/v1/journeys**", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname === "/api/v1/journeys") {
+      const query = url.searchParams.get("q") ?? "";
+      const matches = records.filter((item) => !query || item.note?.includes(query));
+      const offset = Number(url.searchParams.get("offset") ?? 0);
+      const limit = Number(url.searchParams.get("limit") ?? 50);
+      await route.fulfill({ json: { items: matches.slice(offset, offset + limit), total: matches.length } });
+    } else if (url.pathname === "/api/v1/journeys/125") {
+      detailRequests += 1;
+      await route.fulfill({ json: records[124] });
+    } else await route.fallback();
+  });
+  await page.goto("/journeys");
+  await expect(page.getByText("第 1–50 条，共 125 条")).toBeVisible();
+  expect(detailRequests).toBe(0);
+  await page.getByRole("button", { name: "下一页" }).click();
+  await expect(page.getByText("第 51–100 条，共 125 条")).toBeVisible();
+  await page.getByRole("button", { name: "下一页" }).click();
+  await expect(page.getByText("第 101–125 条，共 125 条")).toBeVisible();
+  await page.getByPlaceholder("按城市、线路、站点、编号或备注筛选").fill("旧记录专用备注");
+  await expect(page.locator(".journey-card")).toHaveCount(1);
+  await expect(page.getByText("第 1–1 条，共 1 条")).toBeVisible();
+  await page.getByText("查看详情").click();
+  await expect(page.getByText(/数据版本 1 · 1 个区间/)).toBeVisible();
+  expect(detailRequests).toBe(1);
+});
+
+test("export selection retains IDs across pages and loads complete filter facets", async ({ page }) => {
+  const records = Array.from({ length: 125 }, (_, index) => ({ ...journey, id: index + 1, journey_code: `export-${index + 1}` }));
+  let selection: number[] = [];
+  await page.route("**/api/v1/journeys/filters", (route) => route.fulfill({ json: {
+    cities: [{ id: 1, name: "上海" }, { id: 99, name: "历史城市" }],
+    lines: [{ id: 2, name: "2号线", city_id: 1 }, { id: 99, name: "历史线路", city_id: 99 }],
+  }}));
+  await page.route("**/api/v1/journeys?**", (route) => {
+    const url = new URL(route.request().url());
+    const offset = Number(url.searchParams.get("offset") ?? 0);
+    return route.fulfill({ json: { items: records.slice(offset, offset + 50), total: records.length } });
+  });
+  await page.route("**/api/v1/exports/preview", (route) => {
+    const body = route.request().postDataJSON() as { journey_ids: number[] };
+    selection = body.journey_ids;
+    return route.fulfill({ json: { preview_token: "test-token", journey_count: selection.length || 125, edge_count: 2, unique_edge_count: 2, distance_m: 1000, track_count: 1, segment_count: 1, dataset_version_ids: [1], rail_dataset_version_ids: [], rail_graph_versions: [], warnings: [], blocking_errors: [] } });
+  });
+  await page.goto("/exports");
+  await expect(page.getByLabel("城市").locator("option")).toHaveCount(3);
+  await page.getByLabel("仅勾选的行程").check();
+  await page.getByRole("checkbox", { name: /export-1$/, exact: false }).check();
+  await page.getByRole("button", { name: "下一页" }).click();
+  await expect(page.getByText("第 51–100 条，共 125 条")).toBeVisible();
+  await page.getByRole("button", { name: "下一页" }).click();
+  await page.getByRole("checkbox", { name: /export-125$/ }).check();
+  await expect.poll(() => selection).toEqual([1, 125]);
+  await expect(page.getByText("已选择 2 条行程（跨页保留）")).toBeVisible();
+  await page.getByRole("button", { name: "上一页" }).click();
+  await expect(page.getByText("第 51–100 条，共 125 条")).toBeVisible();
+  await page.getByRole("button", { name: "上一页" }).click();
+  await expect(page.getByRole("checkbox", { name: /export-1$/ })).toBeChecked();
+});
+
+test("CSV task survives refresh and can pause and resume", async ({ page }) => {
+  let status = "parsing";
+  let processed = 1;
+  const batch = () => ({ id: 91, filename: "resume.csv", encoding: "utf-8", total_rows: 3, processed_rows: processed, resolved_rows: processed, review_rows: 0, failed_rows: 0, status, error_message: null, created_at: "2026-09-28T00:00:00Z", committed_at: null });
+  await page.route("**/api/v1/import-batches/91**", (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/rows")) return route.fulfill({ json: { items: [], total: 0 } });
+    if (url.pathname.endsWith("/cancel")) status = "cancelled";
+    if (url.pathname.endsWith("/resume")) { status = "ready_for_review"; processed = 3; }
+    return route.fulfill({ json: batch() });
+  });
+  await page.goto("/imports/csv?batch=91");
+  await expect(page.getByRole("progressbar", { name: "CSV 解析进度" })).toHaveAttribute("value", "1");
+  await expect(page.getByRole("button", { name: "提交全部已审核行" })).toBeDisabled();
+  await page.getByRole("button", { name: "暂停解析" }).click();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "继续解析" })).toBeVisible();
+  await expect(page).toHaveURL(/batch=91/);
+  await page.getByRole("button", { name: "继续解析" }).click();
+  await expect(page.getByRole("button", { name: "提交全部已审核行" })).toBeEnabled();
+  await expect(page.getByText("3 已解析", { exact: true })).toBeVisible();
 });

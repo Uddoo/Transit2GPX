@@ -3,9 +3,10 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session, aliased, defer
 
 from app.db.models import (
     City,
@@ -44,6 +45,8 @@ def select_journey_page(
     query: str | None,
     limit: int,
     offset: int,
+    traveled_from: date | None = None,
+    traveled_to: date | None = None,
 ) -> tuple[list[Journey], int]:
     statement = select(Journey).order_by(Journey.traveled_at.desc(), Journey.id.desc())
     if city_id is not None or line_id is not None:
@@ -53,10 +56,49 @@ def select_journey_page(
         if line_id is not None:
             statement = statement.where(JourneyLeg.line_id == line_id)
         statement = statement.distinct()
-    if query:
-        pattern = f"%{query.strip()}%"
+    if traveled_from is not None:
+        statement = statement.where(Journey.traveled_at >= traveled_from)
+    if traveled_to is not None:
+        statement = statement.where(Journey.traveled_at <= traveled_to)
+    if query and query.strip():
+        # Literal contains matching; search station/line/train names across all pages.
+        pattern = (
+            "%"
+            + query.strip().replace("/", "//").replace("%", "/%").replace("_", "/_")
+            + "%"
+        )
+        start_station = aliased(Station)
+        end_station = aliased(Station)
+        matching_legs = (
+            select(JourneyLeg.journey_id)
+            .outerjoin(City, City.id == JourneyLeg.city_id)
+            .outerjoin(Line, Line.id == JourneyLeg.line_id)
+            .outerjoin(start_station, start_station.id == JourneyLeg.start_station_id)
+            .outerjoin(end_station, end_station.id == JourneyLeg.end_station_id)
+            .outerjoin(
+                RailJourneyLegDetail,
+                RailJourneyLegDetail.journey_leg_id == JourneyLeg.id,
+            )
+            .outerjoin(RailJourneyStop, RailJourneyStop.journey_leg_id == JourneyLeg.id)
+            .outerjoin(RailStation, RailStation.id == RailJourneyStop.station_id)
+            .where(
+                or_(
+                    City.name_cn.ilike(pattern, escape="/"),
+                    Line.name_cn.ilike(pattern, escape="/"),
+                    start_station.name_cn.ilike(pattern, escape="/"),
+                    end_station.name_cn.ilike(pattern, escape="/"),
+                    RailStation.name_cn.ilike(pattern, escape="/"),
+                    RailJourneyLegDetail.train_no.ilike(pattern, escape="/"),
+                    RailJourneyLegDetail.train_type.ilike(pattern, escape="/"),
+                )
+            )
+        )
         statement = statement.where(
-            Journey.journey_code.ilike(pattern) | Journey.note.ilike(pattern)
+            or_(
+                Journey.journey_code.ilike(pattern, escape="/"),
+                Journey.note.ilike(pattern, escape="/"),
+                Journey.id.in_(matching_legs),
+            )
         )
     journeys = list(db.scalars(statement.offset(offset).limit(limit)).all())
     total = int(
@@ -158,6 +200,7 @@ def load_journey_context(
             rail_stations_by_leg[stop.journey_leg_id].append(station)
         snapshots = db.scalars(
             select(RailJourneyEdgeSnapshot)
+            .options(defer(RailJourneyEdgeSnapshot.geometry_wkb))
             .where(RailJourneyEdgeSnapshot.journey_leg_id.in_(rail_leg_ids))
             .order_by(
                 RailJourneyEdgeSnapshot.journey_leg_id,

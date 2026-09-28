@@ -379,6 +379,7 @@ a { color: inherit; }
   .candidate-rail__title strong { white-space: normal; font-size: 15px; }
   .candidate-rail__facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
   .candidate-rail__facts div { min-width: 0; padding: 0 9px; }
+  .candidate-rail__facts dd { white-space: normal; overflow-wrap: anywhere; }
   .candidate-rail__actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; }
   .candidate-rail__export { grid-column: 1 / -1; grid-row: 1; }
   .review-toolbar { flex-wrap: wrap; }

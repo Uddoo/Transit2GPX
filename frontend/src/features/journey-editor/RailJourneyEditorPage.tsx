@@ -16,7 +16,7 @@ import {
 import { Icon } from "../../components/Icon";
 import { downloadBlob } from "../../utils/download";
 import { JourneyModeTabs } from "./JourneyModeTabs";
-import { RailPreviewMap } from "./RailPreviewMap";
+import { lazy, Suspense } from "react";
 import { RailStationCombobox } from "./RailStationCombobox";
 import {
   useCreateJourney,
@@ -24,6 +24,8 @@ import {
   useRailPathPreview,
 } from "./useJourneyNetwork";
 import { usePublicConfig } from "./usePublicConfig";
+
+const RailPreviewMap = lazy(() => import("./RailPreviewMap").then((module) => ({ default: module.RailPreviewMap })));
 
 type RailJourneyEditorPageProps = {
   onModeChange: (mode: "metro" | "rail") => void;
@@ -527,6 +529,7 @@ export function RailJourneyEditorPage({ onModeChange }: RailJourneyEditorPagePro
           </button>
         </form>
         <div className="map-stage">
+          <Suspense fallback={<p className="panel-message" role="status">正在加载地图…</p>}>
           <RailPreviewMap
             candidates={candidates}
             onSelectCandidate={(candidateId) => {
@@ -547,6 +550,7 @@ export function RailJourneyEditorPage({ onModeChange }: RailJourneyEditorPagePro
                 : undefined
             }
           />
+          </Suspense>
         </div>
       </div>
       {!selectedCandidate ? (

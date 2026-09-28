@@ -19,7 +19,8 @@ from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging
 from app.core.request_id import install_request_id_middleware
 from app.db.search import ensure_search_indexes
-from app.db.session import engine
+from app.db.session import SessionLocal, engine
+from app.importers.recovery import recover_interrupted_imports
 from app.rail.sidecar import RailSidecarError
 from app.rail.supervisor import RailSidecarSupervisor
 from app.tasks import task_executor
@@ -50,11 +51,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Alembic owns all schema changes. Refuse to let create_all partially apply
     # a new model revision to an older user database.
     with engine.begin() as connection:
-        if not inspect(connection).has_table("app_task"):
+        inspector = inspect(connection)
+        if not inspector.has_table("app_task") or not {
+            "processed_rows",
+            "run_token",
+            "error_message",
+        }.issubset(
+            {column["name"] for column in inspector.get_columns("import_batch")}
+        ):
             raise RuntimeError(
                 "数据库结构不是最新版本；请先运行 scripts/project.py db-upgrade。"
             )
         ensure_search_indexes(connection)
+    with SessionLocal() as db:
+        recover_interrupted_imports(db)
     sidecar: RailSidecarSupervisor | None = None
     if settings.rail_enabled and settings.rail_sidecar_managed:
         sidecar = RailSidecarSupervisor(settings)

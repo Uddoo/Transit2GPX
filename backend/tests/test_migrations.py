@@ -53,6 +53,31 @@ def test_model_metadata_matches_head_migration(tmp_path: Path) -> None:
     _alembic(database, "check")
 
 
+def test_csv_job_migration_preserves_existing_review_progress(tmp_path: Path) -> None:
+    database = tmp_path / "csv-jobs.sqlite3"
+    _alembic(database, "upgrade", "20260821_0006")
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "INSERT INTO import_batch (filename, encoding, total_rows, "
+            "resolved_rows, review_rows, failed_rows, status) "
+            "VALUES ('keep.csv', 'utf-8', 3, 2, 1, 0, 'ready_for_review')"
+        )
+    _alembic(database, "upgrade", "head")
+    with closing(sqlite3.connect(database)) as connection, connection:
+        assert connection.execute(
+            "SELECT filename, processed_rows, resolved_rows, review_rows, "
+            "run_token, error_message FROM import_batch"
+        ).fetchone() == ("keep.csv", 3, 2, 1, None, None)
+    _alembic(database, "check")
+    _alembic(database, "downgrade", "20260821_0006")
+    _alembic(database, "upgrade", "head")
+    with closing(sqlite3.connect(database)) as connection, connection:
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute(
+            "SELECT processed_rows FROM import_batch"
+        ).fetchone() == (3,)
+
+
 def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) -> None:
     database = tmp_path / "migration.sqlite3"
     _alembic(database, "upgrade", "20260821_0003")
@@ -74,7 +99,7 @@ def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) 
         ]
         assert connection.execute(
             "SELECT version_num FROM alembic_version"
-        ).fetchone() == ("20260831_0007",)
+        ).fetchone() == ("20260928_0008",)
 
     _alembic(database, "downgrade", "20260821_0003")
 

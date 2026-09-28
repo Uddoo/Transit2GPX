@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.api.paths import RailPathCandidateResponse, rail_candidate_response
 from app.core.errors import APIError
 from app.db.models import (
+    City,
     Journey,
     JourneyLeg,
     JourneyLegEdge,
@@ -163,12 +164,50 @@ class JourneyResponse(BaseModel):
     legs: list[JourneyLegResponse]
 
 
+class JourneyLegSummary(BaseModel):
+    id: int
+    leg_no: int
+    transport_mode: Literal["metro", "rail"]
+    city_id: int | None
+    city_name: str | None
+    line_id: int | None
+    line_name: str | None
+    start_station_name: str | None
+    end_station_name: str | None
+    train_no: str | None
+    train_type: str | None
+    distance_m: float
+
+
+class JourneySummaryResponse(BaseModel):
+    id: int
+    journey_code: str
+    traveled_at: date | None
+    source_type: str
+    note: str | None
+    created_at: datetime
+    updated_at: datetime
+    distance_m: float
+    legs: list[JourneyLegSummary]
+
+
 class JourneyListResponse(BaseModel):
-    items: list[JourneyResponse]
+    items: list[JourneyResponse | JourneySummaryResponse]
     total: int
     limit: int
     offset: int
     has_more: bool
+
+
+class JourneyFilterOption(BaseModel):
+    id: int
+    name: str
+    city_id: int | None = None
+
+
+class JourneyFiltersResponse(BaseModel):
+    cities: list[JourneyFilterOption]
+    lines: list[JourneyFilterOption]
 
 
 class RailRecomputeLegPreview(BaseModel):
@@ -732,11 +771,37 @@ def _clone_metro_leg(
         )
 
 
+@router.get("/filters", response_model=JourneyFiltersResponse)
+def journey_filters(db: Session = Depends(get_db)) -> JourneyFiltersResponse:
+    cities = db.execute(
+        select(City.id, City.name_cn)
+        .join(JourneyLeg, JourneyLeg.city_id == City.id)
+        .distinct()
+        .order_by(City.name_cn)
+    ).all()
+    lines = db.execute(
+        select(Line.id, Line.name_cn, Line.city_id)
+        .join(JourneyLeg, JourneyLeg.line_id == Line.id)
+        .distinct()
+        .order_by(Line.city_id, Line.sort_order, Line.name_cn)
+    ).all()
+    return JourneyFiltersResponse(
+        cities=[JourneyFilterOption(id=ident, name=name) for ident, name in cities],
+        lines=[
+            JourneyFilterOption(id=ident, name=name, city_id=city_id)
+            for ident, name, city_id in lines
+        ],
+    )
+
+
 @router.get("", response_model=JourneyListResponse)
 def list_journeys(
     city_id: int | None = None,
     line_id: int | None = None,
     q: str | None = None,
+    summary: bool = False,
+    traveled_from: date | None = None,
+    traveled_to: date | None = None,
     limit: int = 20,
     offset: int = 0,
     db: Session = Depends(get_db),
@@ -752,12 +817,29 @@ def list_journeys(
         city_id=city_id,
         line_id=line_id,
         query=q,
+        traveled_from=traveled_from,
+        traveled_to=traveled_to,
         limit=limit,
         offset=offset,
     )
     context = load_journey_context(db, journeys)
+    items: list[JourneyResponse | JourneySummaryResponse] = []
+    for journey in journeys:
+        response = _journey_response(db, journey, context)
+        if summary:
+            items.append(
+                JourneySummaryResponse(
+                    **response.model_dump(exclude={"legs"}),
+                    legs=[
+                        JourneyLegSummary.model_validate(leg.model_dump())
+                        for leg in response.legs
+                    ],
+                )
+            )
+        else:
+            items.append(response)
     return JourneyListResponse(
-        items=[_journey_response(db, journey, context) for journey in journeys],
+        items=items,
         total=total,
         limit=limit,
         offset=offset,

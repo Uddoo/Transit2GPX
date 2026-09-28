@@ -252,6 +252,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/import-batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Import Batch */
+        post: operations["cancel_import_batch_api_v1_import_batches__batch_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/import-batches/{batch_id}/commit": {
         parameters: {
             query?: never;
@@ -280,6 +297,23 @@ export interface paths {
         put?: never;
         /** Resolve Import Batch */
         post: operations["resolve_import_batch_api_v1_import_batches__batch_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import-batches/{batch_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Import Batch */
+        post: operations["resume_import_batch_api_v1_import_batches__batch_id__resume_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -419,6 +453,23 @@ export interface paths {
         put?: never;
         /** Re Resolve Journey */
         post: operations["re_resolve_journey_api_v1_journeys__journey_id__re_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/journeys/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Journey Filters */
+        get: operations["journey_filters_api_v1_journeys_filters_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -862,12 +913,16 @@ export interface components {
             created_at: string;
             /** Encoding */
             encoding: string;
+            /** Error Message */
+            error_message: string | null;
             /** Failed Rows */
             failed_rows: number;
             /** Filename */
             filename: string;
             /** Id */
             id: number;
+            /** Processed Rows */
+            processed_rows: number;
             /** Resolved Rows */
             resolved_rows: number;
             /** Review Rows */
@@ -979,6 +1034,22 @@ export interface components {
             /** Traveled At */
             traveled_at?: string | null;
         };
+        /** JourneyFilterOption */
+        JourneyFilterOption: {
+            /** City Id */
+            city_id?: number | null;
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** JourneyFiltersResponse */
+        JourneyFiltersResponse: {
+            /** Cities */
+            cities: components["schemas"]["JourneyFilterOption"][];
+            /** Lines */
+            lines: components["schemas"]["JourneyFilterOption"][];
+        };
         /** JourneyLegResponse */
         JourneyLegResponse: {
             /** Candidate Digest */
@@ -1053,12 +1124,42 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** JourneyLegSummary */
+        JourneyLegSummary: {
+            /** City Id */
+            city_id: number | null;
+            /** City Name */
+            city_name: string | null;
+            /** Distance M */
+            distance_m: number;
+            /** End Station Name */
+            end_station_name: string | null;
+            /** Id */
+            id: number;
+            /** Leg No */
+            leg_no: number;
+            /** Line Id */
+            line_id: number | null;
+            /** Line Name */
+            line_name: string | null;
+            /** Start Station Name */
+            start_station_name: string | null;
+            /** Train No */
+            train_no: string | null;
+            /** Train Type */
+            train_type: string | null;
+            /**
+             * Transport Mode
+             * @enum {string}
+             */
+            transport_mode: "metro" | "rail";
+        };
         /** JourneyListResponse */
         JourneyListResponse: {
             /** Has More */
             has_more: boolean;
             /** Items */
-            items: components["schemas"]["JourneyResponse"][];
+            items: (components["schemas"]["JourneyResponse"] | components["schemas"]["JourneySummaryResponse"])[];
             /** Limit */
             limit: number;
             /** Offset */
@@ -1090,6 +1191,33 @@ export interface components {
             journey_code: string;
             /** Legs */
             legs: components["schemas"]["JourneyLegResponse"][];
+            /** Note */
+            note: string | null;
+            /** Source Type */
+            source_type: string;
+            /** Traveled At */
+            traveled_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** JourneySummaryResponse */
+        JourneySummaryResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Distance M */
+            distance_m: number;
+            /** Id */
+            id: number;
+            /** Journey Code */
+            journey_code: string;
+            /** Legs */
+            legs: components["schemas"]["JourneyLegSummary"][];
             /** Note */
             note: string | null;
             /** Source Type */
@@ -2065,6 +2193,37 @@ export interface operations {
             };
         };
     };
+    cancel_import_batch_api_v1_import_batches__batch_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     commit_import_batch_api_v1_import_batches__batch_id__commit_post: {
         parameters: {
             query?: never;
@@ -2113,6 +2272,37 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_import_batch_api_v1_import_batches__batch_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2230,6 +2420,9 @@ export interface operations {
                 line_id?: number | null;
                 offset?: number;
                 q?: string | null;
+                summary?: boolean;
+                traveled_from?: string | null;
+                traveled_to?: string | null;
             };
             header?: never;
             path?: never;
@@ -2478,6 +2671,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    journey_filters_api_v1_journeys_filters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JourneyFiltersResponse"];
                 };
             };
         };
