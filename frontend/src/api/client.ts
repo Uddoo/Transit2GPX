@@ -617,6 +617,8 @@ export type SetupProgress = ApiSchema<"SetupProgress">;
 export type SetupProgressPatch = Partial<ApiSchema<"SetupProgressPatch">>;
 export type RailSetupConfig = ApiSchema<"RailSetupConfig">;
 export type RailServiceState = ApiSchema<"RailServiceState">;
+export type ComponentState = ApiSchema<"ComponentState">;
+export type PackPreview = ApiSchema<"PackPreview">;
 export type SetupStep = NonNullable<SetupProgress["step"]>;
 
 export function fetchSetup(signal?: AbortSignal) {
@@ -633,4 +635,18 @@ export function checkRailSetup(input: RailSetupConfig) {
 }
 export function startSetupRailService(input: RailSetupConfig) {
   return requestJson<RailServiceState>("/api/v1/setup/rail/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}
+
+export function prepareRailComponents() {
+  return requestJson<ComponentState>("/api/v1/setup/rail/components", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ install: true }) });
+}
+
+export function inspectCityPack(file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return requestJson<PackPreview>("/api/v1/data/city-packs/inspect", { method: "POST", body });
+}
+
+export function installCityPack(packageId: string) {
+  return requestJson<ApiSchema<"PackInstallResult">>("/api/v1/data/city-packs/install", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: packageId }) });
 }

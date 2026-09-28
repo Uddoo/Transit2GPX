@@ -95,6 +95,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/data/city-packs/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Capabilities */
+        get: operations["capabilities_api_v1_data_city_packs_capabilities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inspect Pack */
+        post: operations["inspect_pack_api_v1_data_city_packs_inspect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Install Pack */
+        post: operations["install_pack_api_v1_data_city_packs_install_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/data/imports": {
         parameters: {
             query?: never;
@@ -663,6 +714,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/setup/rail/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare Rail Components */
+        post: operations["prepare_rail_components_api_v1_setup_rail_components_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/setup/rail/start": {
         parameters: {
             query?: never;
@@ -723,6 +791,11 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_inspect_pack_api_v1_data_city_packs_inspect_post */
+        Body_inspect_pack_api_v1_data_city_packs_inspect_post: {
+            /** File */
+            file: string;
+        };
         /** CityMapResponse */
         CityMapResponse: {
             /** Bbox */
@@ -768,6 +841,39 @@ export interface components {
              * @enum {string}
              */
             strategy: "all" | "resolved_only";
+        };
+        /** ComponentPrepareRequest */
+        ComponentPrepareRequest: {
+            /**
+             * Install
+             * @constant
+             */
+            install: true;
+        };
+        /** ComponentState */
+        ComponentState: {
+            /**
+             * Downloaded Bytes
+             * @default 0
+             */
+            downloaded_bytes: number;
+            /** Jar Path */
+            jar_path?: string | null;
+            /** Java Home */
+            java_home?: string | null;
+            /** Message */
+            message?: string | null;
+            /**
+             * Status
+             * @default unavailable
+             * @enum {string}
+             */
+            status: "unavailable" | "idle" | "downloading" | "installing" | "ready" | "failed";
+            /**
+             * Total Bytes
+             * @default 0
+             */
+            total_bytes: number;
         };
         /** DatasetImportRequest */
         DatasetImportRequest: {
@@ -1016,6 +1122,16 @@ export interface components {
             status: string;
             /** Total Rows */
             total_rows: number;
+        };
+        /** ImportCapabilities */
+        ImportCapabilities: {
+            /**
+             * City Pack Format
+             * @default transit2fog-city-v1
+             */
+            city_pack_format: string;
+            /** Raw Import */
+            raw_import: boolean;
         };
         /** ImportRowPatch */
         ImportRowPatch: {
@@ -1377,6 +1493,70 @@ export interface components {
             start_station_id: number;
             /** Via Station Ids */
             via_station_ids?: number[];
+        };
+        /** PackInstallRequest */
+        PackInstallRequest: {
+            /** Package Id */
+            package_id: string;
+        };
+        /** PackInstallResult */
+        PackInstallResult: {
+            /** Dataset Id */
+            dataset_id: number;
+            /**
+             * Status
+             * @default ready
+             */
+            status: string;
+        };
+        /** PackManifest */
+        PackManifest: {
+            /** City Code */
+            city_code: string;
+            /** City Name */
+            city_name: string;
+            /**
+             * Format
+             * @default transit2fog-city-v1
+             * @constant
+             */
+            format: "transit2fog-city-v1";
+            /** Network Sha256 */
+            network_sha256: string;
+            source: components["schemas"]["PackSource"];
+        };
+        /** PackPreview */
+        PackPreview: {
+            /** Blocked Variants */
+            blocked_variants: number;
+            /** Lines */
+            lines: number;
+            manifest: components["schemas"]["PackManifest"];
+            /** Package Id */
+            package_id: string;
+            /** Ready Variants */
+            ready_variants: number;
+            /** Stations */
+            stations: number;
+        };
+        /** PackSource */
+        PackSource: {
+            /** Attribution */
+            attribution: string;
+            /** Captured At */
+            captured_at?: string | null;
+            /** Checksum */
+            checksum: string;
+            /** Importer */
+            importer: string;
+            /** License */
+            license: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+            /** Version */
+            version: string;
         };
         /** PathCandidateResponse */
         PathCandidateResponse: {
@@ -1904,6 +2084,7 @@ export interface components {
         };
         /** SetupState */
         SetupState: {
+            components: components["schemas"]["ComponentState"];
             /** Locked Fields */
             locked_fields: string[];
             /** Log Path */
@@ -1916,6 +2097,8 @@ export interface components {
             rail_config: components["schemas"]["RailSetupConfig"];
             /** Rail Start Allowed */
             rail_start_allowed: boolean;
+            /** Raw Import Available */
+            raw_import_available: boolean;
             service: components["schemas"]["RailServiceState"];
             /** Should Show */
             should_show: boolean;
@@ -2090,6 +2273,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfigResponse"];
+                };
+            };
+        };
+    };
+    capabilities_api_v1_data_city_packs_capabilities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCapabilities"];
+                };
+            };
+        };
+    };
+    inspect_pack_api_v1_data_city_packs_inspect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_inspect_pack_api_v1_data_city_packs_inspect_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    install_pack_api_v1_data_city_packs_install_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackInstallRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackInstallResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3198,6 +3467,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupChecks"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_rail_components_api_v1_setup_rail_components_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentPrepareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentState"];
                 };
             };
             /** @description Validation Error */

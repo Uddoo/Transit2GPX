@@ -12,7 +12,7 @@ import geopandas as gpd
 import pandas as pd
 from pyproj import Geod
 from shapely.geometry import LineString, MultiLineString, Point
-from sqlalchemy import delete, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -31,6 +31,7 @@ from app.geometry.edges import (
     build_loop_edges,
     build_route_edges,
 )
+from app.importers.cleanup import clear_dataset_cities as clear_dataset_cities
 from app.matching.names import (
     normalize_city_name,
     normalize_line_name,
@@ -857,23 +858,6 @@ def _import_into_session(
     dataset.status = "ready"
     dataset.completed_at = datetime.now(UTC)
     db.commit()
-
-
-def clear_dataset_cities(db: Session, dataset_id: int) -> None:
-    """Delete an unpublished dataset graph in foreign-key-safe order."""
-
-    city_ids = select(City.id).where(City.dataset_version_id == dataset_id)
-    variant_ids = select(RouteVariant.id).where(
-        RouteVariant.dataset_version_id == dataset_id
-    )
-    db.execute(delete(RouteEdge).where(RouteEdge.route_variant_id.in_(variant_ids)))
-    db.execute(delete(RouteStop).where(RouteStop.route_variant_id.in_(variant_ids)))
-    db.execute(
-        delete(RouteVariant).where(RouteVariant.dataset_version_id == dataset_id)
-    )
-    db.execute(delete(Line).where(Line.city_id.in_(city_ids)))
-    db.execute(delete(Station).where(Station.city_id.in_(city_ids)))
-    db.execute(delete(City).where(City.dataset_version_id == dataset_id))
 
 
 def create_dataset_import(

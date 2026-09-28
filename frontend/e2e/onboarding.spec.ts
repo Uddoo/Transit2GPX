@@ -101,3 +101,83 @@ test("rail errors remain actionable and skipping does not fake readiness", async
   await page.getByRole("button", { name: "继续准备数据" }).click();
   await expect(page.getByRole("heading", { name: "导入地铁线路数据" })).toBeVisible();
 });
+
+test("optional railway components retry, survive navigation and do not fake data readiness", async ({ page }) => {
+  const state = await mockSetup(page);
+  state.rail_config.jar_path = null;
+  state.components = { status: "idle", downloaded_bytes: 0, total_bytes: 96000000, message: null, jar_path: null, java_home: null };
+  let attempts = 0;
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+  await page.route("**/api/v1/setup/rail/components", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ install: true });
+    attempts += 1;
+    state.components.status = attempts === 1 ? "failed" : "downloading";
+    state.components.downloaded_bytes = attempts === 1 ? 0 : 48000000;
+    state.components.message = attempts === 1 ? "下载未完成，请重试以继续下载。" : "正在下载铁路引擎和专用 Java";
+    await route.fulfill({ status: 202, json: state.components });
+  });
+  await page.goto("/setup?step=rail");
+  await expect(page).toHaveTitle(/Transit2Fog/);
+  await expect(page.getByRole("heading", { name: "准备铁路服务" })).toBeVisible();
+  await page.getByRole("button", { name: "下载并准备铁路组件" }).click();
+  await expect(page.getByRole("alert").getByText("下载未完成，请重试以继续下载。")).toBeVisible();
+  await page.getByRole("button", { name: "重试组件下载" }).click();
+  await expect(page.getByRole("progressbar", { name: "铁路组件下载进度" })).toHaveAttribute("value", "48000000");
+  await expect(page.getByRole("button", { name: "启动铁路服务" })).toBeDisabled();
+  await page.reload();
+  await expect(page.getByRole("progressbar", { name: "铁路组件下载进度" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  state.components.status = "ready";
+  state.components.jar_path = "/tmp/components/openrailrouting.jar";
+  state.components.java_home = "/tmp/components/java";
+  await expect(page.getByText("铁路组件已就绪", { exact: true })).toBeVisible();
+  await expect(page.getByText("铁路数据已就绪", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "启动铁路服务" })).toBeEnabled();
+  await page.getByText("高级设置：Java 与服务文件").click();
+  await expect(page.getByLabel("Java 安装目录")).toHaveValue("");
+  await expect(page.getByLabel("铁路服务 JAR 文件")).toHaveValue("");
+  // Empty overrides keep auto-discovery version-aware on future upgrades.
+  await page.getByRole("button", { name: "跳过，先使用地铁" }).click();
+  await expect(page.getByRole("heading", { name: "还差一份线路数据" })).toBeVisible();
+  expect(attempts).toBe(2);
+  expect(errors).toEqual([]);
+});
+
+test("light edition installs a city pack after preview and hides raw GIS controls", async ({ page }) => {
+  const state = await mockSetup(page);
+  state.raw_import_available = false;
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  let attempts = 0;
+  await page.route("**/api/v1/data/city-packs/inspect", async (route) => {
+    attempts += 1;
+    if (attempts === 1) return route.fulfill({ status: 422, json: { error: { code: "invalid_city_pack", message: "城市包校验失败，原有数据已保留。" } } });
+    return route.fulfill({ json: {
+      package_id: "a".repeat(64), lines: 2, stations: 20, ready_variants: 3, blocked_variants: 1,
+      manifest: { format: "transit2fog-city-v1", city_code: "310000", city_name: "上海", network_sha256: "b".repeat(64),
+        source: { name: "CPTOND", version: "2025-snapshot", url: "https://example.org", license: "CC BY 4.0", captured_at: "2025-06", checksum: "source-checksum", importer: "cptond-v2.3", attribution: "测试来源署名，仅供验收" } },
+    } });
+  });
+  await page.route("**/api/v1/data/city-packs/install", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ package_id: "a".repeat(64) });
+    state.metro = { ...state.metro, status: "ready", ready_available: true, cities: 1, ready_lines: 2, processed_cities: 1, total_cities: 1 };
+    return route.fulfill({ json: { dataset_id: 8, status: "ready" } });
+  });
+  await page.goto("/setup?step=metro");
+  await expect(page.getByLabel("地铁数据目录（本机绝对路径）")).toHaveCount(0);
+  await page.getByLabel("选择城市数据包").setInputFiles({name: "bad.t2fcity", mimeType: "application/zip", buffer: Buffer.from("bad")});
+  await expect(page.getByRole("alert").getByText("城市包校验失败，原有数据已保留。")).toBeVisible();
+  await page.getByLabel("选择城市数据包").setInputFiles({name: "shanghai.t2fcity", mimeType: "application/zip", buffer: Buffer.from("fixture")});
+  await expect(page.getByText("上海 · 2025-snapshot", { exact: true })).toBeVisible();
+  await expect(page.getByText("测试来源署名，仅供验收")).toBeVisible();
+  await expect(page.getByText("地铁数据已就绪", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "安装城市数据", exact: true }).click();
+  await expect(page.getByText("地铁数据已就绪", { exact: true })).toBeVisible();
+  await expect(page.getByText("城市包已安装，可选择起终点并导出轨迹。")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("地铁数据已就绪", { exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  expect(errors).toEqual([]);
+});

@@ -9,6 +9,7 @@ from pydantic import AliasChoices, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.resources import resource_path
+from app.rail.components import installed_runtime
 
 
 def _environment_alias(name: str) -> AliasChoices:
@@ -164,6 +165,8 @@ class Settings(BaseSettings):
         bundled = resource_path("rail-routing", "openrailrouting.jar")
         if bundled.is_file():
             return bundled
+        if runtime := installed_runtime(self.data_dir):
+            return runtime / "openrailrouting.jar"
         return (
             self.data_dir / "rail-routing" / "dist" / "openrailrouting.jar"
         ).resolve()

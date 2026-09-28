@@ -115,7 +115,7 @@ def current_rail_config(settings: Settings) -> RailSetupConfig:
         graph_root=str(settings.resolved_rail_graph_root),
         graph_version=settings.rail_graph_version or "active",
         pbf_path=str(pbf_path) if pbf_path else None,
-        jar_path=str(settings.resolved_rail_sidecar_jar),
+        jar_path=str(settings.rail_sidecar_jar) if settings.rail_sidecar_jar else None,
         java_home=str(settings.rail_java_home) if settings.rail_java_home else None,
     )
 
@@ -155,6 +155,25 @@ def restore_rail_preferences(db: Session, settings: Settings) -> None:
                     if not Path(value).is_absolute():
                         continue
                     value = Path(value)
+                    # The old wizard saved the auto-discovered bundled JAR as
+                    # an explicit preference. A light upgrade removes that file.
+                    # Restore automatic discovery only for these missing defaults;
+                    # custom paths and explicit launch overrides still win.
+                    legacy_defaults = {
+                        resource_path("rail-routing", "openrailrouting.jar").resolve(),
+                        (
+                            settings.data_dir
+                            / "rail-routing"
+                            / "dist"
+                            / "openrailrouting.jar"
+                        ).resolve(),
+                    }
+                    if (
+                        name == "rail_sidecar_jar"
+                        and value.resolve() in legacy_defaults
+                        and not value.is_file()
+                    ):
+                        value = None
             setattr(settings, name, value)
         except (ValueError, TypeError):
             continue
@@ -323,7 +342,7 @@ def rail_checks(settings: Settings) -> SetupChecks:
                 else "没有找到 Java 17 或更高版本",
                 remedy=None
                 if ready
-                else "安装 Java 17+，或在高级设置中填写 Java 目录。",
+                else "点击“下载并准备铁路组件”，或在高级设置中填写 Java 目录。",
             )
         )
     except (RailSidecarError, OSError, subprocess.TimeoutExpired):
@@ -333,7 +352,7 @@ def rail_checks(settings: Settings) -> SetupChecks:
                 title="Java 运行环境",
                 status="failed",
                 detail="没有找到可用的 Java",
-                remedy="安装 Java 17 或更高版本，或在高级设置中填写 Java 目录。",
+                remedy="点击“下载并准备铁路组件”，或手动指定 Java 17+ 目录。",
             )
         )
     for key, title, path, remedy in (
@@ -341,7 +360,7 @@ def rail_checks(settings: Settings) -> SetupChecks:
             "jar",
             "铁路服务文件",
             settings.resolved_rail_sidecar_jar,
-            "按铁路准备说明安装服务文件，或在高级设置中填写 JAR 路径。",
+            "点击“下载并准备铁路组件”，或在高级设置中填写 JAR 路径。",
         ),
         (
             "config",

@@ -218,6 +218,36 @@ def test_preferences_restore_and_respect_explicit_launch_values(
     assert restored.rail_java_opts == "-Xms256m -Xmx2500m"
 
 
+def test_light_upgrade_resets_only_missing_legacy_auto_jar(
+    db: Session, tmp_path: Path
+) -> None:
+    legacy_jar = tmp_path / "rail-routing" / "dist" / "openrailrouting.jar"
+    original = Settings(data_dir=tmp_path, _env_file=None)
+    save_rail_preferences(
+        db,
+        original,
+        RailSetupConfig(graph_root=str(tmp_path / "graphs"), jar_path=str(legacy_jar)),
+        set(),
+    )
+    restored = Settings(data_dir=tmp_path, _env_file=None)
+    restore_rail_preferences(db, restored)
+    assert restored.rail_sidecar_jar is None
+    # An explicit launch path is not migrated, even when it names the old default.
+    locked = Settings(data_dir=tmp_path, rail_sidecar_jar=legacy_jar, _env_file=None)
+    restore_rail_preferences(db, locked)
+    assert locked.rail_sidecar_jar == legacy_jar
+    custom = tmp_path / "custom-service.jar"
+    save_rail_preferences(
+        db,
+        original,
+        RailSetupConfig(graph_root=str(tmp_path / "graphs"), jar_path=str(custom)),
+        set(),
+    )
+    restored = Settings(data_dir=tmp_path, _env_file=None)
+    restore_rail_preferences(db, restored)
+    assert restored.rail_sidecar_jar == custom
+
+
 def test_service_start_is_nonblocking_persistent_and_distinct_from_index_ready(
     client: TestClient, db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

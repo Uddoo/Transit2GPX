@@ -6,12 +6,15 @@ import {
   cancelDatasetImport,
   compareRailDatasets,
   fetchDataQuality,
+  fetchSetup,
   RequestError,
   startRailDataImport,
   startDatasetImport,
 } from "../../api/client";
 import { useRailDataStatus } from "../journey-editor/useJourneyNetwork";
 import { useDataStatus } from "./useDataStatus";
+import { CityPackImport } from "../onboarding/CityPackImport";
+import "../onboarding/onboarding.css";
 
 function datasetStatusLabel(status?: string) {
   switch (status) {
@@ -30,6 +33,7 @@ function datasetStatusLabel(status?: string) {
 
 export function DataSettingsPage() {
   const query = useDataStatus();
+  const setup = useQuery({ queryKey: ["setup"], queryFn: ({ signal }) => fetchSetup(signal) });
   const queryClient = useQueryClient();
   const [directory, setDirectory] = useState("");
   const [railPbfPath, setRailPbfPath] = useState("");
@@ -79,6 +83,11 @@ export function DataSettingsPage() {
         <p>管理本地地铁数据、质量报告与应用目录。</p>
         <Link className="button button--secondary" to="/setup?step=check">打开首次使用向导</Link>
       </header>
+      <section className="settings-section settings-section--stacked">
+        <CityPackImport disabled={isImporting} refresh={async () => {
+          await Promise.all(["data-status", "data-quality", "setup", "cities"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
+        }} />
+      </section>
       <section className="settings-section settings-section--stacked" aria-labelledby="dataset-title">
         <div className="settings-section__heading">
           <div>
@@ -130,7 +139,7 @@ export function DataSettingsPage() {
             ) : null}
             {query.data.source_url ? <p className="settings-note">数据来源：<a href={query.data.source_url} rel="noreferrer" target="_blank">数据集来源页面</a></p> : null}
           </>
-        ) : (
+        ) : setup.data?.raw_import_available === false ? (<p className="settings-note">轻量版使用标准城市数据包；原始 Shapefile 请通过完整导入版或制包工具处理。</p>) : (
           <form
             className="dataset-import-form"
             onSubmit={(event) => {

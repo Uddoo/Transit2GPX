@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.active_cities import current_city_ids
 from app.db.models import City, DatasetVersion, Line, Station
 from app.db.session import get_db
 from app.matching.stations import search_ready_stations, stations_for_line
@@ -53,7 +54,7 @@ def list_cities(db: Session = Depends(get_db)) -> list[CityResponse]:
     cities = db.scalars(
         select(City)
         .join(DatasetVersion)
-        .where(City.status == "ready", DatasetVersion.status == "ready")
+        .where(City.id.in_(current_city_ids()), DatasetVersion.status == "ready")
         .order_by(City.name_cn, City.id)
     ).all()
     return [
@@ -77,7 +78,7 @@ def list_lines(city_id: int, db: Session = Depends(get_db)) -> list[LineResponse
         .where(
             Line.city_id == city_id,
             Line.status == "ready",
-            City.status == "ready",
+            City.id.in_(current_city_ids()),
             DatasetVersion.status == "ready",
         )
         .order_by(Line.sort_order, Line.name_cn, Line.id)
@@ -104,7 +105,7 @@ def list_city_stations(
         .join(DatasetVersion, DatasetVersion.id == City.dataset_version_id)
         .where(
             Station.city_id == city_id,
-            City.status == "ready",
+            City.id.in_(current_city_ids()),
             DatasetVersion.status == "ready",
         )
         .order_by(Station.name_cn, Station.id)
