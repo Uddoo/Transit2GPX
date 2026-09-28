@@ -2,9 +2,9 @@
 
 ## 当前获取状态
 
-当前代码版本为 1.0.0，尚无正式 GitHub Release 安装包。可以先按[首次使用指南](GETTING_STARTED.md)运行源码，或按本文自行构建。
+首个 [v1.0.0-rc.1 预发布版](https://github.com/Uddoo/transit2fog/releases/tag/v1.0.0-rc.1)已提供 Windows x64 ZIP、macOS Apple Silicon PKG 与备用 TAR.GZ，以及各文件的 SHA-256。包内应用版本为 1.0.0；当前尚无 Intel Mac 安装包。
 
-2026-09-08 的[双平台构建](https://github.com/Uddoo/transit2fog/actions/runs/34192998619)已生成 Windows x64 ZIP、macOS arm64 PKG 与备用 TAR.GZ，并通过工作流内隔离 smoke test。它们仍是未签名的验证产物；文件选择、摘要、验证范围和发布前剩余事项见[发行说明草稿](RELEASE_DRAFT.md)。Actions artifact 有保留期限，不是长期下载入口。
+安装包自带 Python 运行库与生产前端，不要求安装 Python、Node.js、npm 或 uv。Windows 安装脚本需要 PowerShell 7；铁路模式仍需 Java 和用户准备的图数据。文件选择、构建记录与验证范围见[发行说明](RELEASE_DRAFT.md)。请从 Release 下载，Actions artifact 仅用于构建验证且有保留期限。
 
 ## 1. 产物
 
@@ -16,6 +16,8 @@
 安装包内含生产前端、FastAPI、Python 地理运行库、Alembic migrations、GPX schema、铁路 Profile/config，以及发布工作流构建的 OpenRailRouting sidecar JAR。它不包含 OSM PBF、GraphHopper graph cache 或用户数据库。
 
 当前产物未做 Apple Developer ID 或 Windows Authenticode 签名，也不包含自动更新。正式向第三方分发前必须在受控发布环境完成签名、公证和恶意软件扫描。
+
+预发布包可能触发系统的未识别开发者提示；本次发布不代表已完成签名、公证或恶意软件扫描，也不要求关闭系统安全防护。下载后用对应 `.sha256` 核对文件，例如 macOS 使用 `shasum -a 256 <文件>`，Windows PowerShell 使用 `Get-FileHash <文件> -Algorithm SHA256`。
 
 ## 2. 本地构建
 

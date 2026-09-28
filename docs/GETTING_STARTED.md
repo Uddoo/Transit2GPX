@@ -4,7 +4,11 @@
 
 ## 先从一条地铁行程开始
 
-首次准备需要下载依赖和第三方数据，耗时取决于网络和数据量。当前支持 Windows 10/11 x64 与 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。Windows 还需要 PowerShell 7；不要求 WSL、Git Bash 或 GNU Make。
+可先下载 [v1.0.0-rc.1 预发布安装包](https://github.com/Uddoo/transit2fog/releases/tag/v1.0.0-rc.1)：Windows x64 解压后运行程序，macOS Apple Silicon 使用 PKG 或 TAR.GZ。安装包无需 Python、Node.js、npm 或 uv；当前尚未签名、公证，具体安装说明见[安装包文档](PACKAGING.md)。
+
+启动安装包会自动打开本地页面，首次使用向导会带你完成环境检查、地铁数据导入和可选的铁路服务准备。第三方数据仍需自行下载，可直接从下面第 2 步开始准备数据。
+
+如果选择源码运行，首次准备还需下载开发依赖。当前支持 Windows 10/11 x64 与 macOS，需要 Node.js 22+、npm 10+ 和 `uv` 0.9+。Windows 还需要 PowerShell 7；不要求 WSL、Git Bash 或 GNU Make。以下终端命令针对源码运行。
 
 ### 1. 获取源码并检查环境
 
