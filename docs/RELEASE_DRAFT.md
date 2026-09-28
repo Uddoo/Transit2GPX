@@ -33,7 +33,8 @@
 
 - 构建日期：2026-09-28。
 - 安装包源码提交：`d10322c6ac014320ffaea67d5d0456a1d330170e`。
-- [双平台安装包构建](https://github.com/Uddoo/transit2fog/actions/runs/36388958848)：Windows x64 与 macOS arm64，包含工作流内的隔离迁移、API 资源与地理库 smoke test。
+- [标签构建与发布](https://github.com/Uddoo/transit2fog/actions/runs/36390973871)：Windows x64 与 macOS arm64，包含工作流内的隔离迁移、API 资源与地理库 smoke test；最终附件由此工作流生成并上传。
+- [同一源码的发布预演](https://github.com/Uddoo/transit2fog/actions/runs/36388958848)：两平台包通过 SHA-256 与资源核对；macOS 预演包在外部 Python / Node.js 不可用时，通过首次向导、地铁导入、行程保存、GPX 导出、铁路测试图服务和旧数据库迁移验证。
 - [源码 CI](https://github.com/Uddoo/transit2fog/actions/runs/36388647207)：macOS / Windows、Python 3.11 / 3.13 质量检查及两平台浏览器测试通过。
 - 本地后端 125 项测试通过，覆盖率 86.95%；历史数据库迁移前后的原有表内容核对一致。
 
