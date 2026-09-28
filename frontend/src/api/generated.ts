@@ -595,6 +595,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Setup State */
+        get: operations["setup_state_api_v1_setup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check Environment */
+        get: operations["check_environment_api_v1_setup_checks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Setup Progress */
+        patch: operations["update_setup_progress_api_v1_setup_progress_patch"];
+        trace?: never;
+    };
+    "/api/v1/setup/rail/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Rail Setup */
+        post: operations["check_rail_setup_api_v1_setup_rail_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/rail/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Rail Service */
+        post: operations["start_rail_service_api_v1_setup_rail_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stations/search": {
         parameters: {
             query?: never;
@@ -1674,6 +1759,35 @@ export interface components {
             /** Leg No */
             leg_no: number;
         };
+        /** RailServiceState */
+        RailServiceState: {
+            /** Error Code */
+            error_code?: string | null;
+            /** Message */
+            message?: string | null;
+            /**
+             * Status
+             * @default idle
+             * @enum {string}
+             */
+            status: "idle" | "starting" | "ready" | "failed";
+        };
+        /** RailSetupConfig */
+        RailSetupConfig: {
+            /** Graph Root */
+            graph_root: string;
+            /**
+             * Graph Version
+             * @default active
+             */
+            graph_version: string;
+            /** Jar Path */
+            jar_path?: string | null;
+            /** Java Home */
+            java_home?: string | null;
+            /** Pbf Path */
+            pbf_path?: string | null;
+        };
         /** RailStationDifferenceSample */
         RailStationDifferenceSample: {
             /** Changed Fields */
@@ -1724,6 +1838,87 @@ export interface components {
             osm_way_id: number;
             /** Start Index */
             start_index: number;
+        };
+        /** SetupCheck */
+        SetupCheck: {
+            /** Detail */
+            detail: string;
+            /** Id */
+            id: string;
+            /** Remedy */
+            remedy?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "passed" | "warning" | "failed";
+            /** Title */
+            title: string;
+        };
+        /** SetupChecks */
+        SetupChecks: {
+            /** Can Continue */
+            can_continue: boolean;
+            /** Checks */
+            checks: components["schemas"]["SetupCheck"][];
+        };
+        /** SetupProgress */
+        SetupProgress: {
+            /**
+             * Completed
+             * @default false
+             */
+            completed: boolean;
+            /**
+             * Dismissed
+             * @default false
+             */
+            dismissed: boolean;
+            /**
+             * Rail Skipped
+             * @default false
+             */
+            rail_skipped: boolean;
+            /**
+             * Step
+             * @default check
+             * @enum {string}
+             */
+            step: "check" | "metro" | "rail" | "finish";
+        };
+        /** SetupProgressPatch */
+        SetupProgressPatch: {
+            /**
+             * Complete
+             * @default false
+             */
+            complete: boolean;
+            /** Dismissed */
+            dismissed?: boolean | null;
+            /** Metro Directory */
+            metro_directory?: string | null;
+            /** Rail Skipped */
+            rail_skipped?: boolean | null;
+            /** Step */
+            step?: ("check" | "metro" | "rail" | "finish") | null;
+        };
+        /** SetupState */
+        SetupState: {
+            /** Locked Fields */
+            locked_fields: string[];
+            /** Log Path */
+            log_path: string;
+            metro: components["schemas"]["DataStatusResponse"];
+            /** Metro Directory */
+            metro_directory: string;
+            progress: components["schemas"]["SetupProgress"];
+            rail: components["schemas"]["RailDataStatusResponse"];
+            rail_config: components["schemas"]["RailSetupConfig"];
+            /** Rail Start Allowed */
+            rail_start_allowed: boolean;
+            service: components["schemas"]["RailServiceState"];
+            /** Should Show */
+            should_show: boolean;
         };
         /** StationResponse */
         StationResponse: {
@@ -2897,6 +3092,145 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RailStationResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setup_state_api_v1_setup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupState"];
+                };
+            };
+        };
+    };
+    check_environment_api_v1_setup_checks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupChecks"];
+                };
+            };
+        };
+    };
+    update_setup_progress_api_v1_setup_progress_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupProgressPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupProgress"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_rail_setup_api_v1_setup_rail_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RailSetupConfig"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupChecks"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_rail_service_api_v1_setup_rail_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RailSetupConfig"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RailServiceState"];
                 };
             };
             /** @description Validation Error */

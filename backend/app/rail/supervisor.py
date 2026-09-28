@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -42,7 +43,15 @@ class RailSidecarSupervisor:
     def owns_process(self) -> bool:
         return self._owns_process
 
-    def start(self) -> None:
+    @property
+    def exited(self) -> bool:
+        return (
+            self._owns_process
+            and self._process is not None
+            and self._process.poll() is not None
+        )
+
+    def start(self, *, cancel_event: threading.Event | None = None) -> None:
         _managed_sidecar_port(self._settings)
         graph_path, metadata = _graph_runtime(self._settings)
         existing = _probe_sidecar(self._settings)
@@ -54,6 +63,8 @@ class RailSidecarSupervisor:
             self._settings, graph_path=graph_path, metadata=metadata
         )
 
+        if cancel_event is not None and cancel_event.is_set():
+            raise RailSidecarError("rail_start_cancelled", "铁路服务启动已取消。")
         log_dir = self._settings.data_dir.resolve() / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         self._log_stream = (log_dir / "rail-sidecar.log").open("ab", buffering=0)
@@ -66,6 +77,9 @@ class RailSidecarSupervisor:
         deadline = time.monotonic() + self._settings.rail_sidecar_startup_seconds
         last_error: RailSidecarError | None = None
         while time.monotonic() < deadline:
+            if cancel_event is not None and cancel_event.is_set():
+                self.stop()
+                raise RailSidecarError("rail_start_cancelled", "铁路服务启动已取消。")
             if self._process.poll() is not None:
                 self.stop()
                 raise RailSidecarError(

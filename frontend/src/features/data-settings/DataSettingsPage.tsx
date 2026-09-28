@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -76,6 +77,7 @@ export function DataSettingsPage() {
       <header className="page-heading">
         <h1 id="settings-title">数据与设置</h1>
         <p>管理本地地铁数据、质量报告与应用目录。</p>
+        <Link className="button button--secondary" to="/setup?step=check">打开首次使用向导</Link>
       </header>
       <section className="settings-section settings-section--stacked" aria-labelledby="dataset-title">
         <div className="settings-section__heading">

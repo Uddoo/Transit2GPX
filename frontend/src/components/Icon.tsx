@@ -1,6 +1,10 @@
 import type { SVGProps } from "react";
 
 export type IconName =
+  | "server"
+  | "folder"
+  | "drive"
+  | "info"
   | "check"
   | "database"
   | "download"
@@ -19,6 +23,10 @@ type IconProps = SVGProps<SVGSVGElement> & {
 };
 
 const iconPaths: Record<IconName, React.ReactNode> = {
+  server: <><rect x="3" y="3" width="18" height="8" rx="2" /><rect x="3" y="13" width="18" height="8" rx="2" /><path d="M17 7h.01M17 17h.01" /></>,
+  folder: <path d="M3 7V5a1 1 0 0 1 1-1h5l3 3h8a1 1 0 0 1 1 1v12H3V7Z" />,
+  drive: <><path d="M6 4h12l3 12v4H3v-4L6 4Z" /><path d="M3 16h18M16 18h2" /></>,
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></>,
   check: <path d="m5 12 4 4L19 6" />,
   database: (
     <>

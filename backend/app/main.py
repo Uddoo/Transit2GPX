@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -21,11 +20,9 @@ from app.core.request_id import install_request_id_middleware
 from app.db.search import ensure_search_indexes
 from app.db.session import SessionLocal, engine
 from app.importers.recovery import recover_interrupted_imports
-from app.rail.sidecar import RailSidecarError
-from app.rail.supervisor import RailSidecarSupervisor
+from app.rail.service import RailServiceController
+from app.services.onboarding import restore_rail_preferences
 from app.tasks import task_executor
-
-logger = logging.getLogger(__name__)
 
 
 class SPAStaticFiles(StaticFiles):
@@ -45,7 +42,6 @@ class SPAStaticFiles(StaticFiles):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    del app
     settings = get_settings()
     settings.ensure_runtime_directories()
     # Alembic owns all schema changes. Refuse to let create_all partially apply
@@ -65,24 +61,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         ensure_search_indexes(connection)
     with SessionLocal() as db:
         recover_interrupted_imports(db)
-    sidecar: RailSidecarSupervisor | None = None
+    controller = RailServiceController(settings)
+    app.state.rail_service = controller
+    with SessionLocal() as db:
+        restore_rail_preferences(db, settings)
     if settings.rail_enabled and settings.rail_sidecar_managed:
-        sidecar = RailSidecarSupervisor(settings)
-        try:
-            sidecar.start()
-        except RailSidecarError:
-            logger.exception(
-                "Managed railway sidecar could not start; metro mode remains available"
-            )
-            sidecar.stop()
-            sidecar = None
+        controller.start()
     task_executor.start()
     try:
         yield
     finally:
         task_executor.stop()
-        if sidecar is not None:
-            sidecar.stop()
+        controller.stop()
 
 
 def create_app() -> FastAPI:

@@ -3,6 +3,9 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./AppShell";
 
+const OnboardingPage = lazy(() => import("../features/onboarding/OnboardingPage").then((module) => ({ default: module.OnboardingPage })));
+const SetupEntry = lazy(() => import("../features/onboarding/SetupEntry").then((module) => ({ default: module.SetupEntry })));
+
 const CsvImportPage = lazy(() =>
   import("../features/csv-import/CsvImportPage").then((module) => ({
     default: module.CsvImportPage,
@@ -49,7 +52,8 @@ export function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Navigate replace to="/journeys/new" />} />
+        <Route index element={<LazyRoute><SetupEntry /></LazyRoute>} />
+        <Route path="/setup" element={<LazyRoute><OnboardingPage /></LazyRoute>} />
         <Route
           path="/journeys"
           element={

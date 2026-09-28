@@ -1,0 +1,13 @@
+{
+  "appVersion": "1.0.0",
+  "desktop": "1505x1045",
+  "mobile": "390x844",
+  "metroCities": 1,
+  "railStations": 3,
+  "graphVersion": "fixture-cologne-r0.1",
+  "completed": true,
+  "railConfigPersisted": true,
+  "restartRestoredPreferences": true,
+  "ownedProcessCleanup": true,
+  "errors": []
+}
