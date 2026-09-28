@@ -1,18 +1,21 @@
-"""Persist CSV processing progress and worker ownership."""
+"""Restore the CSV progress revision used before the upstream merge.
+
+Both this branch and 0008 introduced the same columns. Keep these operations
+self-contained and idempotent so either historical branch can reach the merge.
+"""
 
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "20260928_0008"
-down_revision: str | Sequence[str] | None = "20260831_0007"
+revision: str = "20260928_0007"
+down_revision: str | Sequence[str] | None = "20260821_0006"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # The pre-merge 20260928_0007 branch may already own these schema changes.
     inspector = sa.inspect(op.get_bind())
     indexes = {index["name"] for index in inspector.get_indexes("import_row")}
     columns = {column["name"] for column in inspector.get_columns("import_batch")}
@@ -35,8 +38,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Keep the shared columns while the legacy branch remains applied.
-    if "20260928_0007" in op.get_context().get_current_heads():
+    # The retained mainline branch still needs the shared CSV schema.
+    if "20260928_0008" in op.get_context().get_current_heads():
         return
     op.drop_index("ix_import_row_pending", table_name="import_row")
     with op.batch_alter_table("import_batch") as batch:

@@ -7,6 +7,8 @@ import sys
 from contextlib import closing
 from pathlib import Path
 
+import pytest
+
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
@@ -78,6 +80,109 @@ def test_csv_job_migration_preserves_existing_review_progress(tmp_path: Path) ->
         ).fetchone() == (3,)
 
 
+@pytest.mark.parametrize("pending_index", [False, True])
+def test_upgrade_from_retired_csv_revision_preserves_data(
+    tmp_path: Path, pending_index: bool
+) -> None:
+    database = tmp_path / "legacy-csv.sqlite3"
+    _alembic(database, "upgrade", "20260821_0006")
+    # Reproduce the historical database independently of the restored migration.
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(
+            "ALTER TABLE import_batch ADD COLUMN processed_rows INTEGER NOT NULL "
+            "DEFAULT '0';"
+            "ALTER TABLE import_batch ADD COLUMN run_token VARCHAR(32);"
+            "ALTER TABLE import_batch ADD COLUMN error_message TEXT;"
+            "UPDATE alembic_version SET version_num = '20260928_0007';"
+        )
+        if pending_index:
+            connection.execute(
+                "CREATE INDEX ix_import_row_pending "
+                "ON import_row (batch_id, error_code, row_no)"
+            )
+        connection.execute(
+            "INSERT INTO journey (journey_code, traveled_at, source_type, note) "
+            "VALUES ('legacy-journey', '2026-09-28', 'manual', 'keep journey')"
+        )
+        connection.executemany(
+            "INSERT INTO import_batch (filename, encoding, total_rows, "
+            "resolved_rows, review_rows, failed_rows, status, processed_rows, "
+            "run_token, error_message) VALUES (?, 'utf-8', 3, 1, 0, 0, ?, 1, ?, ?)",
+            [
+                ("parsing.csv", "parsing", "original-owner", None),
+                ("review.csv", "ready_for_review", None, "preserve error"),
+            ],
+        )
+        connection.execute(
+            "INSERT INTO import_row (batch_id, row_no, raw_json, normalized_json, "
+            "resolution_status, candidate_json) "
+            "VALUES (1, 1, '{\"original\":true}', '{}', 'needs_review', '[]')"
+        )
+        original_batches = connection.execute(
+            "SELECT * FROM import_batch ORDER BY id"
+        ).fetchall()
+        original_rows = connection.execute("SELECT * FROM import_row").fetchall()
+        original_journeys = connection.execute("SELECT * FROM journey").fetchall()
+
+    _alembic(database, "upgrade", "head")
+    _alembic(database, "upgrade", "head")
+    _alembic(database, "check")
+
+    assert {"app_task", "rail_station_fts"} <= _tables(database)
+    with closing(sqlite3.connect(database)) as connection:
+        assert connection.execute(
+            "SELECT version_num FROM alembic_version"
+        ).fetchall() == [("20260928_0009",)]
+        assert (
+            connection.execute("SELECT * FROM import_batch ORDER BY id").fetchall()
+            == original_batches
+        )
+        assert (
+            connection.execute("SELECT * FROM import_row").fetchall() == original_rows
+        )
+        assert (
+            connection.execute("SELECT * FROM journey").fetchall() == original_journeys
+        )
+        assert connection.execute(
+            "SELECT count(*) FROM sqlite_master WHERE type='trigger' "
+            "AND name LIKE 'rail_station%fts%'"
+        ).fetchone() == (6,)
+        assert connection.execute(
+            "SELECT name FROM pragma_index_info('ix_import_row_pending') ORDER BY seqno"
+        ).fetchall() == [("batch_id",), ("error_code",), ("row_no",)]
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+@pytest.mark.parametrize("revision", ["20260928_0007", "20260928_0008"])
+def test_csv_merge_round_trip_retains_either_branch(
+    tmp_path: Path, revision: str
+) -> None:
+    database = tmp_path / "csv-branches.sqlite3"
+    _alembic(database, "upgrade", revision)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "INSERT INTO import_batch (filename, encoding, total_rows, "
+            "resolved_rows, review_rows, failed_rows, status, processed_rows) "
+            "VALUES ('keep.csv', 'utf-8', 5, 2, 0, 0, 'ready_for_review', 2)"
+        )
+    _alembic(database, "upgrade", "head")
+    _alembic(database, "check")
+    _alembic(database, "downgrade", revision)
+    # Unmerging leaves both parents applied; remove only the other branch.
+    other_revision = "20260928_0008" if revision == "20260928_0007" else "20260928_0007"
+    _alembic(database, "downgrade", f"{other_revision}@20260821_0006")
+    with closing(sqlite3.connect(database)) as connection:
+        assert connection.execute(
+            "SELECT version_num FROM alembic_version"
+        ).fetchall() == [(revision,)]
+        assert connection.execute(
+            "SELECT filename, processed_rows, total_rows FROM import_batch"
+        ).fetchone() == ("keep.csv", 2, 5)
+    _alembic(database, "upgrade", "head")
+    _alembic(database, "check")
+
+
 def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) -> None:
     database = tmp_path / "migration.sqlite3"
     _alembic(database, "upgrade", "20260821_0003")
@@ -99,7 +204,7 @@ def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) 
         ]
         assert connection.execute(
             "SELECT version_num FROM alembic_version"
-        ).fetchone() == ("20260928_0008",)
+        ).fetchone() == ("20260928_0009",)
 
     _alembic(database, "downgrade", "20260821_0003")
 
