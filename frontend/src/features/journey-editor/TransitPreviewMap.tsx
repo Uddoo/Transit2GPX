@@ -1,11 +1,13 @@
-import type { Feature, Geometry, Point } from "geojson";
+import type { Feature, Geometry } from "geojson";
 import L, { type Layer, type PathOptions } from "leaflet";
 import { useEffect, useMemo } from "react";
 import {
   GeoJSON,
+  CircleMarker,
   MapContainer,
   Polyline,
   TileLayer,
+  Tooltip,
   ZoomControl,
   useMap,
 } from "react-leaflet";
@@ -61,27 +63,6 @@ function lineStyle(feature?: Feature<Geometry, MapFeatureProperties>): PathOptio
   };
 }
 
-function stationMarker(
-  feature: Feature<Point, unknown>,
-  latlng: L.LatLng,
-  startStationId?: number,
-  endStationId?: number,
-) {
-  const properties =
-    typeof feature.properties === "object" && feature.properties !== null
-      ? (feature.properties as Record<string, unknown>)
-      : undefined;
-  const stationId = properties?.station_id;
-  const isEndpoint = stationId === startStationId || stationId === endStationId;
-  return L.circleMarker(latlng, {
-    radius: isEndpoint ? 7 : 4,
-    color: "#007f89",
-    fillColor: "#ffffff",
-    fillOpacity: 1,
-    weight: isEndpoint ? 3 : 2,
-  });
-}
-
 function bindSafeLabel(
   feature: Feature<Geometry, MapFeatureProperties>,
   layer: Layer,
@@ -131,6 +112,9 @@ export function TransitPreviewMap({
   };
   const lines = data?.lines;
   const stations = data?.stations;
+  const lineLayerKey = `${data?.dataset_version_id}:${data?.city_id}:${
+    lines?.features.map((feature) => feature.properties?.route_variant_id ?? feature.properties?.name_cn).join(",")
+  }`;
   const status = state === "ready" ? undefined : STATE_COPY[state];
   const candidatePositions = useMemo<[number, number][] | undefined>(
     () => candidateCoordinates?.map(([lon, lat]) => [lat, lon]),
@@ -159,6 +143,7 @@ export function TransitPreviewMap({
         ) : null}
         {lines && lines.features.length > 0 ? (
           <GeoJSON
+            key={lineLayerKey}
             data={lines}
             onEachFeature={bindSafeLabel}
             style={lineStyle}
@@ -192,22 +177,24 @@ export function TransitPreviewMap({
             />
           </>
         ) : null}
-        {stations && stations.features.length > 0 ? (
-          <GeoJSON
-            data={stations}
-            onEachFeature={(feature, layer) => {
-              const typedFeature = feature as Feature<Geometry, MapFeatureProperties>;
-              bindSafeLabel(typedFeature, layer);
-              const stationId = typedFeature.properties?.station_id;
-              if (typeof stationId === "number" && onStationClick) {
-                layer.on("click", () => onStationClick(stationId));
-              }
-            }}
-            pointToLayer={(feature, latlng) =>
-              stationMarker(feature, latlng, startStationId, endStationId)
-            }
-          />
-        ) : null}
+        {stations?.features.map((feature) => {
+          const stationId = feature.properties?.station_id;
+          if (feature.geometry.type !== "Point" || typeof stationId !== "number") return null;
+          const [lon, lat] = feature.geometry.coordinates;
+          const isEndpoint = stationId === startStationId || stationId === endStationId;
+          const name = feature.properties?.name_cn;
+          return (
+            <CircleMarker
+              key={stationId}
+              center={[lat, lon]}
+              radius={isEndpoint ? 7 : 4}
+              pathOptions={{ color: "#007f89", fillColor: "#ffffff", fillOpacity: 1, weight: isEndpoint ? 3 : 2 }}
+              eventHandlers={{ click: () => onStationClick?.(stationId) }}
+            >
+              {typeof name === "string" ? <Tooltip direction="top">{name}</Tooltip> : null}
+            </CircleMarker>
+          );
+        })}
         <FitImportedData data={data} />
         <ZoomControl position="bottomright" />
       </MapContainer>

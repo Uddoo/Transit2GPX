@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
@@ -6,14 +6,16 @@ import {
   confirmRailRecompute,
   deleteJourney,
   fetchJourneys,
+  fetchJourney,
   patchJourney,
   previewRailRecompute,
   RequestError,
   reResolveJourney,
-  type Journey,
+  type JourneySummary,
   type RailRecomputeInput,
   type RailRecomputePreview,
 } from "../../api/client";
+import { Pagination } from "../../components/Pagination";
 import { ModalDialog } from "../../components/ModalDialog";
 
 function mutationErrorMessage(error: unknown, fallback: string) {
@@ -28,7 +30,7 @@ function RailRecomputeDialog({
   onClose,
   onConfirm,
 }: {
-  journey: Journey;
+  journey: JourneySummary;
   preview: RailRecomputePreview;
   isSaving: boolean;
   error: unknown;
@@ -159,17 +161,44 @@ function RailRecomputeDialog({
   );
 }
 
+const PAGE_SIZE = 50;
+
+function JourneyDetails({ id }: { id: number }) {
+  const [open, setOpen] = useState(false);
+  const detail = useQuery({
+    queryKey: ["journeys", "detail", id],
+    queryFn: ({ signal }) => fetchJourney(id, signal),
+    enabled: open,
+  });
+  return (
+    <details className="journey-card__details" onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary>查看详情</summary>
+      {open && detail.isPending ? <p role="status">正在读取详情…</p> : null}
+      {detail.isError ? <p role="alert">详情读取失败。<button type="button" onClick={() => void detail.refetch()}>重试</button></p> : null}
+      <dl>{detail.data?.legs.map((leg) => (
+        <div key={leg.id}><dt>第 {leg.leg_no} 段</dt><dd>
+          {leg.transport_mode === "rail"
+            ? `铁路图 ${leg.graph_version} · ${leg.osm_way_ids.length} 个 OSM way · ${leg.routing_profile}`
+            : `数据版本 ${leg.dataset_version_id} · ${leg.edge_ids.length} 个区间 · ${leg.direction ?? "方向未标注"}`}
+          {" "}· {leg.resolution_status}
+        </dd></div>
+      ))}</dl>
+    </details>
+  );
+}
+
 export function JourneysPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
-  const [editing, setEditing] = useState<Journey>();
+  const [page, setPage] = useState(0);
+  const [editing, setEditing] = useState<JourneySummary>();
   const [railRecompute, setRailRecompute] = useState<{
-    journey: Journey;
+    journey: JourneySummary;
     preview: RailRecomputePreview;
   }>();
   const journeys = useQuery({
-    queryKey: ["journeys"],
-    queryFn: ({ signal }) => fetchJourneys(signal),
+    queryKey: ["journeys", "list", filter, page],
+    queryFn: ({ signal }) => fetchJourneys({ signal, q: filter.trim(), limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
   });
   const removeJourney = useMutation({
     mutationFn: deleteJourney,
@@ -192,7 +221,7 @@ export function JourneysPage() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["journeys"] }),
   });
   const previewRail = useMutation({
-    mutationFn: (journey: Journey) => previewRailRecompute(journey.id),
+    mutationFn: (journey: JourneySummary) => previewRailRecompute(journey.id),
     onSuccess: (preview, journey) => setRailRecompute({ journey, preview }),
   });
   const recomputeRail = useMutation({
@@ -203,42 +232,31 @@ export function JourneysPage() {
       void queryClient.invalidateQueries({ queryKey: ["journeys"] });
     },
   });
-  const filteredItems = useMemo(() => {
-    const key = filter.trim().toLocaleLowerCase();
-    if (!key) return journeys.data?.items ?? [];
-    return (journeys.data?.items ?? []).filter((journey) =>
-      [
-        journey.journey_code,
-        journey.note ?? "",
-        ...journey.legs.flatMap((leg) => [
-          leg.city_name ?? "",
-          leg.line_name ?? "",
-          leg.start_station_name,
-          leg.end_station_name,
-          leg.transport_mode === "rail" ? (leg.train_no ?? leg.train_type) : "",
-        ]),
-      ].some((value) => value.toLocaleLowerCase().includes(key)),
-    );
-  }, [filter, journeys.data?.items]);
+  const filteredItems = journeys.data?.items ?? [];
+  useEffect(() => {
+    if (journeys.data && page > 0 && page * PAGE_SIZE >= journeys.data.total) {
+      setPage(Math.max(0, Math.ceil(journeys.data.total / PAGE_SIZE) - 1));
+    }
+  }, [journeys.data, page]);
 
   return (
     <section className="simple-page" aria-labelledby="journeys-title">
       <header className="page-heading page-heading--with-action">
         <div>
           <h1 id="journeys-title">行程</h1>
-          <p>已确认的地铁乘坐记录会保存在本机。</p>
+          <p>已确认的地铁与铁路乘坐记录会保存在本机。</p>
         </div>
         <Link className="button button--primary" to="/journeys/new">添加行程</Link>
       </header>
       <label className="journey-filter">
         <span className="sr-only">筛选行程</span>
         <input
-          onChange={(event) => setFilter(event.target.value)}
+          onChange={(event) => { setFilter(event.target.value); setPage(0); }}
           placeholder="按城市、线路、站点、编号或备注筛选"
           type="search"
           value={filter}
         />
-        <span>{filteredItems.length} 条</span>
+        <span>{journeys.data?.total ?? 0} 条</span>
       </label>
       {journeys.isPending ? <p className="panel-message">正在读取行程…</p> : null}
       {journeys.isError ? (
@@ -247,7 +265,7 @@ export function JourneysPage() {
           <button className="button button--secondary" onClick={() => void journeys.refetch()} type="button">重试</button>
         </div>
       ) : null}
-      {journeys.data?.items.length === 0 ? (
+      {!filter && journeys.data?.total === 0 ? (
         <div className="empty-state">
           <h2>还没有行程</h2>
           <p>选择一段真实乘坐路线，确认后即可保存。</p>
@@ -277,22 +295,7 @@ export function JourneysPage() {
                   {journey.legs.length} 段 · {(journey.distance_m / 1000).toFixed(1)} km
                   {journey.note ? ` · ${journey.note}` : ""}
                 </p>
-                <details className="journey-card__details">
-                  <summary>查看详情</summary>
-                  <dl>
-                    {journey.legs.map((leg) => (
-                      <div key={leg.id}>
-                        <dt>第 {leg.leg_no} 段</dt>
-                        <dd>
-                          {leg.transport_mode === "rail"
-                            ? `铁路图 ${leg.graph_version} · ${leg.osm_way_ids.length} 个 OSM way · ${leg.routing_profile}`
-                            : `数据版本 ${leg.dataset_version_id} · ${leg.edge_ids.length} 个区间 · ${leg.direction ?? "方向未标注"}`}
-                          {" "}· {leg.resolution_status}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </details>
+                <JourneyDetails id={journey.id} />
               </div>
               <div className="journey-card__actions">
                 <button className="button button--secondary" onClick={() => setEditing(journey)} type="button">编辑</button>
@@ -334,9 +337,10 @@ export function JourneysPage() {
           })}
         </div>
       ) : null}
-      {filter && journeys.data?.items.length && filteredItems.length === 0 ? (
+      {filter && journeys.data?.total === 0 ? (
         <p className="panel-message">没有符合筛选条件的行程。</p>
       ) : null}
+      {journeys.data ? <Pagination label="行程分页" page={page} pageSize={PAGE_SIZE} total={journeys.data.total} busy={journeys.isFetching} onChange={setPage} /> : null}
       {reResolve.isError ? <p className="form-message form-message--error" role="alert">路径仍有歧义，不能自动重算；原行程未改变。</p> : null}
       {previewRail.isError ? (
         <p className="form-message form-message--error" role="alert">

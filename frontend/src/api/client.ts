@@ -515,10 +515,39 @@ export type Journey = {
   legs: JourneyLeg[];
 };
 
-export type JourneyList = { items: Journey[]; total: number };
+export type JourneyLegSummary = Pick<JourneyLeg, "id" | "leg_no" | "transport_mode" | "city_id" | "city_name" | "line_id" | "line_name" | "start_station_name" | "end_station_name" | "distance_m"> & { train_no: string | null; train_type: string | null };
+export type JourneySummary = Omit<Journey, "legs"> & { legs: JourneyLegSummary[] };
+export type JourneyList = { items: JourneySummary[]; total: number };
+export type JourneyListOptions = {
+  signal?: AbortSignal;
+  q?: string;
+  limit?: number;
+  offset?: number;
+  city_id?: number;
+  line_id?: number;
+  traveled_from?: string;
+  traveled_to?: string;
+};
 
-export function fetchJourneys(signal?: AbortSignal) {
-  return requestJson<JourneyList>("/api/v1/journeys", { signal });
+export function fetchJourneys({ signal, ...options }: JourneyListOptions = {}) {
+  const params = new URLSearchParams({ summary: "true" });
+  Object.entries(options).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  });
+  return requestJson<JourneyList>(`/api/v1/journeys?${params.toString()}`, { signal });
+}
+
+export function fetchJourney(id: number, signal?: AbortSignal) {
+  return requestJson<Journey>(`/api/v1/journeys/${id}`, { signal });
+}
+
+export type JourneyFilters = {
+  cities: { id: number; name: string }[];
+  lines: { id: number; name: string; city_id: number }[];
+};
+
+export function fetchJourneyFilters(signal?: AbortSignal) {
+  return requestJson<JourneyFilters>("/api/v1/journeys/filters", { signal });
 }
 
 export type MetroJourneyLegInput = {
@@ -661,11 +690,12 @@ export type ExportPreview = {
   warnings: string[];
 };
 
-export function previewExport(input: ExportOptions) {
+export function previewExport(input: ExportOptions, signal?: AbortSignal) {
   return requestJson<ExportPreview>("/api/v1/exports/preview", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
+    signal,
   });
 }
 
@@ -691,6 +721,8 @@ export type ImportBatch = {
   filename: string;
   encoding: string;
   total_rows: number;
+  processed_rows: number;
+  error_message: string | null;
   resolved_rows: number;
   review_rows: number;
   failed_rows: number;
@@ -727,6 +759,14 @@ export function createImportBatch(file: File) {
 
 export function fetchImportBatch(batchId: number, signal?: AbortSignal) {
   return requestJson<ImportBatch>(`/api/v1/import-batches/${batchId}`, { signal });
+}
+
+export function cancelImportBatch(batchId: number) {
+  return requestJson<ImportBatch>(`/api/v1/import-batches/${batchId}/cancel`, { method: "POST" });
+}
+
+export function resumeImportBatch(batchId: number) {
+  return requestJson<ImportBatch>(`/api/v1/import-batches/${batchId}/resume`, { method: "POST" });
 }
 
 export function fetchImportRows(

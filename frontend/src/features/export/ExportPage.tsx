@@ -1,55 +1,38 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   downloadGpx,
   fetchJourneys,
+  fetchJourneyFilters,
   previewExport,
   type ExportOptions,
-  type ExportPreview,
 } from "../../api/client";
+import { Pagination } from "../../components/Pagination";
 import { downloadBlob } from "../../utils/download";
 
 export function ExportPage() {
   const [mode, setMode] = useState<ExportOptions["mode"]>("coverage");
   const [spacing, setSpacing] = useState<"15" | "25" | "50" | "original">("25");
   const [railSpacing, setRailSpacing] = useState<"100" | "200" | "500" | "original">("200");
-  const [preview, setPreview] = useState<ExportPreview>();
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
   const [cityId, setCityId] = useState<number>();
   const [lineId, setLineId] = useState<number>();
   const [traveledFrom, setTraveledFrom] = useState("");
   const [traveledTo, setTraveledTo] = useState("");
   const [scope, setScope] = useState<"all" | "selected">("all");
   const [selectedJourneyIds, setSelectedJourneyIds] = useState<number[]>([]);
+  const filters = useQuery({ queryKey: ["journeys", "filters"], queryFn: ({ signal }) => fetchJourneyFilters(signal) });
+  const listOptions = { q: search, limit: 50, offset: page * 50, city_id: cityId, line_id: lineId, traveled_from: traveledFrom, traveled_to: traveledTo };
   const journeys = useQuery({
-    queryKey: ["journeys"],
-    queryFn: ({ signal }) => fetchJourneys(signal),
+    queryKey: ["journeys", "selection", listOptions],
+    queryFn: ({ signal }) => fetchJourneys({ ...listOptions, signal }),
+    enabled: scope === "selected",
   });
-  const cities = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          (journeys.data?.items ?? [])
-            .flatMap((journey) => journey.legs)
-            .filter((leg) => leg.transport_mode === "metro")
-            .map((leg) => [leg.city_id, leg.city_name]),
-        ),
-      ),
-    [journeys.data?.items],
-  );
-  const lines = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          (journeys.data?.items ?? [])
-            .flatMap((journey) => journey.legs)
-            .filter((leg) => leg.transport_mode === "metro")
-            .filter((leg) => cityId === undefined || leg.city_id === cityId)
-            .map((leg) => [leg.line_id, leg.line_name]),
-        ),
-      ),
-    [cityId, journeys.data?.items],
-  );
+  const cities = filters.data?.cities ?? [];
+  const lines = (filters.data?.lines ?? []).filter((line) => cityId === undefined || line.city_id === cityId);
+  function resetSelection() { setPage(0); setSelectedJourneyIds([]); }
   const options = useMemo<ExportOptions>(
     () => ({
       mode,
@@ -65,25 +48,20 @@ export function ExportPage() {
     }),
     [cityId, lineId, mode, railSpacing, scope, selectedJourneyIds, spacing, traveledFrom, traveledTo],
   );
-  const previewMutation = useMutation({
-    mutationFn: previewExport,
-    onSuccess: setPreview,
+  const validRange = !(traveledFrom && traveledTo && traveledFrom > traveledTo);
+  const previewQuery = useQuery({
+    queryKey: ["journeys", "export-preview", options],
+    queryFn: ({ signal }) => previewExport(options, signal),
+    enabled: validRange && (scope === "all" || selectedJourneyIds.length > 0),
   });
+  const preview = validRange && (scope === "all" || selectedJourneyIds.length > 0) ? previewQuery.data : undefined;
   const downloadMutation = useMutation({
     mutationFn: downloadGpx,
     onSuccess: ({ blob, filename }) => downloadBlob(blob, filename),
   });
-
-  useEffect(() => {
-    setPreview(undefined);
-    previewMutation.mutate(options);
-  }, [options]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const blocked =
-    !preview ||
+  const blocked = !preview || previewQuery.isFetching || previewQuery.isError ||
     preview.blocking_errors.length > 0 ||
-    (scope === "selected" && selectedJourneyIds.length === 0) ||
-    Boolean(traveledFrom && traveledTo && traveledFrom > traveledTo);
+    (scope === "selected" && selectedJourneyIds.length === 0) || !validRange;
 
   return (
     <section className="simple-page export-page" aria-labelledby="export-title">
@@ -106,6 +84,8 @@ export function ExportPage() {
           <div><dt>铁路图版本</dt><dd>{preview?.rail_graph_versions.join(", ") || "无"}</dd></div>
         </dl>
       </div>
+      {filters.isError ? <p role="alert">导出筛选项读取失败。<button type="button" onClick={() => void filters.refetch()}>重试</button></p> : null}
+      {previewQuery.isFetching ? <p role="status">正在校验导出范围…</p> : null}
       <fieldset className="export-filters">
         <legend>导出范围</legend>
         <label>城市
@@ -113,28 +93,34 @@ export function ExportPage() {
             onChange={(event) => {
               setCityId(event.target.value ? Number(event.target.value) : undefined);
               setLineId(undefined);
+              resetSelection();
             }}
             value={cityId ?? ""}
           >
             <option value="">全部城市</option>
-            {cities.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            {cities.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
           </select>
         </label>
         <label>线路
-          <select onChange={(event) => setLineId(event.target.value ? Number(event.target.value) : undefined)} value={lineId ?? ""}>
+          <select onChange={(event) => { setLineId(event.target.value ? Number(event.target.value) : undefined); resetSelection(); }} value={lineId ?? ""}>
             <option value="">全部线路</option>
-            {lines.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            {lines.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
           </select>
         </label>
-        <label>起始日期<input onChange={(event) => setTraveledFrom(event.target.value)} type="date" value={traveledFrom} /></label>
-        <label>结束日期<input onChange={(event) => setTraveledTo(event.target.value)} type="date" value={traveledTo} /></label>
+        <label>起始日期<input onChange={(event) => { setTraveledFrom(event.target.value); resetSelection(); }} type="date" value={traveledFrom} /></label>
+        <label>结束日期<input onChange={(event) => { setTraveledTo(event.target.value); resetSelection(); }} type="date" value={traveledTo} /></label>
       </fieldset>
       <fieldset className="export-selection">
         <legend>行程选择</legend>
         <label><input checked={scope === "all"} onChange={() => setScope("all")} type="radio" />符合范围的全部行程</label>
         <label><input checked={scope === "selected"} onChange={() => setScope("selected")} type="radio" />仅勾选的行程</label>
         {scope === "selected" ? (
-          <div className="export-selection__list">
+          <div>
+            <label>搜索行程<input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} /></label>
+            <p role="status">已选择 {selectedJourneyIds.length} 条行程（跨页保留）</p>
+            {journeys.isPending ? <p role="status">正在读取行程…</p> : null}
+            {journeys.isError ? <p role="alert">行程读取失败。<button type="button" onClick={() => void journeys.refetch()}>重试</button></p> : null}
+            <div className="export-selection__list">
             {journeys.data?.items.map((journey) => (
               <label key={journey.id}>
                 <input
@@ -150,6 +136,8 @@ export function ExportPage() {
                 {journey.traveled_at ?? "日期未填"} · {journey.journey_code}
               </label>
             ))}
+            </div>
+            {journeys.data ? <Pagination label="导出行程分页" page={page} pageSize={50} total={journeys.data.total} busy={journeys.isFetching} onChange={setPage} /> : null}
           </div>
         ) : null}
       </fieldset>
@@ -174,7 +162,7 @@ export function ExportPage() {
       {traveledFrom && traveledTo && traveledFrom > traveledTo ? (
         <p className="form-message form-message--error" role="alert">结束日期不能早于起始日期。</p>
       ) : null}
-      {previewMutation.isError || downloadMutation.isError ? (
+      {previewQuery.isError || downloadMutation.isError ? (
         <p className="form-message form-message--error" role="alert">导出校验失败，请检查已保存行程。</p>
       ) : null}
       {preview?.blocking_errors.map((error) => (

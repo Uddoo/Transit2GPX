@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import {
@@ -11,10 +11,8 @@ import {
 import { Icon } from "../../components/Icon";
 import { downloadBlob } from "../../utils/download";
 import { JourneyModeTabs } from "./JourneyModeTabs";
-import { RailJourneyEditorPage } from "./RailJourneyEditorPage";
 import { useDataStatus } from "../data-settings/useDataStatus";
 import { StationCombobox } from "./StationCombobox";
-import { TransitPreviewMap } from "./TransitPreviewMap";
 import { useCityMap } from "./useCityMap";
 import {
   useCities,
@@ -26,6 +24,9 @@ import {
 import { usePublicConfig } from "./usePublicConfig";
 import { sortTransitLines } from "./lineSort";
 
+const RailJourneyEditorPage = lazy(() => import("./RailJourneyEditorPage").then((module) => ({ default: module.RailJourneyEditorPage })));
+const TransitPreviewMap = lazy(() => import("./TransitPreviewMap").then((module) => ({ default: module.TransitPreviewMap })));
+
 type CandidateState = "editing" | "preview" | "saved";
 
 export function JourneyEditorPage() {
@@ -33,7 +34,7 @@ export function JourneyEditorPage() {
   return mode === "metro" ? (
     <MetroJourneyEditorPage onModeChange={setMode} />
   ) : (
-    <RailJourneyEditorPage onModeChange={setMode} />
+    <Suspense fallback={<p className="panel-message" role="status">正在加载铁路编辑器…</p>}><RailJourneyEditorPage onModeChange={setMode} /></Suspense>
   );
 }
 
@@ -428,6 +429,7 @@ function MetroJourneyEditorPage({
         </form>
 
         <div className="map-stage">
+          <Suspense fallback={<p className="panel-message" role="status">正在加载地图…</p>}>
           <TransitPreviewMap
             candidateCoordinates={selectedCandidate?.geometry.coordinates}
             data={cityMap.data}
@@ -456,6 +458,7 @@ function MetroJourneyEditorPage({
                 : undefined
             }
           />
+          </Suspense>
           {mapState === "ready" && state === "editing" ? (
             <p className="map-selection-hint" role="status">
               地图点击将设置{mapSelection === "start" ? "起点" : "终点"}；也可使用左侧表单。

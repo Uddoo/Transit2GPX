@@ -19,7 +19,8 @@ from app.core.request_id import install_request_id_middleware
 from app.db import models as _models  # noqa: F401
 from app.db.base import Base
 from app.db.search import ensure_search_indexes
-from app.db.session import engine
+from app.db.session import SessionLocal, engine
+from app.importers.recovery import recover_interrupted_imports
 
 
 class SPAStaticFiles(StaticFiles):
@@ -47,6 +48,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Base.metadata.create_all(engine)
     with engine.begin() as connection:
         ensure_search_indexes(connection)
+    with SessionLocal() as db:
+        recover_interrupted_imports(db)
     yield
 
 

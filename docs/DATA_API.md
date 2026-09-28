@@ -295,6 +295,7 @@ POST /api/v1/paths/preview
 
 ```http
 GET    /api/v1/journeys
+GET    /api/v1/journeys/filters
 POST   /api/v1/journeys
 GET    /api/v1/journeys/{journey_id}
 PATCH  /api/v1/journeys/{journey_id}
@@ -305,6 +306,8 @@ POST   /api/v1/journeys/{journey_id}/re-resolve
 创建行程提交 candidate ID、digest 和用户输入。服务端重新校验候选仍属于当前数据版本且 edge 列表未变化，再在一个事务中写入 journey、legs 和 edges。
 元数据更新可提交 `expected_updated_at`；若行程已被另一操作修改，返回 `409 journey_update_conflict`，不会覆盖较新的内容。
 
+列表接受 `limit`（1–500）、`offset`、`q`、`city_id`、`line_id`、`traveled_from` 与 `traveled_to`。`q` 在全部行程的编号、备注、城市、线路、站名与车次中按字面子串查询，不只搜索当前页。前端使用 `summary=true` 读取分段摘要，展开详情时再请求单条行程；不传 `summary` 时保留完整响应兼容性。`/journeys/filters` 从全部已保存行程提取城市和线路，包含历史数据版本，供导出页使用。
+
 ### 5.5 CSV 导入
 
 ```http
@@ -313,11 +316,17 @@ GET    /api/v1/import-batches/{batch_id}
 GET    /api/v1/import-batches/{batch_id}/rows
 PATCH  /api/v1/import-batches/{batch_id}/rows/{row_id}
 POST   /api/v1/import-batches/{batch_id}/resolve
+POST   /api/v1/import-batches/{batch_id}/cancel
+POST   /api/v1/import-batches/{batch_id}/resume
 POST   /api/v1/import-batches/{batch_id}/commit
 DELETE /api/v1/import-batches/{batch_id}
 ```
 
 分页查询 rows。修改输入或候选后重新计算统计。`commit` 对已解析行全事务提交，对未处理的 review/unresolved 行返回阻止原因，不进行部分静默提交；若产品允许“只提交 resolved”，必须由用户显式选择。
+
+上传在校验文件格式并持久化全部输入行后返回 `201` 与 `status=parsing`。路径解析在后台线程中执行，使用独立数据库会话；每行完成后持久化 `processed_rows`、成功/待审核/失败计数。客户端轮询批次状态，直到 `ready_for_review` 再审核或提交。尚未处理的行使用 `error_code=csv_pending`，不计入失败数。
+
+`cancel` 暂停正在解析的批次并保留结果，`resume` 返回 `202`，仅处理剩余行。每次运行有独立令牌，暂停前的旧任务不能覆盖继续后的结果。页面把批次 ID 保存在 `?batch=...`，刷新后可以继续观察、暂停或恢复。应用按单个本地 API 进程运行；启动时将遗留的 CSV、地铁及铁路导入标记为中断。CSV 可继续剩余行，地铁/铁路可安全重新导入；已有就绪数据与已保存行程保持可用。
 
 ### 5.6 导出
 

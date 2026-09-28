@@ -6,10 +6,19 @@ from collections import defaultdict
 from collections.abc import Sequence
 from datetime import date, datetime
 from typing import Any, Literal, TypeVar, cast
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Query,
+    Response,
+    UploadFile,
+)
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -26,7 +35,7 @@ from app.db.models import (
     RailStation,
     Station,
 )
-from app.db.session import get_db
+from app.db.session import SessionLocal, get_db
 from app.matching.names import (
     normalize_city_name,
     normalize_line_name,
@@ -74,6 +83,8 @@ class ImportBatchResponse(BaseModel):
     filename: str
     encoding: str
     total_rows: int
+    processed_rows: int
+    error_message: str | None
     resolved_rows: int
     review_rows: int
     failed_rows: int
@@ -136,6 +147,8 @@ def _batch_response(batch: ImportBatch) -> ImportBatchResponse:
         filename=batch.filename,
         encoding=batch.encoding,
         total_rows=batch.total_rows,
+        processed_rows=batch.processed_rows,
+        error_message=batch.error_message,
         resolved_rows=batch.resolved_rows,
         review_rows=batch.review_rows,
         failed_rows=batch.failed_rows,
@@ -470,14 +483,31 @@ def _resolve_row(db: Session, row: ImportRow) -> None:
 
 
 def _refresh_counts(db: Session, batch: ImportBatch) -> None:
-    rows = db.scalars(select(ImportRow).where(ImportRow.batch_id == batch.id)).all()
-    batch.total_rows = len(rows)
-    batch.resolved_rows = sum(
-        row.resolution_status in {"resolved", "committed"} for row in rows
+    db.flush()
+    counts = {
+        status: count
+        for status, count in db.execute(
+            select(ImportRow.resolution_status, func.count())
+            .where(ImportRow.batch_id == batch.id)
+            .group_by(ImportRow.resolution_status)
+        ).all()
+    }
+    batch.total_rows = sum(counts.values())
+    batch.resolved_rows = counts.get("resolved", 0) + counts.get("committed", 0)
+    batch.review_rows = counts.get("needs_review", 0)
+    pending = int(
+        db.scalar(
+            select(func.count())
+            .select_from(ImportRow)
+            .where(
+                ImportRow.batch_id == batch.id, ImportRow.error_code == "csv_pending"
+            )
+        )
+        or 0
     )
-    batch.review_rows = sum(row.resolution_status == "needs_review" for row in rows)
-    batch.failed_rows = sum(row.resolution_status == "unresolved" for row in rows)
-    if batch.status not in {"committed", "cancelled"}:
+    batch.failed_rows = counts.get("unresolved", 0) - pending
+    batch.processed_rows = batch.total_rows - pending
+    if batch.status not in {"committed", "cancelled", "parsing", "failed"}:
         batch.status = "ready_for_review"
 
 
@@ -490,6 +520,147 @@ def _require_batch(db: Session, batch_id: int) -> ImportBatch:
             message="没有找到这个 CSV 导入批次。",
         )
     return batch
+
+
+def _require_reviewable(batch: ImportBatch) -> None:
+    if batch.status != "ready_for_review":
+        raise APIError(
+            status_code=409,
+            code="batch_not_ready",
+            message="请等待解析完成；已暂停或中断的批次可先继续解析。",
+        )
+
+
+def run_import_batch(batch_id: int, run_token: str) -> None:
+    """Resolve off the event loop, committing one row at a time for recovery.
+
+    A generation token prevents an old worker from writing after cancel/resume.
+    Each transaction owns its session; no request session crosses threads.
+    """
+    try:
+        while True:
+            with SessionLocal() as db:
+                batch = db.get(ImportBatch, batch_id)
+                if (
+                    batch is None
+                    or batch.status != "parsing"
+                    or batch.run_token != run_token
+                ):
+                    return
+                row = db.scalar(
+                    select(ImportRow)
+                    .where(
+                        ImportRow.batch_id == batch_id,
+                        ImportRow.error_code == "csv_pending",
+                    )
+                    .order_by(ImportRow.row_no)
+                    .limit(1)
+                )
+                if row is None:
+                    db.execute(
+                        update(ImportBatch)
+                        .where(
+                            ImportBatch.id == batch_id,
+                            ImportBatch.status == "parsing",
+                            ImportBatch.run_token == run_token,
+                        )
+                        .values(
+                            status="ready_for_review",
+                            run_token=None,
+                            error_message=None,
+                        )
+                    )
+                    db.commit()
+                    return
+                _resolve_row(db, row)
+                claimed = db.execute(
+                    update(ImportBatch)
+                    .where(
+                        ImportBatch.id == batch_id,
+                        ImportBatch.status == "parsing",
+                        ImportBatch.run_token == run_token,
+                    )
+                    .values(
+                        processed_rows=ImportBatch.processed_rows + 1,
+                        resolved_rows=ImportBatch.resolved_rows
+                        + int(row.resolution_status == "resolved"),
+                        review_rows=ImportBatch.review_rows
+                        + int(row.resolution_status == "needs_review"),
+                        failed_rows=ImportBatch.failed_rows
+                        + int(row.resolution_status == "unresolved"),
+                    )
+                    .returning(ImportBatch.id)
+                ).scalar_one_or_none()
+                if claimed is None:
+                    db.rollback()
+                    return
+                db.commit()
+    except Exception:
+        with SessionLocal() as db:
+            db.execute(
+                update(ImportBatch)
+                .where(
+                    ImportBatch.id == batch_id,
+                    ImportBatch.status == "parsing",
+                    ImportBatch.run_token == run_token,
+                )
+                .values(
+                    status="failed",
+                    run_token=None,
+                    error_message="解析已中断，可继续处理剩余行；已完成的审核结果仍保留。",
+                )
+            )
+            db.commit()
+
+
+@router.post("/{batch_id}/cancel", response_model=ImportBatchResponse)
+def cancel_import_batch(
+    batch_id: int, db: Session = Depends(get_db)
+) -> ImportBatchResponse:
+    changed = db.execute(
+        update(ImportBatch)
+        .where(
+            ImportBatch.id == batch_id,
+            ImportBatch.status == "parsing",
+        )
+        .values(status="cancelled", run_token=None)
+        .returning(ImportBatch.id)
+    ).scalar_one_or_none()
+    if changed is None:
+        _require_batch(db, batch_id)
+        raise APIError(
+            status_code=409,
+            code="batch_not_cancellable",
+            message="仅正在解析的批次可以暂停。",
+        )
+    db.commit()
+    return _batch_response(_require_batch(db, batch_id))
+
+
+@router.post("/{batch_id}/resume", response_model=ImportBatchResponse, status_code=202)
+def resume_import_batch(
+    batch_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+) -> ImportBatchResponse:
+    token = uuid4().hex
+    changed = db.execute(
+        update(ImportBatch)
+        .where(
+            ImportBatch.id == batch_id,
+            ImportBatch.status.in_(["cancelled", "failed"]),
+        )
+        .values(status="parsing", run_token=token, error_message=None)
+        .returning(ImportBatch.id)
+    ).scalar_one_or_none()
+    if changed is None:
+        _require_batch(db, batch_id)
+        raise APIError(
+            status_code=409,
+            code="batch_not_resumable",
+            message="仅已暂停或中断的批次可以继续。",
+        )
+    db.commit()
+    background_tasks.add_task(run_import_batch, batch_id, token)
+    return _batch_response(_require_batch(db, batch_id))
 
 
 @router.get("/template.csv")
@@ -512,11 +683,12 @@ def csv_template() -> Response:
 
 
 @router.post("", response_model=ImportBatchResponse, status_code=201)
-async def create_import_batch(
+def create_import_batch(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(),
     db: Session = Depends(get_db),
 ) -> ImportBatchResponse:
-    content = await file.read(MAX_FILE_BYTES + 1)
+    content = file.file.read(MAX_FILE_BYTES + 1)
     if len(content) > MAX_FILE_BYTES:
         raise APIError(
             status_code=413,
@@ -549,6 +721,7 @@ async def create_import_batch(
         filename=(file.filename or "import.csv")[:260],
         encoding="utf-8-sig" if content.startswith(b"\xef\xbb\xbf") else "utf-8",
         status="parsing",
+        run_token=uuid4().hex,
     )
     db.add(batch)
     db.flush()
@@ -578,10 +751,10 @@ async def create_import_batch(
                 raw_json=cleaned,
                 normalized_json=normalized,
                 resolution_status="unresolved",
+                error_code="csv_pending",
             )
             db.add(row)
-            db.flush()
-            _resolve_row(db, row)
+        db.flush()
         if not db.scalar(
             select(ImportRow.id).where(ImportRow.batch_id == batch.id).limit(1)
         ):
@@ -596,6 +769,8 @@ async def create_import_batch(
         db.rollback()
         raise
     db.refresh(batch)
+    assert batch.run_token is not None
+    background_tasks.add_task(run_import_batch, batch.id, batch.run_token)
     return _batch_response(batch)
 
 
@@ -644,6 +819,7 @@ def patch_import_row(
             code="batch_already_committed",
             message="已提交批次不能再修改审核行。",
         )
+    _require_reviewable(batch)
     row = db.get(ImportRow, row_id)
     if row is None or row.batch_id != batch_id:
         raise APIError(
@@ -728,6 +904,7 @@ def resolve_import_batch(
             code="batch_already_committed",
             message="已提交批次不能重新解析。",
         )
+    _require_reviewable(batch)
     rows = db.scalars(
         select(ImportRow).where(
             ImportRow.batch_id == batch_id,
@@ -892,6 +1069,7 @@ def commit_import_batch(
             code="batch_already_committed",
             message="这个 CSV 批次已经提交。",
         )
+    _require_reviewable(batch)
     rows = db.scalars(
         select(ImportRow)
         .where(ImportRow.batch_id == batch_id)

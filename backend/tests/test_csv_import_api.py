@@ -52,7 +52,7 @@ def test_csv_review_and_transaction_commit(client: TestClient, db: Session) -> N
         files={"file": ("journeys.csv", content.encode(), "text/csv")},
     )
     assert upload.status_code == 201
-    batch = upload.json()
+    batch = client.get(f"/api/v1/import-batches/{upload.json()['id']}").json()
     assert batch["resolved_rows"] == 1
 
     rows = client.get(f"/api/v1/import-batches/{batch['id']}/rows").json()
@@ -108,7 +108,7 @@ def test_csv_commits_two_leg_transfer_as_one_journey(
         files={"file": ("transfer.csv", content.encode(), "text/csv")},
     )
     assert upload.status_code == 201
-    batch = upload.json()
+    batch = client.get(f"/api/v1/import-batches/{upload.json()['id']}").json()
     assert batch["resolved_rows"] == 2
 
     commit = client.post(
@@ -223,7 +223,12 @@ def test_unified_csv_commits_metro_and_rail_as_one_mixed_journey(
     )
 
     assert upload.status_code == 201
-    assert upload.json()["resolved_rows"] == 2
+    assert (
+        client.get(f"/api/v1/import-batches/{upload.json()['id']}").json()[
+            "resolved_rows"
+        ]
+        == 2
+    )
     batch_id = upload.json()["id"]
     commit = client.post(
         f"/api/v1/import-batches/{batch_id}/commit", json={"strategy": "all"}

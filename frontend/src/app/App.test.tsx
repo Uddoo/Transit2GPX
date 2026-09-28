@@ -329,7 +329,7 @@ describe("Transit2Fog app shell", () => {
             blob: () => Promise.resolve(new Blob(["<gpx />"])),
           });
         }
-        if (url.endsWith("/api/v1/journeys")) {
+        if (new URL(url, "http://localhost").pathname === "/api/v1/journeys") {
           return Promise.resolve(jsonResponse(SAVED_JOURNEY));
         }
         return Promise.resolve(jsonResponse(DATA_STATUS));
@@ -346,6 +346,7 @@ describe("Transit2Fog app shell", () => {
   it("previews and saves a selected journey candidate", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     const homeLinks = screen.getAllByRole("link", { name: "Transit2Fog 首页" });
     expect(homeLinks).toHaveLength(2);
@@ -372,6 +373,7 @@ describe("Transit2Fog app shell", () => {
 
   it("sorts metro lines by their natural Chinese line names", async () => {
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     const line = screen.getByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
@@ -393,6 +395,7 @@ describe("Transit2Fog app shell", () => {
   it("searches and selects both endpoint stations with the keyboard", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     const startStation = screen.getByRole("combobox", { name: "起点站" });
     const endStation = screen.getByRole("combobox", { name: "终点站" });
@@ -425,6 +428,7 @@ describe("Transit2Fog app shell", () => {
   it("searches and clears a via station while automatic transfers are enabled", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     const line = screen.getByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
@@ -471,6 +475,7 @@ describe("Transit2Fog app shell", () => {
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => undefined);
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     const previewButton = screen.getByRole("button", { name: "预览路径" });
     await waitFor(() => expect(previewButton).toBeEnabled());
@@ -498,10 +503,11 @@ describe("Transit2Fog app shell", () => {
   it("searches railway stations, previews a candidate, and saves the confirmed snapshot", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
     expect(
-      screen.getByRole("heading", { name: "添加一段真实铁路乘坐记录" }),
+      await screen.findByRole("heading", { name: "添加一段真实铁路乘坐记录" }),
     ).toBeInTheDocument();
 
     const date = screen.getByLabelText("乘坐日期（必填）");
@@ -540,7 +546,7 @@ describe("Transit2Fog app shell", () => {
         : input instanceof URL
           ? input.href
           : input;
-      return url.endsWith("/api/v1/journeys") && init?.method === "POST";
+      return new URL(url, "http://localhost").pathname === "/api/v1/journeys" && init?.method === "POST";
     });
     const createBody = createCall?.[1]?.body;
     expect(typeof createBody).toBe("string");
@@ -579,9 +585,11 @@ describe("Transit2Fog app shell", () => {
           }),
         );
       }
+      if (url.endsWith("/api/v1/cities")) return Promise.resolve(jsonResponse([]));
       return Promise.resolve(jsonResponse(DATA_STATUS));
     });
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
     expect(await screen.findByText("铁路功能暂不可用")).toBeInTheDocument();
@@ -619,13 +627,14 @@ describe("Transit2Fog app shell", () => {
   it("navigates to the CSV upload and review flow", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await screen.findByRole("button", { name: "预览路径" });
 
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "预览路径" })).toBeEnabled(),
     );
     await user.click(screen.getAllByRole("link", { name: "CSV 导入" })[0]);
 
-    expect(screen.getByRole("heading", { name: "CSV 导入" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "CSV 导入" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "选择 CSV 文件" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "下载模板" })).toBeInTheDocument();
     expect(screen.getByText("选择一个 CSV 文件")).toBeInTheDocument();
@@ -665,7 +674,7 @@ describe("Transit2Fog app shell", () => {
             }),
           );
         }
-        if (url.endsWith("/api/v1/journeys")) {
+        if (new URL(url, "http://localhost").pathname === "/api/v1/journeys") {
           return Promise.resolve(
             jsonResponse({ items: [SAVED_RAIL_JOURNEY], total: 1 }),
           );

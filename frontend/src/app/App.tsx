@@ -1,11 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy } from "react";
 
 import { AppShell } from "./AppShell";
-import { CsvImportPage } from "../features/csv-import/CsvImportPage";
-import { DataSettingsPage } from "../features/data-settings/DataSettingsPage";
-import { ExportPage } from "../features/export/ExportPage";
-import { JourneyEditorPage } from "../features/journey-editor/JourneyEditorPage";
-import { JourneysPage } from "../features/journeys/JourneysPage";
+const CsvImportPage = lazy(() => import("../features/csv-import/CsvImportPage").then((module) => ({ default: module.CsvImportPage })));
+const DataSettingsPage = lazy(() => import("../features/data-settings/DataSettingsPage").then((module) => ({ default: module.DataSettingsPage })));
+const ExportPage = lazy(() => import("../features/export/ExportPage").then((module) => ({ default: module.ExportPage })));
+const JourneyEditorPage = lazy(() => import("../features/journey-editor/JourneyEditorPage").then((module) => ({ default: module.JourneyEditorPage })));
+const JourneysPage = lazy(() => import("../features/journeys/JourneysPage").then((module) => ({ default: module.JourneysPage })));
 
 export function App() {
   return (
@@ -22,4 +23,3 @@ export function App() {
     </Routes>
   );
 }
-

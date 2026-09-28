@@ -553,6 +553,11 @@ class ImportBatch(Base):
     filename: Mapped[str] = mapped_column(String(260), nullable=False)
     encoding: Mapped[str] = mapped_column(String(20), nullable=False)
     total_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    processed_rows: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+    run_token: Mapped[str | None] = mapped_column(String(32))
+    error_message: Mapped[str | None] = mapped_column(Text)
     resolved_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     review_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     failed_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -567,6 +572,7 @@ class ImportRow(Base):
     __tablename__ = "import_row"
     __table_args__ = (
         UniqueConstraint("batch_id", "row_no"),
+        Index("ix_import_row_pending", "batch_id", "error_code", "row_no"),
         CheckConstraint(
             "resolution_status IN ('resolved', 'needs_review', 'unresolved', "
             "'ignored', 'committed')",

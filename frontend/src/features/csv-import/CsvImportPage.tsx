@@ -1,8 +1,11 @@
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   commitImportBatch,
+  cancelImportBatch,
+  resumeImportBatch,
   createImportBatch,
   fetchImportBatch,
   fetchImportRows,
@@ -47,14 +50,16 @@ const RAIL_REPAIR_FIELDS = [
 export function CsvImportPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
-  const [batchId, setBatchId] = useState<number>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const batchParam = Number(searchParams.get("batch"));
+  const batchId = Number.isSafeInteger(batchParam) && batchParam > 0 ? batchParam : undefined;
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<ImportRow>();
   const upload = useMutation({
     mutationFn: createImportBatch,
     onSuccess: (newBatch) => {
-      setBatchId(newBatch.id);
+      setSearchParams({ batch: String(newBatch.id) });
       setStatus("");
       setPage(0);
     },
@@ -63,12 +68,21 @@ export function CsvImportPage() {
     queryKey: ["import-batch", batchId],
     queryFn: ({ signal }) => fetchImportBatch(batchId as number, signal),
     enabled: batchId !== undefined,
+    refetchInterval: (query) => query.state.data?.status === "parsing" ? 500 : false,
   });
   const rows = useQuery({
-    queryKey: ["import-rows", batchId, status, page],
+    queryKey: ["import-rows", batchId, status, page, batch.data?.processed_rows],
     queryFn: ({ signal }) =>
       fetchImportRows(batchId as number, status, PAGE_SIZE, page * PAGE_SIZE, signal),
     enabled: batchId !== undefined,
+  });
+  const canReview = batch.data?.status === "ready_for_review";
+  const taskAction = useMutation({
+    mutationFn: (action: "cancel" | "resume") => action === "cancel" ? cancelImportBatch(batchId as number) : resumeImportBatch(batchId as number),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["import-batch", batchId] });
+      void queryClient.invalidateQueries({ queryKey: ["import-rows", batchId] });
+    },
   });
   const updateRow = useMutation({
     mutationFn: ({ rowId, input }: { rowId: number; input: Record<string, string | boolean | null> }) =>
@@ -107,8 +121,8 @@ export function CsvImportPage() {
             ref={inputRef}
             type="file"
           />
-          <button className="button button--primary" disabled={upload.isPending} onClick={() => inputRef.current?.click()} type="button">
-            {upload.isPending ? "正在解析" : "选择 CSV 文件"}
+          <button className="button button--primary" disabled={upload.isPending || batch.data?.status === "parsing"} onClick={() => inputRef.current?.click()} type="button">
+            {upload.isPending ? "正在上传" : "选择 CSV 文件"}
           </button>
         </div>
       </header>
@@ -122,6 +136,21 @@ export function CsvImportPage() {
           <span>{batch.data.failed_rows} 未解析</span>
         </div>
       ) : null}
+      {batch.isError ? <p role="alert">批次读取失败。<button type="button" onClick={() => void batch.refetch()}>重试</button></p> : null}
+      {batch.data?.status === "parsing" ? (
+        <div className="panel-message" role="status">
+          <p>正在解析：{batch.data.processed_rows ?? 0} / {batch.data.total_rows} 行。刷新页面后仍可继续查看。</p>
+          <progress max={Math.max(1, batch.data.total_rows)} value={batch.data.processed_rows ?? 0} aria-label="CSV 解析进度" />
+          <button className="button button--secondary" disabled={taskAction.isPending} onClick={() => taskAction.mutate("cancel")} type="button">暂停解析</button>
+        </div>
+      ) : null}
+      {batch.data?.status === "failed" || batch.data?.status === "cancelled" ? (
+        <div className="panel-message" role="status">
+          <p>{batch.data.error_message ?? "解析已暂停，已完成的结果已保留。"}</p>
+          <button className="button button--secondary" disabled={taskAction.isPending} onClick={() => taskAction.mutate("resume")} type="button">继续解析</button>
+        </div>
+      ) : null}
+      {taskAction.isError ? <p role="alert">任务状态更新失败，请刷新批次状态后重试。</p> : null}
       {batch.data?.status === "committed" ? (
         <p className="form-message form-message--success" role="status">
           已事务提交 {batch.data.resolved_rows} 个分段；相同 journey_id 已合并为一条多段行程。
@@ -148,7 +177,7 @@ export function CsvImportPage() {
             </label>
             <button
               className="button button--primary"
-              disabled={!batch.data?.resolved_rows || commit.isPending || batch.data.status === "committed"}
+              disabled={!canReview || !batch.data?.resolved_rows || commit.isPending}
               onClick={() => commit.mutate("all")}
               type="button"
             >
@@ -176,12 +205,12 @@ export function CsvImportPage() {
                     <td>{row.normalized.to_station}</td>
                     <td>
                       <span className={`status-text status-text--${row.resolution_status === "needs_review" ? "review" : row.resolution_status}`}>
-                        {statusLabels[row.resolution_status] ?? row.resolution_status}
+                        {row.error_code === "csv_pending" ? "等待解析" : statusLabels[row.resolution_status] ?? row.resolution_status}
                       </span>
                       {row.error_message ? <small>{row.error_message}</small> : null}
                     </td>
                     <td className="table-actions">
-                      {row.resolution_status === "needs_review" && batch.data?.status !== "committed" ? (
+                      {row.resolution_status === "needs_review" && canReview ? (
                         <select
                           aria-label={`第 ${row.row_no} 行候选`}
                           onChange={(event) => updateRow.mutate({ rowId: row.id, input: { selected_candidate_id: event.target.value } })}
@@ -195,7 +224,7 @@ export function CsvImportPage() {
                           ))}
                         </select>
                       ) : null}
-                      {batch.data?.status !== "committed" ? (
+                      {canReview ? (
                         <>
                           <button className="button button--secondary" onClick={() => setEditing(row)} type="button">修复</button>
                           <button className="button button--secondary" onClick={() => updateRow.mutate({ rowId: row.id, input: { ignored: true } })} type="button">忽略</button>
