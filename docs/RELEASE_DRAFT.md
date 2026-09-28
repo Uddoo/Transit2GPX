@@ -1,57 +1,41 @@
-# v1.0.0 发行说明草稿
+# v1.0.0-rc.1 发行说明
 
-状态：**待发布检查完成，尚未正式发布。** 本文是已构建产物的说明草稿，不是下载已开放的声明。
+[下载预发布版](https://github.com/Uddoo/transit2fog/releases/tag/v1.0.0-rc.1)
 
-## 这是什么
+这是 Transit2Fog 的首个安装包预发布版，包内应用版本为 1.0.0。产物尚未完成 Windows Authenticode、Apple Developer ID 签名、公证或恶意软件扫描；本次发布不代表已完成这些验证。
 
-Transit2Fog 把实际乘坐的中国地铁和铁路区间转成 GPX 轨迹。选择起终点、预览候选并确认后，即可导出给世界迷雾等支持 GPX 1.1 轨迹的应用。
+## 本版功能
+
+- 将实际乘坐的中国地铁和铁路区间转为 GPX 1.1 轨迹，支持逐次行程与覆盖区间导出。
+- 首次使用向导整合环境检查、数据导入、铁路服务启动与故障提示。
+- 修复地图连续选站、行程分页与搜索、CSV 后台处理与中断恢复；优化列表查询和前端页面加载。
+- 兼容历史数据库迁移 `20260928_0007`，自动补齐任务队列与铁路搜索结构，并保留已有行程和导入进度。
 
 ## 应该选择哪个文件
 
 | 平台 | 文件 | 使用方式 |
 |---|---|---|
-| Windows 10/11 x64 | `Transit2Fog-1.0.0-windows-x64.zip` | 解压后用 PowerShell 7 运行包内 `Transit2Fog/install.ps1`，或直接运行包内程序 |
-| macOS Apple Silicon | `Transit2Fog-1.0.0-macos-arm64.pkg` | 完成正式签名与公证后，使用系统安装程序安装 |
-| macOS Apple Silicon 备用包 | `Transit2Fog-1.0.0-macos-arm64.tar.gz` | 同内容的压缩归档，供手动部署 |
+| Windows 10/11 x64 | `Transit2Fog-1.0.0-windows-x64.zip` | 解压后直接运行 `Transit2Fog/Transit2Fog.exe`；也可用 PowerShell 7 运行包内 `install.ps1` |
+| macOS Apple Silicon | `Transit2Fog-1.0.0-macos-arm64.pkg` | 系统安装程序包，当前未签名、公证 |
+| macOS Apple Silicon 备用包 | `Transit2Fog-1.0.0-macos-arm64.tar.gz` | 同内容的 `.app` 归档，供手动部署 |
 
-本次工作流未生成 Intel Mac 安装包，不应将 arm64 包标为通用 macOS 包。
+每个文件均有对应 `.sha256` 附件；以本次 Release 附件中的校验和为准，不要使用历史构建的摘要。本版不包含 Intel Mac 安装包。
 
 ## 首次启动后
 
-1. 先准备并导入兼容的第三方地铁数据；详见[首次使用指南](GETTING_STARTED.md)。
-2. 选择自己实际乘坐的城市、线路和起终点，预览并确认候选。
+1. 跟随首次使用向导检查环境并导入兼容的第三方地铁数据；详见[首次使用指南](GETTING_STARTED.md)。
+2. 选择实际乘坐的城市、线路、起终点，预览并确认候选。
 3. 保存后生成 GPX，先用少量行程在目标应用中抽检。
 
-安装包包含应用和生产前端，不包含地铁数据、OSM PBF、铁路图或用户数据库。铁路还需 Java 17+ 以及经过验证、激活的本地图；包内 sidecar JAR 不能替代这些准备步骤。
+安装包自带 Python 运行库、生产前端、数据库迁移和铁路 sidecar JAR，无需安装 Python、Node.js、npm 或 uv。包内不含地铁数据、OSM PBF、铁路图或用户数据库；铁路仍需 Java 17+ 以及经过验证、激活的本地图。当前 Figshare 数据字段兼容限制见[数据获取步骤](GETTING_STARTED.md#2-获取一份地铁数据)。
 
-## 本次构建与验证
+## 构建与验证
 
-- 构建日期：2026-09-08。
-- 源码提交：`5a31c2d5f15e72d3b018316efdcf3f12f546b7b5`。
-- [GitHub Actions 构建 #34192998619](https://github.com/Uddoo/transit2fog/actions/runs/34192998619)：Windows x64 与 macOS arm64 均通过构建及工作流内隔离 smoke test；通过 `workflow_dispatch` 触发，发布步骤未执行。
-- 下载产物后，3 个文件的 SHA-256 均与工作流提供的校验文件一致。
-- Windows ZIP 在本机解压后再次通过独立运行目录中的迁移、资源、API 与地理库 smoke test。
-- Windows ZIP 包含 LICENSE、NOTICE、ATTRIBUTION、安装/卸载脚本；未发现用户数据库、OSM PBF 或 `.env` 文件。
-- 同一源码的本地 `check` 通过：后端 105 项、前端 10 项，后端覆盖率 85.34%，以及类型、风格、API 契约和生产构建检查。
-- 本地 E2E：桌面/移动 Chromium 20/20、真实 FastAPI + SQLite + 生产前端保存导出路径 1/1。
+- 构建日期：2026-09-28。
+- 安装包源码提交：`d10322c6ac014320ffaea67d5d0456a1d330170e`。
+- [标签构建与发布](https://github.com/Uddoo/transit2fog/actions/runs/36390973871)：Windows x64 与 macOS arm64，包含工作流内的隔离迁移、API 资源与地理库 smoke test；最终附件由此工作流生成并上传。
+- [同一源码的发布预演](https://github.com/Uddoo/transit2fog/actions/runs/36388958848)：两平台包通过 SHA-256 与资源核对；macOS 预演包在外部 Python / Node.js 不可用时，通过首次向导、地铁导入、行程保存、GPX 导出、铁路测试图服务和旧数据库迁移验证。
+- [源码 CI](https://github.com/Uddoo/transit2fog/actions/runs/36388647207)：macOS / Windows、Python 3.11 / 3.13 质量检查及两平台浏览器测试通过。
+- 本地后端 125 项测试通过，覆盖率 86.95%；历史数据库迁移前后的原有表内容核对一致。
 
-本次验证不包含 macOS 桌面安装后的人工操作、签名、公证、杀毒扫描或中国铁路全国图的本机运行。
-
-## 当前构建的 SHA-256
-
-```text
-9bd4a84bcb7d6d91104859d39641bf42f43ca914c2fde318deff63ad00993143  Transit2Fog-1.0.0-windows-x64.zip
-bb6a6ca255cd21038efd96757e61ce9fb4957d91a32514fa24d068e4059c479c  Transit2Fog-1.0.0-macos-arm64.pkg
-4c904487053a3d3c337425f566d953fef48d3a0e238ba5d782fc7b2caf9bf659  Transit2Fog-1.0.0-macos-arm64.tar.gz
-```
-
-以上只适用于此次未签名构建。签名、公证或重新打包后必须重新计算并替换校验和。
-
-## 正式发布前剩余事项
-
-- 按[安装包文档](PACKAGING.md)完成 Windows Authenticode、Apple Developer ID 签名/公证及恶意软件扫描。
-- 重新生成并审阅依赖许可快照；按[安装包文档](PACKAGING.md)核对分发要求，并完成人工安装验证与发布审阅。
-- 核对目标 tag、最终源码提交、平台安装体验与最终签名产物摘要。
-- 明确当前 Figshare 原始包的字段兼容限制；不能宣传为“下载即用”或“自带全国数据”。
-
-GitHub Actions artifact 有保留期限，不替代正式 Release 附件。本次下载的产物保存在被忽略的本机工作目录；完成发布条件后才应将最终制品附加到正式 Release。
+本次自动验证不替代签名、公证、恶意软件扫描、各平台的人工安装验收或中国铁路全国图在 Windows 上的资源验收。完整边界见[已知限制](KNOWN_LIMITATIONS.md)。
