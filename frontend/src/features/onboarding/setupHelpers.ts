@@ -6,4 +6,3 @@ export const RAIL_GUIDE = "https://github.com/Uddoo/transit2fog/blob/main/rail-r
 export function errorMessage(error: unknown, fallback: string) {
   return error instanceof RequestError ? error.message : fallback;
 }
-
