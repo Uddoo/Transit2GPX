@@ -12,6 +12,8 @@ import tarfile
 import tempfile
 from pathlib import Path
 
+from build_rail_components import build_components, sidecar_notices
+
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = PROJECT_DIR / "frontend"
 RELEASE_DIR = PROJECT_DIR / "release"
@@ -79,6 +81,14 @@ def _smoke_test(executable: Path) -> None:
         )
 
 
+def _verify_base_libraries(root: Path, with_import_tools: bool) -> None:
+    if with_import_tools:
+        return
+    forbidden = {"pandas", "pandas.libs", "geopandas", "pyogrio", "pyogrio.libs"}
+    if any(path.name.lower() in forbidden for path in root.rglob("*")):
+        raise SystemExit("轻量构建意外包含重型 GIS 导入依赖。")
+
+
 def build_package(args: argparse.Namespace) -> list[Path]:
     version = _version()
     if not args.skip_frontend:
@@ -96,28 +106,34 @@ def build_package(args: argparse.Namespace) -> list[Path]:
     shutil.rmtree(work_dir, ignore_errors=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
+    # A previous shell/build must not silently turn a light build into a full one.
+    for key in (
+        "TRANSIT2FOG_PACKAGE_SIDECAR_JAR",
+        "TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES",
+        "TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST",
+    ):
+        environment.pop(key, None)
     environment.setdefault("SOURCE_DATE_EPOCH", "1788134400")
+    environment["TRANSIT2FOG_PACKAGE_IMPORT_TOOLS"] = (
+        "1" if args.with_import_tools else "0"
+    )
+    artifacts: list[Path] = []
+    if args.rail_components:
+        if not args.sidecar_jar or not args.release_tag:
+            raise SystemExit("按需组件构建需要 --sidecar-jar 和 --release-tag。")
+        component_archive, manifest = build_components(
+            args.sidecar_jar.resolve(), output_dir, args.release_tag
+        )
+        environment["TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST"] = str(manifest)
+        artifacts.append(component_archive)
     if args.sidecar_jar:
         sidecar_jar = args.sidecar_jar.resolve()
-        if sidecar_jar.name != "openrailrouting.jar":
-            raise SystemExit("内置 sidecar JAR 必须命名为 openrailrouting.jar。")
-        work_dir_from_jar = sidecar_jar.parent.parent
-        notice_paths = [
-            work_dir_from_jar / "upstream" / "OpenRailRouting" / "LICENSE.txt",
-            work_dir_from_jar / "upstream" / "OpenRailRouting" / "THIRD_PARTY.md",
-            work_dir_from_jar / "upstream" / "GraphHopper" / "LICENSE.txt",
-            work_dir_from_jar / "upstream" / "GraphHopper" / "NOTICE.md",
-        ]
-        missing_notices = [path for path in notice_paths if not path.is_file()]
-        if missing_notices:
-            raise SystemExit(
-                "sidecar 第三方声明不完整："
-                + ", ".join(str(path) for path in missing_notices)
+        notice_paths = sidecar_notices(sidecar_jar)
+        if not args.rail_components:
+            environment["TRANSIT2FOG_PACKAGE_SIDECAR_JAR"] = str(sidecar_jar)
+            environment["TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES"] = json.dumps(
+                [str(path) for path in notice_paths]
             )
-        environment["TRANSIT2FOG_PACKAGE_SIDECAR_JAR"] = str(sidecar_jar)
-        environment["TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES"] = json.dumps(
-            [str(path) for path in notice_paths]
-        )
     _run(
         sys.executable,
         "-m",
@@ -132,13 +148,13 @@ def build_package(args: argparse.Namespace) -> list[Path]:
         env=environment,
     )
 
-    artifacts: list[Path] = []
     artifact_base = f"Transit2Fog-{version}-{_platform_tag()}"
     if platform.system() == "Darwin":
         application = stage_dir / "Transit2Fog.app"
         executable = application / "Contents" / "MacOS" / "Transit2Fog"
         if not executable.is_file():
             raise SystemExit("PyInstaller 没有生成 Transit2Fog.app。")
+        _verify_base_libraries(application, args.with_import_tools)
         if not args.no_smoke:
             _smoke_test(executable)
         archive = output_dir / f"{artifact_base}.tar.gz"
@@ -167,6 +183,7 @@ def build_package(args: argparse.Namespace) -> list[Path]:
         executable = bundle / executable_name
         if not executable.is_file():
             raise SystemExit("PyInstaller 没有生成 Transit2Fog 可执行目录。")
+        _verify_base_libraries(bundle, args.with_import_tools)
         _copy_release_documents(bundle)
         if os.name == "nt":
             shutil.copy2(PROJECT_DIR / "packaging" / "install.ps1", bundle)
@@ -181,6 +198,12 @@ def build_package(args: argparse.Namespace) -> list[Path]:
                 base_dir="Transit2Fog",
             )
             artifacts.append(Path(archive_path))
+            if args.windows_installer:
+                artifacts.append(
+                    build_windows_installer(
+                        bundle, output_dir, version, args.iscc, args.with_import_tools
+                    )
+                )
         else:
             archive = output_dir / f"{artifact_base}.tar.gz"
             with tarfile.open(archive, "w:gz") as stream:
@@ -192,6 +215,40 @@ def build_package(args: argparse.Namespace) -> list[Path]:
     return artifacts
 
 
+def build_windows_installer(
+    bundle: Path,
+    output: Path,
+    version: str,
+    iscc: Path | None = None,
+    with_import_tools: bool = False,
+) -> Path:
+    compiler = str(iscc) if iscc else shutil.which("ISCC")
+    if compiler is None:
+        for directory in ("ProgramFiles(x86)", "ProgramFiles"):
+            candidate = (
+                Path(os.environ.get(directory, "C:/Program Files"))
+                / "Inno Setup 6"
+                / "ISCC.exe"
+            )
+            if candidate.is_file():
+                compiler = str(candidate)
+                break
+    if compiler is None:
+        raise SystemExit("Windows 安装器需要 Inno Setup 6；可使用 --iscc 指定编译器。")
+    _run(
+        compiler,
+        f"/DVersion={version}",
+        f"/DWithImportTools={int(with_import_tools)}",
+        f"/DBundleDir={bundle.resolve()}",
+        f"/DOutputDir={output.resolve()}",
+        str(PROJECT_DIR / "packaging" / "windows.iss"),
+    )
+    result = output / f"Transit2Fog-{version}-windows-x64-Setup.exe"
+    if not result.is_file():
+        raise SystemExit("Inno Setup 未生成安装器。")
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build Transit2Fog install packages")
     parser.add_argument(
@@ -201,6 +258,22 @@ def main() -> None:
         help="artifact directory",
     )
     parser.add_argument("--sidecar-jar", type=Path)
+    parser.add_argument(
+        "--with-import-tools",
+        action="store_true",
+        help="Include legacy Shapefile/GDAL import dependencies (larger advanced build)",
+    )
+    parser.add_argument(
+        "--rail-components",
+        action="store_true",
+        help="Publish the JAR/JRE separately and embed a pinned download manifest",
+    )
+    parser.add_argument(
+        "--release-tag",
+        help="Exact future/published release tag for component downloads",
+    )
+    parser.add_argument("--windows-installer", action="store_true")
+    parser.add_argument("--iscc", type=Path)
     parser.add_argument("--skip-frontend", action="store_true")
     parser.add_argument("--no-smoke", action="store_true")
     args = parser.parse_args()
