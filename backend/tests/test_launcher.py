@@ -36,7 +36,7 @@ def test_packaged_launcher_upgrades_an_isolated_database(tmp_path: Path) -> None
     with closing(sqlite3.connect(database)) as connection:
         assert connection.execute(
             "SELECT version_num FROM alembic_version"
-        ).fetchone() == ("20260928_0008",)
+        ).fetchone() == ("20260928_0009",)
         assert connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='app_task'"
         ).fetchone() == ("app_task",)
