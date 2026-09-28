@@ -4,12 +4,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from rapidfuzz.fuzz import WRatio
-from sqlalchemy import func, or_, select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.models import RailDatasetVersion, RailStation, RailStationAlias
 from app.matching.names import normalize_station_name, pinyin_keys
+from app.matching.search import fts_prefix_expression
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,9 +99,6 @@ def search_ready_rail_stations(
     dataset = _active_dataset(db, rail_dataset_version_id)
     if dataset is None:
         return []
-    alias_station_ids = select(RailStationAlias.station_id).where(
-        RailStationAlias.normalized_alias.contains(query)
-    )
     statement = select(RailStation).where(
         RailStation.rail_dataset_version_id == dataset.id,
         RailStation.match_status == "ready",
@@ -109,18 +107,45 @@ def search_ready_rail_stations(
         statement = statement.where(RailStation.province_name == province_name)
     if city_name:
         statement = statement.where(RailStation.city_name == city_name)
-    filtered_statement = statement.where(
-        or_(
-            RailStation.normalized_name.contains(query),
-            RailStation.pinyin_full.contains(query),
-            RailStation.pinyin_initials.contains(query),
-            func.lower(RailStation.station_code) == query.casefold(),
-            RailStation.id.in_(alias_station_ids),
-        )
-    )
-    stations = list(
-        db.scalars(filtered_statement.order_by(RailStation.name_cn).limit(500)).all()
-    )
+
+    stations: list[RailStation] = []
+    expression = fts_prefix_expression(value)
+    if expression:
+        filters = [
+            "rail_station_fts MATCH :query",
+            "rail_dataset_version_id = :dataset_id",
+        ]
+        parameters: dict[str, str | int] = {
+            "query": expression,
+            "dataset_id": dataset.id,
+            "candidate_limit": max(limit * 10, 100),
+        }
+        if province_name:
+            filters.append("province_name = :province_name")
+            parameters["province_name"] = province_name
+        if city_name:
+            filters.append("city_name = :city_name")
+            parameters["city_name"] = city_name
+        rows = db.execute(
+            text(
+                "SELECT station_id FROM rail_station_fts WHERE "
+                + " AND ".join(filters)
+                + " ORDER BY bm25(rail_station_fts), station_id "
+                "LIMIT :candidate_limit"
+            ),
+            parameters,
+        ).all()
+        ranked_ids = [station_id for (station_id,) in rows]
+        if ranked_ids:
+            by_id = {
+                station.id: station
+                for station in db.scalars(
+                    statement.where(RailStation.id.in_(ranked_ids))
+                ).all()
+            }
+            stations = [
+                by_id[station_id] for station_id in ranked_ids if station_id in by_id
+            ]
     if not stations:
         stations = list(
             db.scalars(statement.order_by(RailStation.name_cn).limit(5000)).all()

@@ -2,23 +2,41 @@
 
 ## 环境
 
-- macOS 作为首个支持平台。
+- Windows 10/11 x64：PowerShell 7 原生入口，不依赖 WSL、Git Bash 或 GNU Make。
+- macOS：继续使用 Makefile 与 POSIX shell 入口。
 - Node.js 22+、npm 10+。
 - `uv` 0.9+；项目使用 Python 3.11+，由 uv 管理。
 
 ## 首次安装
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 doctor
+.\transit2fog.ps1 setup
+```
+
+macOS：
 
 ```bash
 make doctor
 make setup
 ```
 
-`make doctor` 会检查 macOS、Node.js、npm 和 `uv` 版本，不下载依赖或修改数据。`make setup` 会：
+`doctor` 会检查操作系统入口、Node.js、npm 和 `uv` 版本，不下载依赖或修改数据。`setup` 会：
 
 1. 根据 `backend/uv.lock` 创建 Python 环境。
 2. 根据 `frontend/package-lock.json` 安装前端依赖。
 
 ## 开发
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 dev
+```
+
+macOS：
 
 ```bash
 make dev
@@ -32,24 +50,82 @@ make dev
 
 ## 生产模式
 
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 start
+```
+
+macOS：
+
 ```bash
 make start
 ```
 
-命令会构建前端、运行 Alembic，然后由 FastAPI 在 `http://127.0.0.1:8765` 同时托管 API 和 SPA。默认不监听局域网地址。
+命令会构建前端、运行 Alembic，然后由 FastAPI 在 `http://127.0.0.1:8765` 同时托管 API 和 SPA。默认不监听局域网地址。铁路 production 使用 `start-rail`，无需另开 sidecar 终端。
+
+## 安装包
+
+```powershell
+.\transit2fog.ps1 package
+```
+
+```bash
+make package
+```
+
+该命令生成 PyInstaller 独立运行目录、平台安装产物和 SHA-256，并在隔离临时数据库执行打包 smoke test。`SIDECAR_JAR`/`-SidecarJar` 可把固定构建的 OpenRailRouting JAR 与完整第三方声明一并放入包中。tag 工作流会在 Windows/macOS 构建该完整变体。详见 [`PACKAGING.md`](PACKAGING.md)。
 
 ## 质量检查
+
+Windows PowerShell 7：
+
+```powershell
+.\transit2fog.ps1 check
+.\transit2fog.ps1 e2e
+```
+
+macOS：
 
 ```bash
 make check
 make e2e
 ```
 
-`make check` 包含后端 Ruff、Mypy、pytest，以及前端 ESLint、Vitest 和生产构建。`make e2e` 使用 Playwright 在桌面 Chromium 和移动 Chromium 运行核心流程。
+`make check` 包含后端 Ruff、Mypy、pytest，以及前端 OpenAPI 产物漂移检查、ESLint、Vitest 覆盖率和生产构建。后端行覆盖率不得低于 85%；前端 statements/branches/functions/lines 阈值分别为 65%/75%/60%/65%。
+
+`make e2e` 先在桌面和移动 Chromium 运行隔离的浏览器 Mock 场景，再运行一个不拦截 API 的真实全栈场景。后者启动生产构建、真实 FastAPI 和迁移到最新版本的临时 SQLite，播种最小合成地铁网络，验证路径预览、行程持久化和 GPX 下载；不会读取或修改用户数据库。
+
+Makefile、PowerShell 入口和兼容 shell 脚本统一委托给 `scripts/project.py`；setup、build、dev、start、package、check、test、e2e、数据库升级、备份和真实数据验证不再分别维护不同命令序列。可直接调试统一入口，例如：
+
+```bash
+uv run --project backend python scripts/project.py backend-check
+```
+
+### OpenAPI 前端类型
+
+FastAPI OpenAPI 快照提交在 `frontend/openapi.json`，生成的 TypeScript 类型提交在 `frontend/src/api/generated.ts`。后端 API schema 改动后，从仓库根目录运行：
+
+```bash
+npm run api:generate --prefix frontend
+```
+
+`api:generate` 使用隔离临时数据目录导出 schema，不会连接现有应用数据库。`make check` 中的 `api:check` 会同时检查 OpenAPI 快照和 TypeScript 产物；任一文件未重新生成都会使质量门禁失败。业务侧需要额外约束 GeoJSON 或判别联合时，在 `frontend/src/api/client.ts` 中基于生成的 schema 做窄化，不再重复手写整个响应结构。
+
+下文为简洁起见主要使用 Make target；Windows 的命令名保持一致，写作 `.\transit2fog.ps1 <target>`。完整 Windows 路径、环境变量和铁路说明见 [`WINDOWS.md`](WINDOWS.md)。`validate-real-data` 在 Windows 使用 `-CptondDir`，自定义铁路建图使用 `-PbfPath` 与 `-GraphVersion`。
 
 ## 应用数据
 
 默认应用数据目录由 `platformdirs` 按操作系统确定。可使用以下变量覆盖：
+
+Windows PowerShell 7：
+
+```powershell
+$env:TRANSIT2FOG_DATA_DIR = 'D:\Transit2Fog\app-data'
+$env:TRANSIT2FOG_DATABASE_URL = 'sqlite:///D:/Transit2Fog/app-data/transit2fog.sqlite3'
+```
+
+macOS：
 
 ```bash
 TRANSIT2FOG_DATA_DIR=/absolute/path/to/app-data
@@ -110,7 +186,7 @@ CPTOND-2025/
 ```
 
 导入器会先审计字段、CRS、sidecar 与 SHA-256，再统一转换为 EPSG:4326 并构建 route-aware edges。重复导入相同版本与 checksum 会复用已有数据版本。
-导入进度按城市持久化；刷新设置页后仍可观察或取消。新版本导入期间旧 ready 数据继续提供查询，失败或取消会清理新版本的 staging 城市；只有全部处理结束且至少一个城市通过质量门禁后，才原子切换 active 数据版本。
+导入进度按城市持久化；刷新设置页后仍可观察或取消。导入任务本身也写入 SQLite 的 `app_task`：服务异常退出后，下一次启动会恢复未完成任务，而不是依赖响应结束后的内存回调。新版本导入期间旧 ready 数据继续提供查询，失败或取消会清理新版本的 staging 城市；只有全部处理结束且至少一个城市通过质量门禁后，才原子切换 active 数据版本。
 
 ### Science Data Bank 时序数据集
 
@@ -136,11 +212,31 @@ Metro-Timeline-1971-2025/
 make validate-real-data CPTOND_DIR=/absolute/path/to/extracted-dataset
 ```
 
+Windows 等价命令为：
+
+```powershell
+.\transit2fog.ps1 validate-real-data -CptondDir 'D:\Datasets\CPTOND-2025'
+```
+
 命令会重复审计 checksum、完整导入，并要求至少找到一座普通线路城市和另一座含环线/支线的城市，输出后续人工地图抽检应使用的城市。若需保留验证库以供排查，可直接运行 `scripts/validate_cptond.py ... --runtime /absolute/path/to/validation-runtime`。
 
 ## 构建与运行铁路图
 
 铁路能力额外需要 Java 17+；当前可复现基线使用 Java 21。sidecar、PBF 和 graph 都是可选本地资源，缺失时地铁流程仍可运行。系统 Maven 不是必需项，bootstrap 脚本会下载固定版本并校验 SHA-512。
+
+Windows 可以使用仓库固定版本与 SHA-256 的项目内便携 Temurin JDK 21，不修改系统环境变量：
+
+```powershell
+.\transit2fog.ps1 setup-java
+.\transit2fog.ps1 doctor-rail
+```
+
+完成 bootstrap 后可用最小 fixture 一次性验证 JAR、graph、路由、metadata 双端点和进程清理：
+
+```powershell
+.\transit2fog.ps1 rail-fixture
+.\transit2fog.ps1 rail-fixture-verify
+```
 
 先运行附加检查：
 
@@ -201,7 +297,7 @@ make rail-china-activate
 make dev-rail
 ```
 
-`rail-yangtze-activate` 和 `rail-china-activate` 会先运行对应的固定样本验证，再原子更新 `active` selector。已经激活同一图版本时，终端 B 可跳过 activate，直接运行 `make dev-rail`。普通 `make dev` 仍默认关闭铁路；铁路录入页会保留乘车事实输入，并明确提示车站搜索和路径预览为何暂不可用。
+`rail-yangtze-activate` 和 `rail-china-activate` 会先运行对应的固定样本验证，再原子更新 `active` selector。Windows 使用 `active.json` / `previous.json`，无需符号链接权限；既有安全相对符号链接仍兼容读取。已经激活同一图版本时，终端 B 可跳过 activate，直接运行 `dev-rail`。普通 `dev` 仍默认关闭铁路；铁路录入页会保留乘车事实输入，并明确提示车站搜索和路径预览为何暂不可用。
 
 如果复用旧验收目录或自定义存储位置，请在 sidecar 与应用两个终端导出相同配置后再运行命令：
 
@@ -209,6 +305,14 @@ make dev-rail
 export RAIL_WORK_DIR=/absolute/path/to/rail-work
 export RAIL_GRAPH_ROOT=/absolute/path/to/graphs
 make doctor-rail
+```
+
+Windows PowerShell 7：
+
+```powershell
+$env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
+$env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
+.\transit2fog.ps1 doctor-rail
 ```
 
 `RAIL_WORK_DIR` 控制下载工具、sidecar JAR 和默认 graph 工作目录；`RAIL_GRAPH_ROOT` 单独指定不可变图与 `active`/`previous` selector 所在目录。
@@ -250,6 +354,8 @@ TRANSIT2FOG_DATABASE_URL="sqlite:///$migration_runtime/data/transit2fog.sqlite3"
 uv run alembic upgrade head
 ```
 
+Windows 应使用 `New-Item` 创建明确的临时目录，并使用正斜杠构造 SQLite URL；可直接参考 [`WINDOWS.md`](WINDOWS.md) 中的数据目录写法。不要把 PowerShell 枚举出的路径交给 `cmd` 或 WSL 执行清理。
+
 随后在 `backend` 目录运行 `uv run alembic check`，并验证 `downgrade base` 后能再次 `upgrade head`。
 
 ## 备份与恢复
@@ -287,6 +393,14 @@ Fog of World 是已完成实机验证的兼容应用之一；若其菜单名称�
 make check
 make e2e
 make start
+```
+
+Windows 发布前等价命令：
+
+```powershell
+.\transit2fog.ps1 check
+.\transit2fog.ps1 e2e
+.\transit2fog.ps1 start
 ```
 
 `make start` 后应验证 `/healthz`、首页及 `/journeys/new`、`/journeys`、`/imports/csv`、`/exports`、`/settings/data` 等 SPA 深链。数据库备份/恢复和 Alembic 升降级也必须至少演练一次。

@@ -57,7 +57,8 @@ export function StationCombobox({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
-  const deferredQuery = useDeferredValue(query.trim());
+  const normalizedQuery = query.trim();
+  const deferredQuery = useDeferredValue(normalizedQuery);
   const selectedStation = useMemo(
     () => stations.find((station) => station.id === value),
     [stations, value],
@@ -69,19 +70,21 @@ export function StationCombobox({
     enabled: isOpen,
   });
   const matches = useMemo(() => {
-    if (!deferredQuery) {
+    if (!normalizedQuery) {
       return stations;
     }
     const localMatches = stations.filter((station) =>
-      stationMatches(station, deferredQuery),
+      stationMatches(station, normalizedQuery),
     );
     const merged = new Map<number, Station>();
     for (const station of localMatches) merged.set(station.id, station);
-    for (const station of stationSearch.data ?? []) merged.set(station.id, station);
+    if (deferredQuery === normalizedQuery) {
+      for (const station of stationSearch.data ?? []) merged.set(station.id, station);
+    }
     return [...merged.values()];
-  }, [deferredQuery, stationSearch.data, stations]);
+  }, [deferredQuery, normalizedQuery, stationSearch.data, stations]);
   const visibleMatches = matches.slice(0, MAX_VISIBLE_RESULTS);
-  const showClearOption = clearable && !deferredQuery;
+  const showClearOption = clearable && !normalizedQuery;
   const stationIndex = activeIndex - (showClearOption ? 1 : 0);
   const activeStation = visibleMatches[stationIndex];
   const activeOptionId =
@@ -97,7 +100,7 @@ export function StationCombobox({
 
   useEffect(() => {
     setActiveIndex(optionCount > 0 ? 0 : -1);
-  }, [deferredQuery, optionCount]);
+  }, [normalizedQuery, optionCount]);
 
   function open() {
     setQuery("");

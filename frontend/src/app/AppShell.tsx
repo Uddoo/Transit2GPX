@@ -1,5 +1,4 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Suspense } from "react";
 
 import { useDataStatus } from "../features/data-settings/useDataStatus";
 import { useRailDataStatus } from "../features/journey-editor/useJourneyNetwork";
@@ -136,9 +135,7 @@ export function AppShell() {
           </div>
         </header>
         <main className="page" id="main-content">
-          <Suspense fallback={<p className="panel-message" role="status">正在加载页面…</p>}>
-            <Outlet />
-          </Suspense>
+          <Outlet />
         </main>
       </div>
 

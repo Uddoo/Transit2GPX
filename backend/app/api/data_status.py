@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, cast
 
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,8 +16,8 @@ from app.importers.cptond import (
     DatasetAuditError,
     audit_dataset,
     create_dataset_import,
-    run_dataset_import,
 )
+from app.services.import_jobs import cancel_cptond_import, enqueue_cptond_import
 
 router = APIRouter(prefix="/data", tags=["data"])
 
@@ -176,7 +176,6 @@ def data_status(db: Session = Depends(get_db)) -> DataStatusResponse:
 )
 def start_dataset_import(
     request: DatasetImportRequest,
-    background_tasks: BackgroundTasks,
 ) -> DatasetImportResponse:
     try:
         audit = audit_dataset(Path(request.directory))
@@ -190,7 +189,11 @@ def start_dataset_import(
         audit, request.source_version or audit.default_source_version
     )
     if handle.should_run:
-        background_tasks.add_task(run_dataset_import, handle.import_id, audit)
+        enqueue_cptond_import(
+            handle.import_id,
+            root=audit.root,
+            expected_checksum=audit.checksum,
+        )
     return DatasetImportResponse(
         import_id=handle.import_id,
         status=cast(DatasetImportStatus, handle.status),
@@ -257,6 +260,7 @@ def cancel_dataset_import(
     dataset.error_code = "import_cancelled"
     dataset.error_message = "用户取消了数据导入"
     db.commit()
+    cancel_cptond_import(dataset.id)
     return DatasetImportResponse(
         import_id=dataset.id,
         status="cancelled",

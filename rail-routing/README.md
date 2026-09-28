@@ -16,6 +16,16 @@ downloaded into the ignored work directory and verified with SHA-512.
 Set `RAIL_JAVA_HOME` when the system default Java is not the version intended
 for a reproducible build; Java 21 is the currently verified runtime.
 
+The commands below use the macOS Makefile form. On Windows PowerShell 7, use
+the same target name after `.\transit2fog.ps1`; for example,
+`.\transit2fog.ps1 doctor-rail` and `.\transit2fog.ps1 rail-bootstrap`.
+The Windows bootstrap uses `mvn.cmd`, `git apply`, native archive/hash APIs,
+and does not require WSL, Git Bash, GNU Make, `patch`, or `shasum`.
+`.\transit2fog.ps1 setup-java` installs the pinned project-local Temurin 21
+archive after SHA-256 verification without changing system environment
+variables. `.\transit2fog.ps1 rail-fixture-verify` starts the fixture sidecar,
+checks routing and both metadata endpoints, and then verifies port cleanup.
+
 Run the preflight check before downloading or building anything:
 
 ```sh
@@ -43,8 +53,8 @@ make rail-fixture-smoke
 
 The pinned regional manifest downloads and verifies the 2026-08-15 Shanghai,
 Jiangsu, Zhejiang, and Anhui Geofabrik extracts before atomically merging them.
-Build the immutable graph, then use two terminals to start, validate, activate,
-and run Transit2Fog:
+Build the immutable graph, then use two terminals once to start, validate, and
+activate the new graph:
 
 ```sh
 make rail-yangtze-data
@@ -55,7 +65,14 @@ make rail-yangtze-start
 
 # Terminal B
 make rail-yangtze-activate
+```
+
+After activation, stop terminal A. Daily development or production uses the
+managed sidecar in the same process tree:
+
+```sh
 make dev-rail
+make start-rail
 ```
 
 The validator rejects missing China profiles, invalid WGS-84 geometry,
@@ -72,6 +89,14 @@ build it into a new immutable graph directory:
 ./scripts/rail_start.sh region-YYYYMMDD /absolute/path/region.osm.pbf
 ```
 
+Windows equivalent:
+
+```powershell
+.\transit2fog.ps1 rail-build-graph `
+  -PbfPath 'D:\Rail\region.osm.pbf' `
+  -GraphVersion 'region-YYYYMMDD'
+```
+
 The build refuses to overwrite an existing version. A successful import is
 first created in a temporary sibling directory and moved into place only after
 OpenRailRouting exits successfully.
@@ -80,7 +105,8 @@ OpenRailRouting exits successfully.
 
 The pinned China manifest, immutable build metadata, and eight-route acceptance
 set are tracked under `rail-routing/data/`. Large PBF, graph, database, and
-validation outputs remain ignored. Build first, then use two terminals:
+validation outputs remain ignored. Build first, then use two terminals once for
+validation and activation:
 
 ```sh
 make rail-china-data
@@ -91,13 +117,15 @@ make rail-china-start
 
 # Terminal B
 make rail-china-activate
-make dev-rail
 ```
 
-Activation refuses a report whose graph/PBF/Profile/commit identity differs
-from the immutable graph metadata. It atomically updates safe relative
-`active` and `previous` symlinks. Roll back to the previously validated graph
-with:
+After activation, `make dev-rail` or `make start-rail` starts and supervises the
+identity-checked sidecar automatically. Activation refuses a report whose graph/PBF/Profile/commit identity differs
+from the immutable graph metadata. New activations atomically update
+`active.json` and `previous.json`, whose values are restricted to a safe,
+single graph-version name. Existing safe relative `active` and `previous`
+symlinks remain supported for compatibility. The JSON form avoids Windows
+symlink privilege requirements. Roll back to the previously validated graph with:
 
 ```sh
 make rail-rollback

@@ -12,6 +12,11 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["vite.config.ts", "eslint.config.js", "playwright.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "eslint.config.js",
+    "playwright.config.ts",
+    "playwright.fullstack.config.ts"
+  ]
 }
 

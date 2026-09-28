@@ -1,0 +1,20 @@
+diff --git a/src/test/java/de/geofabrik/railway_routing/http/MatchingResourceTest.java b/src/test/java/de/geofabrik/railway_routing/http/MatchingResourceTest.java
+--- a/src/test/java/de/geofabrik/railway_routing/http/MatchingResourceTest.java
++++ b/src/test/java/de/geofabrik/railway_routing/http/MatchingResourceTest.java
+@@ -30,6 +30,8 @@ import de.geofabrik.railway_routing.util.RailwayProfiles;
+ import de.geofabrik.railway_routing.http.RailwayRoutingApplication;
+ import de.geofabrik.railway_routing.http.RailwayRoutingServerConfiguration;
+ import io.dropwizard.core.Configuration;
++import io.dropwizard.core.server.DefaultServerFactory;
++import io.dropwizard.jetty.HttpConnectorFactory;
+ import io.dropwizard.testing.junit5.DropwizardAppExtension;
+ import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+ import jakarta.ws.rs.client.Entity;
+@@ -48,5 +50,7 @@ class MatchingResourceTest {
+     private static RailwayRoutingServerConfiguration createConfig() {
+         RailwayRoutingServerConfiguration config = new RailwayRoutingServerConfiguration();
++        ((HttpConnectorFactory) ((DefaultServerFactory) config.getServerFactory()).getApplicationConnectors().get(0)).setPort(0);
++        ((HttpConnectorFactory) ((DefaultServerFactory) config.getServerFactory()).getAdminConnectors().get(0)).setPort(0);
+         config.getGraphHopperConfiguration().
+                 putObject("prepare.min_network_size", 0).
+                 putObject("datareader.file", VDE82_PBF).

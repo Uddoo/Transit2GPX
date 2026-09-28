@@ -12,6 +12,7 @@ from sqlalchemy import event, select
 from sqlalchemy.orm import Session
 
 from app.db.models import (
+    AppTask,
     DatasetVersion,
     ImportBatch,
     ImportRow,
@@ -187,7 +188,7 @@ def test_startup_marks_abandoned_imports_retryable_without_touching_ready_data(
     client: TestClient, db: Session, tmp_path: Path
 ) -> None:
     from app.importers.cptond import DatasetAudit, create_dataset_import
-    from app.main import create_app
+    from app.importers.recovery import recover_interrupted_imports
 
     network = seed_linear_network(db)
     interrupted = DatasetVersion(
@@ -221,13 +222,12 @@ def test_startup_marks_abandoned_imports_retryable_without_touching_ready_data(
     )
     db.add_all([interrupted, batch, rail])
     db.commit()
-    with TestClient(create_app()) as restarted:
-        assert (
-            restarted.get(f"/api/v1/data/imports/{interrupted.id}").json()["status"]
-            == "failed"
-        )
-        csv_status = restarted.get(f"/api/v1/import-batches/{batch.id}").json()
-        assert csv_status["status"] == "failed"
+    recover_interrupted_imports(db)
+    assert (
+        client.get(f"/api/v1/data/imports/{interrupted.id}").json()["status"]
+        == "failed"
+    )
+    assert client.get(f"/api/v1/import-batches/{batch.id}").json()["status"] == "failed"
     db.expire_all()
     assert db.get(DatasetVersion, network.dataset_id).status == "ready"
     assert db.get(ImportBatch, batch.id).run_token is None
@@ -249,3 +249,26 @@ def test_startup_marks_abandoned_imports_retryable_without_touching_ready_data(
         default_source_version="interrupted",
     )
     assert create_dataset_import(audit, "interrupted").should_run
+
+
+def test_recovery_leaves_durable_imports_to_the_existing_executor(
+    client: TestClient, db: Session
+) -> None:
+    from app.importers.recovery import recover_interrupted_imports
+
+    network = seed_linear_network(db)
+    dataset = db.get(DatasetVersion, network.dataset_id)
+    assert dataset is not None
+    dataset.status = "checking"
+    db.add(
+        AppTask(
+            kind="cptond_import",
+            resource_id=dataset.id,
+            payload_json={},
+            status="running",
+        )
+    )
+    db.commit()
+    recover_interrupted_imports(db)
+    db.refresh(dataset)
+    assert dataset.status == "checking"

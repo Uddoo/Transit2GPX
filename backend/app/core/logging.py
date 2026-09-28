@@ -10,6 +10,7 @@ def configure_logging(settings: Settings) -> None:
     """Install one privacy-safe rotating application log in production."""
 
     app_logger = logging.getLogger("app")
+    app_logger.disabled = False
     app_logger.setLevel(logging.INFO)
     if settings.environment != "production":
         return

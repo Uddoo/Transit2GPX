@@ -1,38 +1,12 @@
 import type { FeatureCollection, Geometry } from "geojson";
 
-export type DataStatus = {
-  status: "not_configured" | "importing" | "ready" | "failed" | "cancelled";
-  ready_available: boolean;
-  import_id: number | null;
-  dataset: string | null;
-  captured_at: string | null;
-  license: string | null;
-  source_url: string | null;
-  checksum: string | null;
-  importer_schema_version: string | null;
-  cities: number;
-  route_count: number;
-  stop_count: number;
-  total_cities: number;
-  processed_cities: number;
-  ready_lines: number;
-  blocked_lines: number;
-  imported_at: string | null;
-  completed_at: string | null;
-  error_code: string | null;
-  error_message: string | null;
-  quality_status: "not_available" | "checking" | "ready" | "blocked";
-};
+import type { components } from "./generated";
 
-export type PublicConfig = {
-  map: {
-    tiles_enabled: boolean;
-    tile_url: string;
-    tile_attribution: string;
-    max_zoom: number;
-    external_tiles: boolean;
-  };
-};
+type ApiSchema<Name extends keyof components["schemas"]> =
+  components["schemas"][Name];
+
+export type DataStatus = ApiSchema<"DataStatusResponse">;
+export type PublicConfig = ApiSchema<"PublicConfigResponse">;
 
 export type MapFeatureProperties = Record<string, unknown>;
 export type GeoJsonFeatureCollection = FeatureCollection<
@@ -40,10 +14,10 @@ export type GeoJsonFeatureCollection = FeatureCollection<
   MapFeatureProperties
 >;
 
-export type CityMap = {
-  city_id: number;
-  dataset_version_id: number;
-  bbox: [number, number, number, number];
+export type CityMap = Omit<
+  ApiSchema<"CityMapResponse">,
+  "lines" | "stations"
+> & {
   lines: GeoJsonFeatureCollection;
   stations: GeoJsonFeatureCollection;
 };
@@ -97,19 +71,7 @@ export function fetchCityMap({
   return requestJson<CityMap>(`/api/v1/cities/${cityId}/map${query}`, { signal });
 }
 
-export type DatasetImport = {
-  import_id: number;
-  status: "staging" | "checking" | "ready" | "failed" | "cancelled";
-  route_count: number | null;
-  stop_count: number | null;
-  checksum: string | null;
-  total_cities: number;
-  processed_cities: number;
-  ready_lines: number;
-  blocked_lines: number;
-  error_code: string | null;
-  error_message: string | null;
-};
+export type DatasetImport = ApiSchema<"DatasetImportResponse">;
 
 export function startDatasetImport(directory: string) {
   return requestJson<DatasetImport>("/api/v1/data/imports", {
@@ -125,14 +87,7 @@ export function cancelDatasetImport(importId: number) {
   });
 }
 
-export type DataQuality = {
-  dataset_version_id: number | null;
-  ready_cities: number;
-  blocked_cities: number;
-  ready_lines: number;
-  blocked_lines: number;
-  ready_variants: number;
-  blocked_variants: number;
+export type DataQuality = Omit<ApiSchema<"QualityResponse">, "issues"> & {
   issues: {
     entity_type: string;
     entity_id: number;
@@ -146,64 +101,16 @@ export function fetchDataQuality(signal?: AbortSignal) {
   return requestJson<DataQuality>("/api/v1/data/quality", { signal });
 }
 
-export type City = {
-  id: number;
-  name_cn: string;
-  name_en: string | null;
-  center: [number, number];
-  bbox: [number, number, number, number];
-};
+export type City = ApiSchema<"CityResponse">;
+export type TransitLine = ApiSchema<"LineResponse">;
+export type Station = ApiSchema<"StationResponse">;
+export type PathCandidateLeg = ApiSchema<"PathLegCandidateResponse">;
 
-export type TransitLine = {
-  id: number;
-  city_id: number;
-  name_cn: string;
-  name_en: string | null;
-  display_color: string | null;
-};
-
-export type Station = {
-  id: number;
-  city_id: number;
-  name_cn: string;
-  name_en: string | null;
-  lon: number;
-  lat: number;
-};
-
-export type PathCandidateLeg = {
-  candidate_id: string;
-  digest: string;
-  dataset_version_id: number;
-  line_id: number;
-  route_variant_id: number;
-  line_name: string;
-  direction_name: string;
-  distance_m: number;
-  start_station_id: number;
-  end_station_id: number;
-  station_ids: number[];
-  edge_ids: number[];
-  reversed_edges: boolean[];
-  warnings: Record<string, unknown>[];
-};
-
-export type PathCandidate = {
-  mode: "metro";
-  candidate_id: string;
-  digest: string;
-  dataset_version_id: number;
-  route_variant_id: number | null;
-  line_name: string;
-  direction_name: string;
-  distance_m: number;
-  station_count: number;
-  station_ids: number[];
-  edge_ids: number[];
-  reversed_edges: boolean[];
+export type PathCandidate = Omit<
+  ApiSchema<"PathCandidateResponse">,
+  "geometry"
+> & {
   geometry: { type: "LineString"; coordinates: [number, number][] };
-  warnings: Record<string, unknown>[];
-  legs?: PathCandidateLeg[];
 };
 
 export type PathPreview = {
@@ -211,66 +118,15 @@ export type PathPreview = {
   candidates: PathCandidate[];
 };
 
-export type RailDataStatus = {
-  status: "disabled" | "not_configured" | "importing" | "unavailable" | "version_mismatch" | "ready";
-  enabled: boolean;
-  sidecar_available: boolean;
-  rail_dataset_version_id: number | null;
-  dataset_status: string | null;
-  station_count: number;
-  graph_version: string | null;
-  profile_version: string | null;
-  sidecar_graph_version: string | null;
-  sidecar_profile_version: string | null;
-  sidecar_pbf_checksum: string | null;
-  pbf_checksum: string | null;
-  source_url: string | null;
-  source_timestamp: string | null;
-  extract_region: string | null;
-  license: string | null;
-  profiles: string[];
-  bbox: [number, number, number, number] | null;
-  error_code: string | null;
-  error_message: string | null;
-};
+export type RailDataStatus = ApiSchema<"RailDataStatusResponse">;
+export type RailStation = ApiSchema<"RailStationResponse">;
+export type RailTrainType = ApiSchema<"RailPathPreviewRequest">["train_type"];
 
-export type RailStation = {
-  id: number;
-  rail_dataset_version_id: number;
-  osm_type: string;
-  osm_id: number;
-  name_cn: string;
-  name_en: string | null;
-  station_code: string | null;
-  city_name: string | null;
-  province_name: string | null;
-  lon: number;
-  lat: number;
-  match_score: number;
-  match_method: string;
-};
-
-export type RailTrainType = "G" | "C" | "D" | "S" | "Z" | "T" | "K" | "Y" | "OTHER";
-
-export type RailPathCandidate = {
-  mode: "rail";
-  candidate_id: string;
-  digest: string;
-  rail_dataset_version_id: number;
-  graph_version: string;
-  profile_version: string;
-  scoring_version: string;
-  routing_profile: string;
-  distance_m: number;
-  duration_ms: number;
-  station_count: number;
-  station_ids: number[];
+export type RailPathCandidate = Omit<
+  ApiSchema<"RailPathCandidateResponse">,
+  "geometry"
+> & {
   geometry: { type: "LineString"; coordinates: [number, number][] };
-  way_ranges: { start_index: number; end_index: number; osm_way_id: number }[];
-  score: number;
-  score_details: Record<string, unknown>[];
-  warnings: Record<string, unknown>[];
-  can_commit: boolean;
 };
 
 export type RailPathPreview = {
@@ -322,14 +178,11 @@ export function fetchRailDataStatus(signal?: AbortSignal) {
   return requestJson<RailDataStatus>("/api/v1/rail/data/status", { signal });
 }
 
-export type RailDataImport = {
-  import_id: number;
+export type RailDataImport = Omit<
+  ApiSchema<"RailDataImportResponse">,
+  "status"
+> & {
   status: "staging" | "building" | "ready" | "failed" | "retired";
-  graph_version: string;
-  pbf_checksum: string;
-  station_count: number;
-  error_code: string | null;
-  error_message: string | null;
 };
 
 export function startRailDataImport(input: {
@@ -349,26 +202,9 @@ export function fetchRailDataImport(importId: number, signal?: AbortSignal) {
   });
 }
 
-export type RailStationDifferenceSample = {
-  osm_type: string;
-  osm_id: number;
-  from_name: string | null;
-  to_name: string | null;
-  changed_fields: string[];
-};
-
-export type RailDatasetDifference = {
-  from_graph_version: string;
-  to_graph_version: string;
-  from_station_count: number;
-  to_station_count: number;
-  added_station_count: number;
-  removed_station_count: number;
-  changed_station_count: number;
-  unchanged_station_count: number;
-  affected_journey_count: number;
-  samples: RailStationDifferenceSample[];
-};
+export type RailStationDifferenceSample =
+  ApiSchema<"RailStationDifferenceSample">;
+export type RailDatasetDifference = ApiSchema<"RailDatasetDifferenceResponse">;
 
 export function compareRailDatasets(input: {
   fromGraphVersion: string;
@@ -515,9 +351,9 @@ export type Journey = {
   legs: JourneyLeg[];
 };
 
-export type JourneyLegSummary = Pick<JourneyLeg, "id" | "leg_no" | "transport_mode" | "city_id" | "city_name" | "line_id" | "line_name" | "start_station_name" | "end_station_name" | "distance_m"> & { train_no: string | null; train_type: string | null };
-export type JourneySummary = Omit<Journey, "legs"> & { legs: JourneyLegSummary[] };
-export type JourneyList = { items: JourneySummary[]; total: number };
+export type JourneyLegSummary = ApiSchema<"JourneyLegSummary">;
+export type JourneySummary = ApiSchema<"JourneySummaryResponse">;
+export type JourneyList = Omit<ApiSchema<"JourneyListResponse">, "items"> & { items: JourneySummary[] };
 export type JourneyListOptions = {
   signal?: AbortSignal;
   q?: string;
@@ -675,27 +511,14 @@ export type ExportOptions = {
   traveled_to?: string | null;
 };
 
-export type ExportPreview = {
-  preview_token: string;
-  journey_count: number;
-  edge_count: number;
-  unique_edge_count: number;
-  distance_m: number;
-  track_count: number;
-  segment_count: number;
-  dataset_version_ids: number[];
-  rail_dataset_version_ids: number[];
-  rail_graph_versions: string[];
-  blocking_errors: string[];
-  warnings: string[];
-};
+export type ExportPreview = ApiSchema<"ExportPreviewResponse">;
 
 export function previewExport(input: ExportOptions, signal?: AbortSignal) {
   return requestJson<ExportPreview>("/api/v1/exports/preview", {
     method: "POST",
+    signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
-    signal,
   });
 }
 
@@ -716,20 +539,7 @@ export async function downloadGpx(input: ExportOptions & { preview_token: string
   return { blob: await response.blob(), filename };
 }
 
-export type ImportBatch = {
-  id: number;
-  filename: string;
-  encoding: string;
-  total_rows: number;
-  processed_rows: number;
-  error_message: string | null;
-  resolved_rows: number;
-  review_rows: number;
-  failed_rows: number;
-  status: string;
-  created_at: string;
-  committed_at: string | null;
-};
+export type ImportBatch = ApiSchema<"ImportBatchResponse">;
 
 export type ImportRow = {
   id: number;

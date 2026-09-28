@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+        python: ["3.11", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.11.26
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\transit2fog.ps1 setup
+          .\transit2fog.ps1 check
+      - name: Check on macOS
+        if: runner.os == 'macOS'
+        run: |
+          make setup
+          make check
+
+  e2e:
+    name: Browser E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.11.26
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: |
+          uv sync --project backend --dev --frozen
+          npm ci --prefix frontend
+      - name: Install Chromium
+        run: npx --prefix frontend playwright install chromium
+      - name: Build frontend
+        run: npm run build --prefix frontend
+      - name: Run mocked-browser Playwright suite
+        run: npm run test:e2e --prefix frontend
+      - name: Run real full-stack Playwright suite
+        run: npm run test:e2e:fullstack --prefix frontend
+      - name: Upload Playwright reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ runner.os }}
+          path: |
+            frontend/playwright-report
+            frontend/playwright-fullstack-report
+          if-no-files-found: ignore
+          retention-days: 7

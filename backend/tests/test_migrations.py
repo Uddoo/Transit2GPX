@@ -4,6 +4,7 @@ import os
 import sqlite3
 import subprocess
 import sys
+from contextlib import closing
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -30,14 +31,14 @@ def _alembic(
 
 
 def _columns(database: Path, table: str) -> set[str]:
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         return {
             str(row[1]) for row in connection.execute(f'PRAGMA table_info("{table}")')
         }
 
 
 def _tables(database: Path) -> set[str]:
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         return {
             str(row[0])
             for row in connection.execute(
@@ -46,17 +47,23 @@ def _tables(database: Path) -> set[str]:
         }
 
 
+def test_model_metadata_matches_head_migration(tmp_path: Path) -> None:
+    database = tmp_path / "metadata-check.sqlite3"
+    _alembic(database, "upgrade", "head")
+    _alembic(database, "check")
+
+
 def test_csv_job_migration_preserves_existing_review_progress(tmp_path: Path) -> None:
     database = tmp_path / "csv-jobs.sqlite3"
     _alembic(database, "upgrade", "20260821_0006")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute(
             "INSERT INTO import_batch (filename, encoding, total_rows, "
             "resolved_rows, review_rows, failed_rows, status) "
             "VALUES ('keep.csv', 'utf-8', 3, 2, 1, 0, 'ready_for_review')"
         )
     _alembic(database, "upgrade", "head")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         assert connection.execute(
             "SELECT filename, processed_rows, resolved_rows, review_rows, "
             "run_token, error_message FROM import_batch"
@@ -64,7 +71,7 @@ def test_csv_job_migration_preserves_existing_review_progress(tmp_path: Path) ->
     _alembic(database, "check")
     _alembic(database, "downgrade", "20260821_0006")
     _alembic(database, "upgrade", "head")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
         assert connection.execute(
             "SELECT processed_rows FROM import_batch"
@@ -74,7 +81,7 @@ def test_csv_job_migration_preserves_existing_review_progress(tmp_path: Path) ->
 def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) -> None:
     database = tmp_path / "migration.sqlite3"
     _alembic(database, "upgrade", "20260821_0003")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute(
             "INSERT INTO journey "
             "(journey_code, traveled_at, source_type, note) "
@@ -86,20 +93,20 @@ def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) 
     assert "transport_mode" in _columns(database, "journey_leg")
     assert "matched_rail_start_station_id" in _columns(database, "import_row")
     assert "rail_journey_edge_snapshot" in _tables(database)
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         assert connection.execute("SELECT journey_code FROM journey").fetchall() == [
             ("pre-rail-trip",)
         ]
         assert connection.execute(
             "SELECT version_num FROM alembic_version"
-        ).fetchone() == ("20260928_0007",)
+        ).fetchone() == ("20260928_0008",)
 
     _alembic(database, "downgrade", "20260821_0003")
 
     assert "transport_mode" not in _columns(database, "journey_leg")
     assert "matched_rail_start_station_id" not in _columns(database, "import_row")
     assert "rail_dataset_version" not in _tables(database)
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         assert connection.execute("SELECT journey_code FROM journey").fetchall() == [
             ("pre-rail-trip",)
         ]
@@ -108,10 +115,27 @@ def test_rail_migrations_round_trip_preserves_existing_journeys(tmp_path: Path) 
     assert "rail_dataset_version" in _tables(database)
 
 
+def test_task_migration_downgrade_refuses_active_jobs(tmp_path: Path) -> None:
+    database = tmp_path / "task-guard.sqlite3"
+    _alembic(database, "upgrade", "head")
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "INSERT INTO app_task "
+            "(kind, resource_id, payload_json, status, attempts) "
+            "VALUES ('cptond_import', 1, '{}', 'queued', 0)"
+        )
+
+    result = _alembic(database, "downgrade", "20260821_0006", check=False)
+
+    assert result.returncode != 0
+    assert "存在未完成的持久化任务" in result.stderr
+    assert "app_task" in _tables(database)
+
+
 def test_rail_migration_downgrade_refuses_user_rail_data(tmp_path: Path) -> None:
     database = tmp_path / "guard.sqlite3"
     _alembic(database, "upgrade", "head")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         journey_id = connection.execute(
             "INSERT INTO journey "
             "(journey_code, traveled_at, source_type, note) "
@@ -131,7 +155,7 @@ def test_rail_migration_downgrade_refuses_user_rail_data(tmp_path: Path) -> None
 
     assert result.returncode != 0
     assert "Cannot downgrade while rail journey legs exist" in result.stderr
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
         assert connection.execute(
             "SELECT transport_mode FROM journey_leg"
         ).fetchone() == ("rail",)
@@ -142,7 +166,7 @@ def test_csv_reference_migration_downgrade_refuses_review_data(
 ) -> None:
     database = tmp_path / "csv-guard.sqlite3"
     _alembic(database, "upgrade", "head")
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         dataset_id = connection.execute(
             "INSERT INTO rail_dataset_version "
             "(source_name, source_url, source_timestamp, pbf_checksum, "

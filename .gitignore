@@ -9,11 +9,15 @@ __pycache__/
 .coverage
 htmlcov/
 backend/dist/
+release/
 
 node_modules/
 frontend/dist/
 frontend/playwright-report/
+frontend/playwright-fullstack-report/
 frontend/test-results/
+/test-results/
+frontend/coverage/
 
 data/
 !rail-routing/data/

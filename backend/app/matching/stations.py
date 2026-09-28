@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 
 from rapidfuzz.fuzz import WRatio
@@ -17,8 +16,7 @@ from app.db.models import (
     StationAlias,
 )
 from app.matching.names import normalize_station_name, pinyin_keys
-
-_SEARCH_TOKEN = re.compile(r"[^\W_]+", re.UNICODE)
+from app.matching.search import fts_prefix_expression
 
 
 def stations_for_line(db: Session, line_id: int) -> list[Station]:
@@ -89,17 +87,6 @@ def exact_line_station_matches(
     ]
 
 
-def _fts_expression(value: str) -> str:
-    tokens = [token.casefold() for token in _SEARCH_TOKEN.findall(value)]
-    normalized = normalize_station_name(value)
-    expressions: list[str] = []
-    if tokens:
-        expressions.append(" AND ".join(f'"{token}"*' for token in tokens))
-    if normalized and normalized not in tokens:
-        expressions.append(f'"{normalized}"*')
-    return " OR ".join(f"({expression})" for expression in expressions)
-
-
 def search_ready_stations(
     db: Session,
     *,
@@ -127,7 +114,7 @@ def search_ready_stations(
     )
     eligible_by_id = {station.id: station for station in eligible}
     ranked: list[Station] = []
-    expression = _fts_expression(value)
+    expression = fts_prefix_expression(value)
     if expression:
         rows = db.execute(
             text(

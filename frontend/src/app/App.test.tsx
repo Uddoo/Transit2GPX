@@ -375,7 +375,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    const line = screen.getByRole("combobox", { name: "线路" });
+    const line = await screen.findByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
 
     expect(
@@ -397,7 +397,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    const startStation = screen.getByRole("combobox", { name: "起点站" });
+    const startStation = await screen.findByRole("combobox", { name: "起点站" });
     const endStation = screen.getByRole("combobox", { name: "终点站" });
     await waitFor(() => expect(startStation).toBeEnabled());
 
@@ -430,7 +430,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    const line = screen.getByRole("combobox", { name: "线路" });
+    const line = await screen.findByRole("combobox", { name: "线路" });
     await waitFor(() => expect(line).toBeEnabled());
     await user.selectOptions(line, "auto");
 
@@ -477,7 +477,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    const previewButton = screen.getByRole("button", { name: "预览路径" });
+    const previewButton = await screen.findByRole("button", { name: "预览路径" });
     await waitFor(() => expect(previewButton).toBeEnabled());
     await user.click(previewButton);
     await user.click(screen.getByRole("button", { name: "导出 GPX" }));
@@ -505,7 +505,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
+    await user.click(await screen.findByRole("tab", { name: "铁路 / 高铁" }));
     expect(
       await screen.findByRole("heading", { name: "添加一段真实铁路乘坐记录" }),
     ).toBeInTheDocument();
@@ -585,13 +585,24 @@ describe("Transit2Fog app shell", () => {
           }),
         );
       }
-      if (url.endsWith("/api/v1/cities")) return Promise.resolve(jsonResponse([]));
+      if (url.includes("/api/v1/cities/1/map")) {
+        return Promise.resolve(jsonResponse(CITY_MAP));
+      }
+      if (url.endsWith("/api/v1/cities")) {
+        return Promise.resolve(jsonResponse(CITIES));
+      }
+      if (url.includes("/api/v1/cities/1/lines")) {
+        return Promise.resolve(jsonResponse(LINES));
+      }
+      if (url.includes("/api/v1/lines/2/stations")) {
+        return Promise.resolve(jsonResponse(STATIONS));
+      }
       return Promise.resolve(jsonResponse(DATA_STATUS));
     });
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    await user.click(screen.getByRole("tab", { name: "铁路 / 高铁" }));
+    await user.click(await screen.findByRole("tab", { name: "铁路 / 高铁" }));
     expect(await screen.findByText("铁路功能暂不可用")).toBeInTheDocument();
 
     const date = screen.getByLabelText("乘坐日期（必填）");
@@ -640,6 +651,76 @@ describe("Transit2Fog app shell", () => {
     expect(screen.getByText("选择一个 CSV 文件")).toBeInTheDocument();
   });
 
+  it("pauses and resumes a CSV batch opened from its persisted URL", async () => {
+    const user = userEvent.setup();
+    let status = "parsing";
+    let processed = 1;
+    const fallback = vi.mocked(fetch).getMockImplementation();
+    if (!fallback) throw new Error("Missing fetch fixture");
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : input instanceof URL ? input.href : input;
+      const pathname = new URL(url, "http://localhost").pathname;
+      if (pathname.startsWith("/api/v1/import-batches/91")) {
+        if (pathname.endsWith("/rows")) return Promise.resolve(jsonResponse({ items: [], total: 0 }));
+        if (pathname.endsWith("/cancel")) status = "cancelled";
+        if (pathname.endsWith("/resume")) { status = "ready_for_review"; processed = 3; }
+        return Promise.resolve(jsonResponse({ id: 91, filename: "resume.csv", encoding: "utf-8", total_rows: 3, processed_rows: processed, resolved_rows: processed, review_rows: 0, failed_rows: 0, status, error_message: null, created_at: "2026-09-28T00:00:00Z", committed_at: null }));
+      }
+      return fallback(input, init);
+    });
+    renderApp(<App />, "/imports/csv?batch=91");
+    expect(await screen.findByRole("progressbar", { name: "CSV 解析进度" })).toHaveAttribute("value", "1");
+    expect(screen.getByRole("button", { name: "提交全部已审核行" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "暂停解析" }));
+    await user.click(await screen.findByRole("button", { name: "继续解析" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "提交全部已审核行" })).toBeEnabled());
+    expect(screen.getByText("3 已解析")).toBeInTheDocument();
+  });
+
+  it("loads journey pages from the API", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      const url =
+        input instanceof Request
+          ? input.url
+          : input instanceof URL
+            ? input.href
+            : input;
+      if (url.includes("/api/v1/config/public")) {
+        return Promise.resolve(jsonResponse(PUBLIC_CONFIG));
+      }
+      if (url.includes("/api/v1/rail/data/status")) {
+        return Promise.resolve(jsonResponse(RAIL_STATUS));
+      }
+      if (url.includes("/api/v1/journeys?")) {
+        const offset = Number(new URL(url, "http://localhost").searchParams.get("offset"));
+        const secondPage = offset === 50;
+        return Promise.resolve(
+          jsonResponse({
+            items: Array.from({ length: secondPage ? 1 : 50 }, (_, index) => ({
+              ...SAVED_JOURNEY,
+              id: offset + index + 1,
+              journey_code: `page-trip-${String(offset + index + 1).padStart(2, "0")}`,
+            })),
+            total: 51,
+            limit: 50,
+            offset,
+            has_more: !secondPage,
+          }),
+        );
+      }
+      return Promise.resolve(jsonResponse(DATA_STATUS));
+    });
+    renderApp(<App />, "/journeys");
+
+    expect(await screen.findByText("page-trip-01")).toBeInTheDocument();
+    expect(screen.getByText("第 1–50 条，共 51 条")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "下一页" }));
+    expect(await screen.findByText("page-trip-51")).toBeInTheDocument();
+    expect(screen.getByText("第 51–51 条，共 51 条")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "下一页" })).toBeDisabled();
+  });
+
   it("previews and confirms an immutable railway journey recompute", async () => {
     const user = userEvent.setup();
     vi.mocked(fetch).mockImplementation(
@@ -676,7 +757,13 @@ describe("Transit2Fog app shell", () => {
         }
         if (new URL(url, "http://localhost").pathname === "/api/v1/journeys") {
           return Promise.resolve(
-            jsonResponse({ items: [SAVED_RAIL_JOURNEY], total: 1 }),
+            jsonResponse({
+              items: [SAVED_RAIL_JOURNEY],
+              total: 1,
+              limit: 20,
+              offset: 0,
+              has_more: false,
+            }),
           );
         }
         return Promise.resolve(jsonResponse(DATA_STATUS));

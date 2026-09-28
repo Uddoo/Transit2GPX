@@ -409,16 +409,18 @@ test("real-map journey can be previewed and saved", async ({ page }) => {
   const endStation = page.getByRole("combobox", { name: "终点站" });
   await startStation.click();
   await startStation.fill("renmin");
-  await expect(
-    page.getByRole("listbox").getByRole("option", { name: /人民广场/ }),
-  ).toBeVisible();
-  await startStation.press("Enter");
+  const startOption = page
+    .getByRole("listbox")
+    .getByRole("option", { name: /人民广场/ });
+  await expect(startOption).toBeVisible();
+  await startOption.click();
   await endStation.click();
   await endStation.fill("虹桥");
-  await expect(
-    page.getByRole("listbox").getByRole("option", { name: /虹桥火车站/ }),
-  ).toBeVisible();
-  await endStation.press("Enter");
+  const endOption = page
+    .getByRole("listbox")
+    .getByRole("option", { name: /虹桥火车站/ });
+  await expect(endOption).toBeVisible();
+  await endOption.click();
 
   await page.getByRole("button", { name: "预览路径" }).click();
   await expect(page.getByRole("heading", { name: "候选路径" })).toBeVisible();
@@ -574,10 +576,11 @@ test("unspecified line transfer candidate is confirmed and saved as two legs", a
   await expect(viaStation).toBeEnabled();
   await viaStation.click();
   await viaStation.fill("renmin");
-  await expect(
-    page.getByRole("listbox").getByRole("option", { name: /人民广场/ }),
-  ).toBeVisible();
-  await viaStation.press("Enter");
+  const viaOption = page
+    .getByRole("listbox")
+    .getByRole("option", { name: /人民广场/ });
+  await expect(viaOption).toBeVisible();
+  await viaOption.click();
   await page.getByRole("button", { name: "预览路径" }).click();
   expect(previewBody?.via_station_ids).toEqual([132]);
   await expect(page.getByText("1号线 → 2号线 · 虹桥火车站 → 浦东机场")).toBeVisible();
@@ -639,7 +642,13 @@ test("rail journey recompute confirms a new immutable candidate", async ({ page 
     if (request.method() === "GET" && url.pathname === "/api/v1/journeys") {
       await route.fulfill({
         contentType: "application/json",
-        json: { items: [railJourney], total: 1 },
+        json: {
+          items: [railJourney],
+          total: 1,
+          limit: 20,
+          offset: 0,
+          has_more: false,
+        },
       });
       return;
     }
@@ -995,7 +1004,13 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   await page.route("**/api/v1/journeys?**", (route) =>
     route.fulfill({
       contentType: "application/json",
-      json: { items: [journey], total: 1 },
+      json: {
+        items: [journey],
+        total: 1,
+        limit: 500,
+        offset: 0,
+        has_more: false,
+      },
     }),
   );
   await page.route("**/api/v1/exports/preview", async (route) => {

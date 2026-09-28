@@ -9,6 +9,7 @@ import sqlite3
 import sys
 import tempfile
 import zipfile
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -61,7 +62,7 @@ def main() -> None:
         checksum = hashlib.sha256(snapshot.read_bytes()).hexdigest()
         if checksum != manifest.get("database_sha256"):
             raise SystemExit("备份校验和不匹配。")
-        with sqlite3.connect(snapshot) as restored:
+        with closing(sqlite3.connect(snapshot)) as restored:
             if restored.execute("PRAGMA integrity_check").fetchone() != ("ok",):
                 raise SystemExit("备份数据库完整性检查失败。")
         if target.exists():
