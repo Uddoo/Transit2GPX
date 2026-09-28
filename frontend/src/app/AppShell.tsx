@@ -124,6 +124,7 @@ export function AppShell() {
       </header>
 
       <div className="workspace">
+        {location.pathname !== "/setup" ? (
         <header className="status-bar" aria-label="应用状态">
           <div className="status-bar__date">
             <Icon name="database" size={17} />
@@ -134,6 +135,7 @@ export function AppShell() {
             <StatusLabel />
           </div>
         </header>
+        ) : null}
         <main className="page" id="main-content">
           <Outlet />
         </main>

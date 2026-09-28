@@ -3454,6 +3454,103 @@
         "title": "RailRecomputeSelection",
         "type": "object"
       },
+      "RailServiceState": {
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "default": "idle",
+            "enum": [
+              "idle",
+              "starting",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "RailServiceState",
+        "type": "object"
+      },
+      "RailSetupConfig": {
+        "properties": {
+          "graph_root": {
+            "maxLength": 480,
+            "minLength": 1,
+            "title": "Graph Root",
+            "type": "string"
+          },
+          "graph_version": {
+            "default": "active",
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "jar_path": {
+            "anyOf": [
+              {
+                "maxLength": 480,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jar Path"
+          },
+          "java_home": {
+            "anyOf": [
+              {
+                "maxLength": 480,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Java Home"
+          },
+          "pbf_path": {
+            "anyOf": [
+              {
+                "maxLength": 480,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pbf Path"
+          }
+        },
+        "required": [
+          "graph_root"
+        ],
+        "title": "RailSetupConfig",
+        "type": "object"
+      },
       "RailStationDifferenceSample": {
         "properties": {
           "changed_fields": {
@@ -3626,6 +3723,220 @@
           "osm_way_id"
         ],
         "title": "RailWayRangeResponse",
+        "type": "object"
+      },
+      "SetupCheck": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "remedy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remedy"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "warning",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "detail"
+        ],
+        "title": "SetupCheck",
+        "type": "object"
+      },
+      "SetupChecks": {
+        "properties": {
+          "can_continue": {
+            "title": "Can Continue",
+            "type": "boolean"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/SetupCheck"
+            },
+            "title": "Checks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "checks",
+          "can_continue"
+        ],
+        "title": "SetupChecks",
+        "type": "object"
+      },
+      "SetupProgress": {
+        "properties": {
+          "completed": {
+            "default": false,
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "dismissed": {
+            "default": false,
+            "title": "Dismissed",
+            "type": "boolean"
+          },
+          "rail_skipped": {
+            "default": false,
+            "title": "Rail Skipped",
+            "type": "boolean"
+          },
+          "step": {
+            "default": "check",
+            "enum": [
+              "check",
+              "metro",
+              "rail",
+              "finish"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "title": "SetupProgress",
+        "type": "object"
+      },
+      "SetupProgressPatch": {
+        "properties": {
+          "complete": {
+            "default": false,
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "dismissed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed"
+          },
+          "metro_directory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metro Directory"
+          },
+          "rail_skipped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rail Skipped"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "enum": [
+                  "check",
+                  "metro",
+                  "rail",
+                  "finish"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          }
+        },
+        "title": "SetupProgressPatch",
+        "type": "object"
+      },
+      "SetupState": {
+        "properties": {
+          "locked_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Locked Fields",
+            "type": "array"
+          },
+          "log_path": {
+            "title": "Log Path",
+            "type": "string"
+          },
+          "metro": {
+            "$ref": "#/components/schemas/DataStatusResponse"
+          },
+          "metro_directory": {
+            "title": "Metro Directory",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/SetupProgress"
+          },
+          "rail": {
+            "$ref": "#/components/schemas/RailDataStatusResponse"
+          },
+          "rail_config": {
+            "$ref": "#/components/schemas/RailSetupConfig"
+          },
+          "rail_start_allowed": {
+            "title": "Rail Start Allowed",
+            "type": "boolean"
+          },
+          "service": {
+            "$ref": "#/components/schemas/RailServiceState"
+          },
+          "should_show": {
+            "title": "Should Show",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "progress",
+          "should_show",
+          "metro",
+          "rail",
+          "service",
+          "rail_config",
+          "metro_directory",
+          "log_path",
+          "locked_fields",
+          "rail_start_allowed"
+        ],
+        "title": "SetupState",
         "type": "object"
       },
       "StationResponse": {
@@ -5467,6 +5778,171 @@
         "summary": "Search Rail Stations",
         "tags": [
           "rail stations"
+        ]
+      }
+    },
+    "/api/v1/setup": {
+      "get": {
+        "operationId": "setup_state_api_v1_setup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Setup State",
+        "tags": [
+          "first-use setup"
+        ]
+      }
+    },
+    "/api/v1/setup/checks": {
+      "get": {
+        "operationId": "check_environment_api_v1_setup_checks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupChecks"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check Environment",
+        "tags": [
+          "first-use setup"
+        ]
+      }
+    },
+    "/api/v1/setup/progress": {
+      "patch": {
+        "operationId": "update_setup_progress_api_v1_setup_progress_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupProgressPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupProgress"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Setup Progress",
+        "tags": [
+          "first-use setup"
+        ]
+      }
+    },
+    "/api/v1/setup/rail/check": {
+      "post": {
+        "operationId": "check_rail_setup_api_v1_setup_rail_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RailSetupConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupChecks"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Rail Setup",
+        "tags": [
+          "first-use setup"
+        ]
+      }
+    },
+    "/api/v1/setup/rail/start": {
+      "post": {
+        "operationId": "start_rail_service_api_v1_setup_rail_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RailSetupConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RailServiceState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Rail Service",
+        "tags": [
+          "first-use setup"
         ]
       }
     },

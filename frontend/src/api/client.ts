@@ -610,3 +610,27 @@ export function commitImportBatch(batchId: number, strategy: "all" | "resolved_o
     body: JSON.stringify({ strategy }),
   });
 }
+
+export type SetupState = ApiSchema<"SetupState">;
+export type SetupChecks = ApiSchema<"SetupChecks">;
+export type SetupProgress = ApiSchema<"SetupProgress">;
+export type SetupProgressPatch = Partial<ApiSchema<"SetupProgressPatch">>;
+export type RailSetupConfig = ApiSchema<"RailSetupConfig">;
+export type RailServiceState = ApiSchema<"RailServiceState">;
+export type SetupStep = NonNullable<SetupProgress["step"]>;
+
+export function fetchSetup(signal?: AbortSignal) {
+  return requestJson<SetupState>("/api/v1/setup", { signal });
+}
+export function fetchSetupChecks(signal?: AbortSignal) {
+  return requestJson<SetupChecks>("/api/v1/setup/checks", { signal });
+}
+export function updateSetupProgress(input: SetupProgressPatch) {
+  return requestJson<SetupProgress>("/api/v1/setup/progress", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}
+export function checkRailSetup(input: RailSetupConfig) {
+  return requestJson<SetupChecks>("/api/v1/setup/rail/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}
+export function startSetupRailService(input: RailSetupConfig) {
+  return requestJson<RailServiceState>("/api/v1/setup/rail/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}

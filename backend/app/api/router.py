@@ -7,6 +7,7 @@ from app.api.data_status import router as data_router
 from app.api.exports import router as exports_router
 from app.api.journeys import router as journeys_router
 from app.api.network import router as network_router
+from app.api.onboarding import router as onboarding_router
 from app.api.paths import router as paths_router
 from app.api.rail_data import router as rail_data_router
 from app.api.rail_stations import router as rail_stations_router
@@ -22,3 +23,5 @@ api_router.include_router(rail_stations_router)
 api_router.include_router(journeys_router)
 api_router.include_router(exports_router)
 api_router.include_router(csv_imports_router)
+
+api_router.include_router(onboarding_router)

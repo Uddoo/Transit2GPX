@@ -5,6 +5,8 @@ const frontendDir = resolve(import.meta.dirname, "..");
 const manifestPath = resolve(frontendDir, "dist", ".vite", "manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const expectedRoutes = [
+  "src/features/onboarding/OnboardingPage.tsx",
+  "src/features/onboarding/SetupEntry.tsx",
   "src/features/csv-import/CsvImportPage.tsx",
   "src/features/data-settings/DataSettingsPage.tsx",
   "src/features/export/ExportPage.tsx",
