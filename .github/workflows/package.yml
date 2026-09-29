@@ -87,8 +87,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null || true)"
-          if [ -n "$existing_sha" ]; then
+          if existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null)"; then
             test "$existing_sha" = "$GITHUB_SHA" || { echo 'Refusing to move an existing release tag'; exit 1; }
           else
             gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
