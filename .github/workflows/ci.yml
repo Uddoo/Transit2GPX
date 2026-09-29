@@ -42,8 +42,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          .\transit2fog.ps1 setup
-          .\transit2fog.ps1 check
+          .\transit2gpx.ps1 setup
+          .\transit2gpx.ps1 check
       - name: Check on macOS
         if: runner.os == 'macOS'
         run: |

@@ -41,7 +41,7 @@ jobs:
       - name: Build pinned sidecar on Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: .\transit2fog.ps1 rail-bootstrap
+        run: .\transit2gpx.ps1 rail-bootstrap
       - name: Build pinned sidecar on macOS
         if: runner.os == 'macOS'
         run: make rail-bootstrap
@@ -49,7 +49,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $iscc = .\scripts\setup_inno.ps1 -Destination "$env:RUNNER_TEMP\transit2fog-inno"
+          $iscc = .\scripts\setup_inno.ps1 -Destination "$env:RUNNER_TEMP\transit2gpx-inno"
           $releaseTag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "preview-$env:GITHUB_SHA" }
           uv run --project backend python scripts/build_package.py `
             --sidecar-jar data/rail-routing/dist/openrailrouting.jar `
@@ -64,7 +64,7 @@ jobs:
             --rail-components --release-tag "$release_tag"
       - uses: actions/upload-artifact@v4
         with:
-          name: transit2fog-${{ runner.os }}
+          name: transit2gpx-${{ runner.os }}
           path: release/packages/*
           if-no-files-found: error
           retention-days: 14
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: transit2fog-*
+          pattern: transit2gpx-*
           path: release-assets
           merge-multiple: true
       - uses: softprops/action-gh-release@v2

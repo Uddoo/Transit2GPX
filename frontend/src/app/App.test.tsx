@@ -264,7 +264,7 @@ function jsonResponse(body: unknown) {
   });
 }
 
-describe("Transit2Fog app shell", () => {
+describe("Transit2GPX app shell", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
@@ -348,11 +348,11 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    const homeLinks = screen.getAllByRole("link", { name: "Transit2Fog 首页" });
+    const homeLinks = screen.getAllByRole("link", { name: "Transit2GPX 首页" });
     expect(homeLinks).toHaveLength(2);
-    expect(homeLinks[0]).toHaveTextContent("Transit2Fog");
+    expect(homeLinks[0]).toHaveTextContent("Transit2GPX");
     expect(
-      screen.getByText("记录真实地铁与铁路行程，导出 Fog of World 可用的 GPX"),
+      screen.getByText("记录真实地铁与铁路行程，导出标准 GPX 轨迹"),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "添加一段真实乘坐记录" })).toBeInTheDocument();
     const previewButton = screen.getByRole("button", { name: "预览路径" });
@@ -466,7 +466,7 @@ describe("Transit2Fog app shell", () => {
 
   it("saves and directly exports the selected candidate as GPX", async () => {
     const user = userEvent.setup();
-    const createObjectUrl = vi.fn(() => "blob:transit2fog-direct");
+    const createObjectUrl = vi.fn(() => "blob:transit2gpx-direct");
     const revokeObjectUrl = vi.fn();
     const BrowserUrl = class extends URL {};
     Object.defineProperties(BrowserUrl, {

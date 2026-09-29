@@ -8,15 +8,17 @@
 
 ## 1. 轻量安装包（下一次发布）
 
+以下命名和命令针对改名后的源码构建。已发布的 `v1.0.0-rc.1` 仍使用 `Transit2Fog` 文件名、程序目录与快捷方式；使用该版本时，请遵循[对应发行说明](RELEASE_DRAFT.md)，并将下方安装路径中的 `Transit2GPX` 替换为 `Transit2Fog`。本次改名没有替换已有 Release 附件。
+
 第二轮同时引入[标准城市数据包](CITY_PACKS.md)：基础包排除 GeoPandas/Pandas/Pyogrio/GDAL，使用 `.t2fcity` 文件导入地铁数据。需要原始 Shapefile 导入的用户可构建 `--with-import-tools` 完整导入版。铁路站点仍可直接从 PBF 导入。
 
 以下描述当前源码新增的打包方式；**v1.0.0-rc.1 附件不会随源码修改而变化**。
 
 发布工作流 `.github/workflows/package.yml` 在 Windows x64 与 macOS runner 上使用锁定的 Python、Node.js、OpenRailRouting 和 GraphHopper 版本生成：
 
-- Windows：推荐 `Transit2Fog-<version>-windows-x64-Setup.exe`，双击安装，不要求 PowerShell 或管理员权限；保留 `.zip` 便携包及原有安装脚本作为备用。
-- macOS：`Transit2Fog-<version>-macos-<arch>.pkg` 以及同内容的 `.tar.gz` 备用包，并生成 SHA-256 文件。
-- 按平台附带 `Transit2Fog-rail-components-<platform>.zip`，包含固定提交的 OpenRailRouting JAR、应用专用 Temurin 21 JRE 和完整相关许可。普通用户无需手动下载该附件。
+- Windows：推荐 `Transit2GPX-<version>-windows-x64-Setup.exe`，双击安装，不要求 PowerShell 或管理员权限；保留 `.zip` 便携包及原有安装脚本作为备用。
+- macOS：`Transit2GPX-<version>-macos-<arch>.pkg` 以及同内容的 `.tar.gz` 备用包，并生成 SHA-256 文件。
+- 按平台附带 `Transit2GPX-rail-components-<platform>.zip`，包含固定提交的 OpenRailRouting JAR、应用专用 Temurin 21 JRE 和完整相关许可。普通用户无需手动下载该附件。
 
 默认主包内含生产前端、FastAPI、Python 地理运行库、Alembic migrations、GPX schema、铁路 Profile/config 和固定组件下载清单。主包不再包含铁路 JAR，也不包含地铁数据、OSM PBF、GraphHopper graph cache 或用户数据库。
 
@@ -36,7 +38,7 @@
 
 ```powershell
 # Windows：构建工具只安装到指定工具目录；应用用户无需安装这些工具
-$iscc = .\scripts\setup_inno.ps1 -Destination "$env:TEMP\transit2fog-inno"
+$iscc = .\scripts\setup_inno.ps1 -Destination "$env:TEMP\transit2gpx-inno"
 uv run --project backend python scripts/build_package.py `
   --sidecar-jar data/rail-routing/dist/openrailrouting.jar `
   --rail-components --release-tag <待发布标签> `
@@ -56,10 +58,10 @@ JRE 下载地址和 SHA-256 锁定在 `packaging/java-runtimes.json`；构建时
 
 ```powershell
 # Windows PowerShell 7
-.\transit2fog.ps1 package
+.\transit2gpx.ps1 package
 
 # 把已固定构建的 sidecar 一并放入包内
-.\transit2fog.ps1 package `
+.\transit2gpx.ps1 package `
   -SidecarJar .\data\rail-routing\dist\openrailrouting.jar
 ```
 
@@ -80,22 +82,22 @@ make package SIDECAR_JAR="$PWD/data/rail-routing/dist/openrailrouting.jar"
 
 ## 3. Windows 安装与卸载
 
-推荐双击 `Setup.exe`：默认用户级安装到 `%LOCALAPPDATA%\Programs\Transit2Fog`，创建开始菜单入口，桌面快捷方式可选，安装完成后可直接启动。使用系统“已安装的应用”卸载。升级会清除旧版程序目录内的内置 JAR 和旧安装脚本，不触及应用数据目录。
+推荐双击 `Setup.exe`：默认用户级安装到 `%LOCALAPPDATA%\Programs\Transit2GPX`，创建开始菜单入口，桌面快捷方式可选，安装完成后可直接启动。使用系统“已安装的应用”卸载。升级会清除旧版程序目录内的内置 JAR 和旧安装脚本，不触及应用数据目录。
 
 旧向导曾把自动发现的 JAR 路径保存为偏好。轻量升级后若该旧默认文件已不存在，启动时恢复自动发现；自定义路径和明确的启动参数仍保留。
 
 使用备用 ZIP 的用户可直接运行 EXE，或用 PowerShell 7 安装：
 
 ```powershell
-pwsh -NoLogo -NoProfile -File .\Transit2Fog\install.ps1
+pwsh -NoLogo -NoProfile -File .\Transit2GPX\install.ps1
 ```
 
-默认安装到 `%LOCALAPPDATA%\Programs\Transit2Fog`，并创建普通模式和 `Transit2Fog Railway` 两个开始菜单快捷方式。不要求管理员权限，不修改防火墙、系统 `PATH` 或执行策略。
+默认安装到 `%LOCALAPPDATA%\Programs\Transit2GPX`，并创建普通模式和 `Transit2GPX Railway` 两个开始菜单快捷方式。不要求管理员权限，不修改防火墙、系统 `PATH` 或执行策略。
 
 卸载只删除程序文件和快捷方式：
 
 ```powershell
-pwsh -NoLogo -NoProfile -File .\Transit2Fog\uninstall.ps1
+pwsh -NoLogo -NoProfile -File .\Transit2GPX\uninstall.ps1
 ```
 
 数据库、备份、PBF 和 graph cache 位于独立应用数据目录，安装升级和卸载均不会删除。
@@ -105,9 +107,9 @@ pwsh -NoLogo -NoProfile -File .\Transit2Fog\uninstall.ps1
 源码运行不再需要单独的 sidecar 终端：
 
 ```powershell
-.\transit2fog.ps1 start-rail
+.\transit2gpx.ps1 start-rail
 # 或开发模式
-.\transit2fog.ps1 dev-rail
+.\transit2gpx.ps1 dev-rail
 ```
 
 ```sh
@@ -127,8 +129,8 @@ make dev-rail
 安装包铁路模式使用：
 
 ```text
-Transit2Fog.exe --rail
-Transit2Fog.app/Contents/MacOS/Transit2Fog --rail
+Transit2GPX.exe --rail
+Transit2GPX.app/Contents/MacOS/Transit2GPX --rail
 ```
 
 铁路运行需 Java 17+（轻量版组件自动提供 21）、已验证并激活的 graph，以及与 metadata checksum 一致的 PBF。默认布局为应用数据目录下：
@@ -142,4 +144,4 @@ rail-routing/
 └── regions/<region-version>/<file>.osm.pbf
 ```
 
-也可通过 `--rail-graph-root`、`--rail-pbf`、`--rail-sidecar-jar` 或对应 `TRANSIT2FOG_RAIL_*` 环境变量指定外部位置。sidecar 始终只接受无凭据的 loopback HTTP 地址。
+也可通过 `--rail-graph-root`、`--rail-pbf`、`--rail-sidecar-jar` 或对应 `TRANSIT2GPX_RAIL_*` 环境变量指定外部位置。sidecar 始终只接受无凭据的 loopback HTTP 地址。

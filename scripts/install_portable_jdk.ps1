@@ -129,7 +129,7 @@ try {
         size_bytes = [long]$manifest.size_bytes
         installed_at = [DateTimeOffset]::UtcNow.ToString('o')
     } | ConvertTo-Json | Set-Content `
-        -LiteralPath (Join-Path $finalHome 'transit2fog-install.json') `
+        -LiteralPath (Join-Path $finalHome 'transit2gpx-install.json') `
         -Encoding utf8NoBOM
     $completed = $true
 }

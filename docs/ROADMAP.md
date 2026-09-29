@@ -8,7 +8,7 @@
 - Science Data Bank 的 46 城真实数据已完成整包导入，东莞普通线路与上海环线的地图、正反向候选和两种 GPX 已通过抽检。地铁 GPX 已在 Fog of World 中完成手动导入验证；完整第三方数据不提交进仓库。证据见 [`V1_AUDIT.md`](V1_AUDIT.md) 和 [`FOG_ACCEPTANCE.md`](FOG_ACCEPTANCE.md)。
 - 铁路 R0–R3 已完成实现、自动化和实机验收，包括长三角与全国真实图、三套国铁 Profile、共享 Provider/行程模型、车站与站序审核、可解释候选、不可变快照、统一 CSV、混合 GPX、版本比较、显式重算、原子切换与回滚。
 - 全国铁路图的当前验证基线包含 645,361 个节点、742,281 条边和 18,490 个车站索引；8 条代表性线路通过固定样本验证。铁路 GPX 已在 Fog of World 中完成手动导入验证，证据见 [`RAIL_FOG_ACCEPTANCE.md`](RAIL_FOG_ACCEPTANCE.md)。
-- 当前完成基线为地铁 v1.0 加铁路 R0–R3，产品名已由 Metro2Fog 迁移为 Transit2Fog。R4 授权时刻表 Provider 保持可选，不阻塞铁路首版。
+- 当前完成基线为地铁 v1.0 加铁路 R0–R3，产品名已由 Metro2Fog 迁移为 Transit2GPX。R4 授权时刻表 Provider 保持可选，不阻塞铁路首版。
 - 工程优化第三、第四批已落地：行程服务端分页与批量加载、铁路 FTS5、地图 RTree 预筛、可重启恢复的 SQLite 持久化任务执行器、API 服务层以及跨平台统一任务入口。
 - 工程优化第五批已落地：五个前端业务路由懒加载与 chunk 预算门禁、Windows/macOS 可复现安装产物及 smoke test、FastAPI 生命周期内的 OpenRailRouting sidecar 自动启动/身份验证/回收。
 
@@ -219,7 +219,7 @@ Fog of World 是当前有实机证据的兼容应用之一。产品的通用输�
 
 ### 当前关闭条件
 
-铁路首版关闭条件已满足：真实铁路 GPX 已通过 XSD 与 Fog of World 固定实机样例，`Transit2Fog` 名称迁移与全部质量门禁已完成。R4 仍保持独立且不阻塞。
+铁路首版关闭条件已满足：真实铁路 GPX 已通过 XSD 与 Fog of World 固定实机样例，`Transit2GPX` 名称迁移与全部质量门禁已完成。R4 仍保持独立且不阻塞。
 
 ## 7. 铁路测试矩阵增量
 

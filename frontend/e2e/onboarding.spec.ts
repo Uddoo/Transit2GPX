@@ -120,7 +120,7 @@ test("optional railway components retry, survive navigation and do not fake data
     await route.fulfill({ status: 202, json: state.components });
   });
   await page.goto("/setup?step=rail");
-  await expect(page).toHaveTitle(/Transit2Fog/);
+  await expect(page).toHaveTitle(/Transit2GPX/);
   await expect(page.getByRole("heading", { name: "准备铁路服务" })).toBeVisible();
   await page.getByRole("button", { name: "下载并准备铁路组件" }).click();
   await expect(page.getByRole("alert").getByText("下载未完成，请重试以继续下载。")).toBeVisible();

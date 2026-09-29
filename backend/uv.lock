@@ -2035,7 +2035,7 @@ wheels = [
 ]
 
 [[package]]
-name = "transit2fog-backend"
+name = "transit2gpx-backend"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [

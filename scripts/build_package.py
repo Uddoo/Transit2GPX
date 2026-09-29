@@ -62,13 +62,13 @@ def _copy_release_documents(destination: Path) -> None:
 
 
 def _smoke_test(executable: Path) -> None:
-    with tempfile.TemporaryDirectory(prefix="transit2fog-package-smoke-") as directory:
+    with tempfile.TemporaryDirectory(prefix="transit2gpx-package-smoke-") as directory:
         environment = os.environ.copy()
         environment.update(
             {
-                "TRANSIT2FOG_ENVIRONMENT": "production",
-                "TRANSIT2FOG_MAP_TILES_ENABLED": "false",
-                "TRANSIT2FOG_RAIL_ENABLED": "false",
+                "TRANSIT2GPX_ENVIRONMENT": "production",
+                "TRANSIT2GPX_MAP_TILES_ENABLED": "false",
+                "TRANSIT2GPX_RAIL_ENABLED": "false",
             }
         )
         _run(
@@ -108,13 +108,13 @@ def build_package(args: argparse.Namespace) -> list[Path]:
     environment = os.environ.copy()
     # A previous shell/build must not silently turn a light build into a full one.
     for key in (
-        "TRANSIT2FOG_PACKAGE_SIDECAR_JAR",
-        "TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES",
-        "TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST",
+        "TRANSIT2GPX_PACKAGE_SIDECAR_JAR",
+        "TRANSIT2GPX_PACKAGE_SIDECAR_NOTICES",
+        "TRANSIT2GPX_PACKAGE_COMPONENT_MANIFEST",
     ):
         environment.pop(key, None)
     environment.setdefault("SOURCE_DATE_EPOCH", "1788134400")
-    environment["TRANSIT2FOG_PACKAGE_IMPORT_TOOLS"] = (
+    environment["TRANSIT2GPX_PACKAGE_IMPORT_TOOLS"] = (
         "1" if args.with_import_tools else "0"
     )
     artifacts: list[Path] = []
@@ -124,14 +124,14 @@ def build_package(args: argparse.Namespace) -> list[Path]:
         component_archive, manifest = build_components(
             args.sidecar_jar.resolve(), output_dir, args.release_tag
         )
-        environment["TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST"] = str(manifest)
+        environment["TRANSIT2GPX_PACKAGE_COMPONENT_MANIFEST"] = str(manifest)
         artifacts.append(component_archive)
     if args.sidecar_jar:
         sidecar_jar = args.sidecar_jar.resolve()
         notice_paths = sidecar_notices(sidecar_jar)
         if not args.rail_components:
-            environment["TRANSIT2FOG_PACKAGE_SIDECAR_JAR"] = str(sidecar_jar)
-            environment["TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES"] = json.dumps(
+            environment["TRANSIT2GPX_PACKAGE_SIDECAR_JAR"] = str(sidecar_jar)
+            environment["TRANSIT2GPX_PACKAGE_SIDECAR_NOTICES"] = json.dumps(
                 [str(path) for path in notice_paths]
             )
     _run(
@@ -144,16 +144,16 @@ def build_package(args: argparse.Namespace) -> list[Path]:
         str(stage_dir),
         "--workpath",
         str(work_dir),
-        str(PROJECT_DIR / "packaging" / "transit2fog.spec"),
+        str(PROJECT_DIR / "packaging" / "transit2gpx.spec"),
         env=environment,
     )
 
-    artifact_base = f"Transit2Fog-{version}-{_platform_tag()}"
+    artifact_base = f"Transit2GPX-{version}-{_platform_tag()}"
     if platform.system() == "Darwin":
-        application = stage_dir / "Transit2Fog.app"
-        executable = application / "Contents" / "MacOS" / "Transit2Fog"
+        application = stage_dir / "Transit2GPX.app"
+        executable = application / "Contents" / "MacOS" / "Transit2GPX"
         if not executable.is_file():
-            raise SystemExit("PyInstaller 没有生成 Transit2Fog.app。")
+            raise SystemExit("PyInstaller 没有生成 Transit2GPX.app。")
         _verify_base_libraries(application, args.with_import_tools)
         if not args.no_smoke:
             _smoke_test(executable)
@@ -178,11 +178,11 @@ def build_package(args: argparse.Namespace) -> list[Path]:
             )
             artifacts.append(package)
     else:
-        bundle = stage_dir / "Transit2Fog"
-        executable_name = "Transit2Fog.exe" if os.name == "nt" else "Transit2Fog"
+        bundle = stage_dir / "Transit2GPX"
+        executable_name = "Transit2GPX.exe" if os.name == "nt" else "Transit2GPX"
         executable = bundle / executable_name
         if not executable.is_file():
-            raise SystemExit("PyInstaller 没有生成 Transit2Fog 可执行目录。")
+            raise SystemExit("PyInstaller 没有生成 Transit2GPX 可执行目录。")
         _verify_base_libraries(bundle, args.with_import_tools)
         _copy_release_documents(bundle)
         if os.name == "nt":
@@ -195,7 +195,7 @@ def build_package(args: argparse.Namespace) -> list[Path]:
                 str(output_dir / artifact_base),
                 "zip",
                 root_dir=stage_dir,
-                base_dir="Transit2Fog",
+                base_dir="Transit2GPX",
             )
             artifacts.append(Path(archive_path))
             if args.windows_installer:
@@ -243,14 +243,14 @@ def build_windows_installer(
         f"/DOutputDir={output.resolve()}",
         str(PROJECT_DIR / "packaging" / "windows.iss"),
     )
-    result = output / f"Transit2Fog-{version}-windows-x64-Setup.exe"
+    result = output / f"Transit2GPX-{version}-windows-x64-Setup.exe"
     if not result.is_file():
         raise SystemExit("Inno Setup 未生成安装器。")
     return result
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build Transit2Fog install packages")
+    parser = argparse.ArgumentParser(description="Build Transit2GPX install packages")
     parser.add_argument(
         "--output",
         type=Path,

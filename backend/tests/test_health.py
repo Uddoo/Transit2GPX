@@ -90,7 +90,7 @@ def test_spa_static_files_support_deep_links_without_masking_assets(
     del client
     from app.main import SPAStaticFiles
 
-    (tmp_path / "index.html").write_text("<main>Transit2Fog</main>", encoding="utf-8")
+    (tmp_path / "index.html").write_text("<main>Transit2GPX</main>", encoding="utf-8")
     (tmp_path / "app.js").write_text("export {};", encoding="utf-8")
     app = FastAPI()
     app.mount("/", SPAStaticFiles(directory=tmp_path, html=True), name="frontend")
@@ -101,7 +101,7 @@ def test_spa_static_files_support_deep_links_without_masking_assets(
         missing_asset = spa_client.get("/missing.js")
 
     assert deep_link.status_code == 200
-    assert deep_link.text == "<main>Transit2Fog</main>"
+    assert deep_link.text == "<main>Transit2GPX</main>"
     assert asset.status_code == 200
     assert asset.text == "export {};"
     assert missing_asset.status_code == 404

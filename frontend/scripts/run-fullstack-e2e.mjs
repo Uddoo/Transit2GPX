@@ -22,7 +22,7 @@ const exitCode = await new Promise((resolve, reject) => {
   child.once("error", reject);
   child.once("exit", (code) => resolve(code ?? 1));
 });
-await rm(join(tmpdir(), "transit2fog-fullstack-e2e"), {
+await rm(join(tmpdir(), "transit2gpx-fullstack-e2e"), {
   force: true,
   maxRetries: 5,
   recursive: true,

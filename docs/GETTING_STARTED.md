@@ -15,8 +15,8 @@
 先安装 [Git](https://git-scm.com/)，然后在终端运行：
 
 ```sh
-git clone https://github.com/Uddoo/transit2fog.git
-cd transit2fog
+git clone https://github.com/Uddoo/transit2fog.git transit2gpx
+cd transit2gpx
 ```
 
 以下命令均在仓库根目录执行。
@@ -24,8 +24,8 @@ cd transit2fog
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 doctor
-.\transit2fog.ps1 setup
+.\transit2gpx.ps1 doctor
+.\transit2gpx.ps1 setup
 ```
 
 macOS：
@@ -55,7 +55,7 @@ make setup
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 dev
+.\transit2gpx.ps1 dev
 ```
 
 macOS：
@@ -76,7 +76,7 @@ make dev
 3. 保存后打开“导出”，先用少量行程生成 journey GPX 抽检，再按需生成 coverage GPX。
 4. 将 GPX 导入目标轨迹应用，确认轨迹没有错误直线或明显跳点；例如可使用《世界迷雾》。
 
-生产模式在 Windows 使用 `.\transit2fog.ps1 start`，在 macOS 使用 `make start`；二者都由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](DEVELOPMENT.md)。
+生产模式在 Windows 使用 `.\transit2gpx.ps1 start`，在 macOS 使用 `make start`；二者都由单一 FastAPI 服务在 `http://127.0.0.1:8765` 托管 API 和前端。行程页默认使用 OpenStreetMap 在线底图；可通过环境变量关闭或替换为合规的自托管瓦片服务。更完整的数据格式、隔离验证和故障排查见[开发与运行](DEVELOPMENT.md)。
 
 ## 铁路最短可用路径
 
@@ -98,11 +98,11 @@ make dev
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 setup
-.\transit2fog.ps1 setup-java
-.\transit2fog.ps1 doctor-rail
-.\transit2fog.ps1 rail-fixture
-.\transit2fog.ps1 rail-fixture-verify
+.\transit2gpx.ps1 setup
+.\transit2gpx.ps1 setup-java
+.\transit2gpx.ps1 doctor-rail
+.\transit2gpx.ps1 rail-fixture
+.\transit2gpx.ps1 rail-fixture-verify
 ```
 
 macOS：
@@ -120,8 +120,8 @@ Windows 的 `setup-java` 会把固定版本 JDK 安装到被忽略的项目数�
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 rail-yangtze-data
-.\transit2fog.ps1 rail-yangtze-graph
+.\transit2gpx.ps1 rail-yangtze-data
+.\transit2gpx.ps1 rail-yangtze-graph
 ```
 
 macOS：
@@ -136,8 +136,8 @@ make rail-yangtze-graph
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 rail-china-data
-.\transit2fog.ps1 rail-china-graph
+.\transit2gpx.ps1 rail-china-data
+.\transit2gpx.ps1 rail-china-graph
 ```
 
 macOS：
@@ -156,8 +156,8 @@ make rail-china-graph
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 dev-rail
-# 生产模式：.\transit2fog.ps1 start-rail
+.\transit2gpx.ps1 dev-rail
+# 生产模式：.\transit2gpx.ps1 start-rail
 ```
 
 macOS：
@@ -174,9 +174,9 @@ make dev-rail
 Windows PowerShell 7：
 
 ```powershell
-$env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
-$env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
-.\transit2fog.ps1 doctor-rail
+$env:RAIL_WORK_DIR = 'D:\Transit2GPX\rail-work'
+$env:RAIL_GRAPH_ROOT = 'D:\Transit2GPX\graphs'
+.\transit2gpx.ps1 doctor-rail
 ```
 
 macOS：

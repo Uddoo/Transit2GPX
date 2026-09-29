@@ -57,7 +57,7 @@ if (-not $IsWindows) {
 }
 
 $projectDir = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$entrypoint = Join-Path $projectDir 'transit2fog.ps1'
+$entrypoint = Join-Path $projectDir 'transit2gpx.ps1'
 $railRoot = Join-Path $projectDir 'data\rail-routing'
 $graphMetadataPath = Join-Path (
     $railRoot

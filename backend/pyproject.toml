@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "transit2fog-backend"
+name = "transit2gpx-backend"
 version = "1.0.0"
-description = "Local-first API and geometry engine for Transit2Fog"
+description = "Local-first API and geometry engine for Transit2GPX"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"

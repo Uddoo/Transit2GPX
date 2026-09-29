@@ -25,7 +25,7 @@ def _json_request(url: str) -> dict[str, Any]:
         url,
         headers={
             "Accept": "application/json",
-            "User-Agent": "Transit2Fog/rail-acceptance",
+            "User-Agent": "Transit2GPX/rail-acceptance",
         },
     )
     with urlopen(request, timeout=30) as response:

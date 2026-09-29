@@ -42,13 +42,13 @@ export function OnboardingPage() {
   const complete = [checks.data?.can_continue, metroReady, railReady || state?.progress.rail_skipped, state?.progress.completed];
 
   return <section className="setup-shell" aria-labelledby="setup-title">
-    <header className="setup-header"><div><h1 id="setup-title">开始使用 Transit2Fog</h1><p>准备一个城市的数据，即可开始记录真实乘坐。</p></div><button className="setup-text-action" disabled={progress.isPending || actionBusy} onClick={() => progress.mutate({ dismissed: true })} type="button">稍后设置</button></header>
+    <header className="setup-header"><div><h1 id="setup-title">开始使用 Transit2GPX</h1><p>准备一个城市的数据，即可开始记录真实乘坐。</p></div><button className="setup-text-action" disabled={progress.isPending || actionBusy} onClick={() => progress.mutate({ dismissed: true })} type="button">稍后设置</button></header>
     <div className="setup-layout"><aside className="setup-rail"><nav aria-label="首次使用步骤"><ol>{STEPS.map((item, index) => <li key={item.id} className={step === item.id ? "is-active" : complete[index] ? "is-complete" : ""}>
       <button aria-current={step === item.id ? "step" : undefined} disabled={progress.isPending || actionBusy || !state} onClick={() => progress.mutate({ step: item.id })} type="button"><span className="setup-step-number">{step !== item.id && complete[index] ? <Icon name="check" size={21} /> : `0${index + 1}`}</span><span>{item.title}{item.id === "rail" ? <small>可选</small> : null}</span></button>
     </li>)}</ol></nav><p>进度会自动保存</p></aside>
       <div className="setup-body"><div className="setup-panel" ref={title} tabIndex={-1}>
         {setup.isPending ? <p className="panel-message" role="status">正在读取设置进度…</p> : null}
-        {setup.isError ? <SetupNotice warning title="无法连接本地服务"><p>请确认 Transit2Fog 正在运行，然后重新连接。</p><button className="button button--secondary" onClick={() => void setup.refetch()} type="button">重新连接</button> <a href={SETUP_GUIDE} target="_blank" rel="noreferrer">查看启动说明 ↗</a></SetupNotice> : null}
+        {setup.isError ? <SetupNotice warning title="无法连接本地服务"><p>请确认 Transit2GPX 正在运行，然后重新连接。</p><button className="button button--secondary" onClick={() => void setup.refetch()} type="button">重新连接</button> <a href={SETUP_GUIDE} target="_blank" rel="noreferrer">查看启动说明 ↗</a></SetupNotice> : null}
         {state && step === "check" ? <>
           <h2>先检查运行环境</h2><p className="setup-lead">确认本地服务和数据存储可用。铁路所需的 Java 会在第三步检查。</p>
           {checks.isPending ? <p role="status">正在检查本地环境…</p> : null}

@@ -75,7 +75,7 @@ class RailServiceController:
             )
             self._cancel.clear()
             self._worker = threading.Thread(
-                target=self._run, name="transit2fog-rail-start", daemon=True
+                target=self._run, name="transit2gpx-rail-start", daemon=True
             )
             self._worker.start()
             return self._state.model_copy()

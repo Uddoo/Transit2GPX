@@ -138,7 +138,7 @@ def download_archive(
         partial.unlink()
         offset = 0
     if offset < manifest.size:
-        headers = {"User-Agent": "Transit2Fog", "Accept-Encoding": "identity"}
+        headers = {"User-Agent": "Transit2GPX", "Accept-Encoding": "identity"}
         if offset:
             headers["Range"] = f"bytes={offset}-"
         request = urllib.request.Request(manifest.url, headers=headers)
@@ -244,7 +244,7 @@ def installation_lock(path: Path) -> Iterator[None]:
                 fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as error:
             raise ComponentError(
-                "另一个 Transit2Fog 正在准备组件，请稍后重试。"
+                "另一个 Transit2GPX 正在准备组件，请稍后重试。"
             ) from error
         try:
             yield

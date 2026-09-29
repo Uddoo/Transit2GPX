@@ -49,7 +49,7 @@ db-upgrade:
 	$(PROJECT_TASK) db-upgrade
 
 backup:
-	$(PROJECT_TASK) backup --output transit2fog-backup.zip
+	$(PROJECT_TASK) backup --output transit2gpx-backup.zip
 
 validate-real-data:
 	@test -n "$(CPTOND_DIR)" || (echo "请设置 CPTOND_DIR=/absolute/path" && exit 2)

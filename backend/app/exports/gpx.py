@@ -446,7 +446,7 @@ def track_segments(
         )
         for transport_mode, group in coverage_edge_groups
     ]
-    return [("Transit2Fog coverage", coverage_segments)] if coverage_segments else []
+    return [("Transit2GPX coverage", coverage_segments)] if coverage_segments else []
 
 
 def render_gpx(plan: ExportPlan) -> bytes:
@@ -462,14 +462,14 @@ def render_gpx(plan: ExportPlan) -> bytes:
         f"{{{GPX_NAMESPACE}}}gpx",
         nsmap=nsmap,
         version="1.1",
-        creator="Transit2Fog",
+        creator="Transit2GPX",
     )
     root.set(
         f"{{{XSI_NAMESPACE}}}schemaLocation",
         f"{GPX_NAMESPACE} https://www.topografix.com/GPX/1/1/gpx.xsd",
     )
     metadata = etree.SubElement(root, f"{{{GPX_NAMESPACE}}}metadata")
-    etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}name").text = "Transit2Fog export"
+    etree.SubElement(metadata, f"{{{GPX_NAMESPACE}}}name").text = "Transit2GPX export"
     has_rail = any(leg.transport_mode == "rail" for leg in plan.legs)
     rail_graph_versions = sorted(
         {

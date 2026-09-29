@@ -13,7 +13,7 @@ package_version = json.loads(
     (project_dir / "frontend" / "package.json").read_text(encoding="utf-8")
 )["version"]
 
-with_import_tools = os.environ.get("TRANSIT2FOG_PACKAGE_IMPORT_TOOLS") == "1"
+with_import_tools = os.environ.get("TRANSIT2GPX_PACKAGE_IMPORT_TOOLS") == "1"
 datas = (collect_data_files(
     "pyogrio",
     includes=["gdal_data/**", "proj_data/**"],
@@ -30,8 +30,8 @@ datas = (collect_data_files(
     (str(project_dir / "NOTICE"), "licenses"),
     (str(project_dir / "ATTRIBUTION.md"), "licenses"),
 ]
-sidecar_jar = os.environ.get("TRANSIT2FOG_PACKAGE_SIDECAR_JAR")
-component_manifest = os.environ.get("TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST")
+sidecar_jar = os.environ.get("TRANSIT2GPX_PACKAGE_SIDECAR_JAR")
+component_manifest = os.environ.get("TRANSIT2GPX_PACKAGE_COMPONENT_MANIFEST")
 if component_manifest:
     datas.append((component_manifest, "rail-routing"))
 if sidecar_jar:
@@ -40,7 +40,7 @@ if sidecar_jar:
         raise SystemExit(f"Sidecar JAR does not exist: {jar_path}")
     datas.append((str(jar_path), "rail-routing"))
     notice_paths = json.loads(
-        os.environ.get("TRANSIT2FOG_PACKAGE_SIDECAR_NOTICES", "[]")
+        os.environ.get("TRANSIT2GPX_PACKAGE_SIDECAR_NOTICES", "[]")
     )
     datas.extend(
         (
@@ -69,7 +69,7 @@ executable = EXE(
     analysis.scripts,
     [],
     exclude_binaries=True,
-    name="Transit2Fog",
+    name="Transit2GPX",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -82,16 +82,16 @@ collection = COLLECT(
     analysis.datas,
     strip=False,
     upx=False,
-    name="Transit2Fog",
+    name="Transit2GPX",
 )
 
 if sys.platform == "darwin":
     application = BUNDLE(
         collection,
-        name="Transit2Fog.app",
+        name="Transit2GPX.app",
         bundle_identifier="io.github.transit2fog.app",
         info_plist={
-            "CFBundleDisplayName": "Transit2Fog",
+            "CFBundleDisplayName": "Transit2GPX",
             "CFBundleShortVersionString": package_version,
             "CFBundleVersion": package_version,
             "NSHighResolutionCapable": True,

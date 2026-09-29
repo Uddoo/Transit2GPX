@@ -17,9 +17,9 @@ from app.core.config import get_settings
 @pytest.fixture(scope="session")
 def client(tmp_path_factory: pytest.TempPathFactory) -> Generator[TestClient]:
     runtime_dir = tmp_path_factory.mktemp("runtime")
-    os.environ["TRANSIT2FOG_ENVIRONMENT"] = "test"
-    os.environ["TRANSIT2FOG_DATA_DIR"] = str(runtime_dir)
-    os.environ["TRANSIT2FOG_DATABASE_URL"] = f"sqlite:///{runtime_dir / 'test.sqlite3'}"
+    os.environ["TRANSIT2GPX_ENVIRONMENT"] = "test"
+    os.environ["TRANSIT2GPX_DATA_DIR"] = str(runtime_dir)
+    os.environ["TRANSIT2GPX_DATABASE_URL"] = f"sqlite:///{runtime_dir / 'test.sqlite3'}"
     get_settings.cache_clear()
 
     backend_dir = Path(__file__).resolve().parents[1]

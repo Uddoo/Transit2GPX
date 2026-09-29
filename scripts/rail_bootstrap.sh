@@ -99,7 +99,7 @@ if ! "$jar_bin" tf "$dist_dir/openrailrouting.jar" \
 fi
 if ! "$jar_bin" tf "$dist_dir/openrailrouting.jar" \
   | grep -q '^de/geofabrik/railway_routing/http/Transit2FogMetadataResource.class$'; then
-  echo "Built JAR is missing the Transit2Fog metadata resource." >&2
+  echo "Built JAR is missing the Transit2GPX metadata resource." >&2
   exit 5
 fi
 

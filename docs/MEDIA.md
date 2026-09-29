@@ -2,6 +2,14 @@
 
 [返回项目首页](../README.md)
 
+## 改名封面（2026-09-29）
+
+README 现使用 [social-preview-transit2gpx.png](images/social-preview-transit2gpx.png)。使用内置 ImageGen 编辑原封面，将标题改为 Transit2GPX，保留宽幅构图、中文文案、页脚与线路配色。原图及下面的历史实机素材保留；本次没有更新 GitHub 仓库 Social preview 设置，也没有重录演示。
+
+本次编辑提示词：
+
+> Edit this existing project banner. Change ONLY the large English title Transit2Fog to Transit2GPX. Preserve original wide 2:1 aspect ratio, composition, white background, black typography, exact Chinese text, METRO + RAIL → GPX footer, abstract gray and teal network on right. Match title font and size as closely as possible while fitting new title. This is a precise brand rename, no redesign.
+
 ## 本次素材（2026-09-08）
 
 | 文件 | 用途 | 来源 |

@@ -7,7 +7,7 @@ from_lat="${RAIL_SMOKE_FROM_LAT:-50.85139337895494}"
 from_lon="${RAIL_SMOKE_FROM_LON:-6.908898310661318}"
 to_lat="${RAIL_SMOKE_TO_LAT:-50.94193447111784}"
 to_lon="${RAIL_SMOKE_TO_LON:-6.960010517835617}"
-response_file="$(mktemp -t transit2fog-rail-smoke.XXXXXX)"
+response_file="$(mktemp -t transit2gpx-rail-smoke.XXXXXX)"
 trap 'rm -f "$response_file"' EXIT INT TERM
 
 ready=0

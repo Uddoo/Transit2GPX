@@ -64,7 +64,7 @@ class PersistentTaskExecutor:
                 )
             self._worker = threading.Thread(
                 target=self._work,
-                name="transit2fog-task-executor",
+                name="transit2gpx-task-executor",
                 daemon=True,
             )
             self._worker.start()

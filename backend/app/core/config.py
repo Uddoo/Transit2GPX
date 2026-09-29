@@ -13,17 +13,22 @@ from app.rail.components import installed_runtime
 
 
 def _environment_alias(name: str) -> AliasChoices:
-    return AliasChoices(f"TRANSIT2FOG_{name}", f"METRO2FOG_{name}")
+    return AliasChoices(
+        f"TRANSIT2GPX_{name}", f"TRANSIT2FOG_{name}", f"METRO2FOG_{name}"
+    )
 
 
 def _default_data_dir() -> Path:
-    current = user_data_path("Transit2Fog", appauthor=False)
-    legacy = user_data_path("Metro2Fog", appauthor=False)
-    return legacy if not current.exists() and legacy.exists() else current
+    current = user_data_path("Transit2GPX", appauthor=False)
+    for name in ("Transit2GPX", "Transit2Fog", "Metro2Fog"):
+        candidate = user_data_path(name, appauthor=False)
+        if candidate.exists():
+            return candidate
+    return current
 
 
 class Settings(BaseSettings):
-    """Runtime settings loaded from TRANSIT2FOG_* or legacy METRO2FOG_* variables."""
+    """Settings with Transit2GPX, Transit2Fog and Metro2Fog aliases, in that order."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -32,7 +37,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = Field(
-        default="Transit2Fog", validation_alias=_environment_alias("APP_NAME")
+        default="Transit2GPX", validation_alias=_environment_alias("APP_NAME")
     )
     environment: Literal["development", "test", "production"] = Field(
         default="development",
@@ -136,10 +141,12 @@ class Settings(BaseSettings):
     def resolved_database_url(self) -> str:
         if self.database_url:
             return self.database_url
-        database_path = self.data_dir / "transit2fog.sqlite3"
-        legacy_database_path = self.data_dir / "metro2fog.sqlite3"
-        if not database_path.exists() and legacy_database_path.exists():
-            database_path = legacy_database_path
+        database_path = self.data_dir / "transit2gpx.sqlite3"
+        for name in ("transit2gpx.sqlite3", "transit2fog.sqlite3", "metro2fog.sqlite3"):
+            candidate = self.data_dir / name
+            if candidate.exists():
+                database_path = candidate
+                break
         database_path = database_path.resolve()
         return f"sqlite:///{database_path}"
 

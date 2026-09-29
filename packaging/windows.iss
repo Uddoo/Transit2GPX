@@ -14,23 +14,23 @@
 
 [Setup]
 AppId={{4596BB09-E79D-4547-A52F-845E33880628}
-AppName=Transit2Fog
+AppName=Transit2GPX
 AppVersion={#Version}
-AppPublisher=Transit2Fog contributors
+AppPublisher=Transit2GPX contributors
 AppPublisherURL=https://github.com/Uddoo/transit2fog
-DefaultDirName={localappdata}\Programs\Transit2Fog
-DefaultGroupName=Transit2Fog
+DefaultDirName={localappdata}\Programs\Transit2GPX
+DefaultGroupName=Transit2GPX
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#OutputDir}
-OutputBaseFilename=Transit2Fog-{#Version}-windows-x64-Setup
+OutputBaseFilename=Transit2GPX-{#Version}-windows-x64-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 DisableProgramGroupPage=yes
-UninstallDisplayIcon={app}\Transit2Fog.exe
+UninstallDisplayIcon={app}\Transit2GPX.exe
 CloseApplications=yes
 RestartApplications=no
 SetupLogging=yes
@@ -54,10 +54,10 @@ Type: filesandordirs; Name: "{app}\_internal\pyogrio.libs"
 #endif
 
 [Icons]
-Name: "{group}\Transit2Fog"; Filename: "{app}\Transit2Fog.exe"; WorkingDir: "{app}"
-Name: "{autodesktop}\Transit2Fog"; Filename: "{app}\Transit2Fog.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\Transit2GPX"; Filename: "{app}\Transit2GPX.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\Transit2GPX"; Filename: "{app}\Transit2GPX.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\Transit2Fog.exe"; Description: "Launch Transit2Fog"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Transit2GPX.exe"; Description: "Launch Transit2GPX"; Flags: nowait postinstall skipifsilent
 
 ; App data and downloaded components are outside {app}; never remove them.

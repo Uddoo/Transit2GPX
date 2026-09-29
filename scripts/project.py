@@ -117,7 +117,7 @@ def db_upgrade() -> None:
 
 def _backend_environment(environment: str, *, rail: bool) -> dict[str, str]:
     child_environment = os.environ.copy()
-    child_environment["TRANSIT2FOG_ENVIRONMENT"] = environment
+    child_environment["TRANSIT2GPX_ENVIRONMENT"] = environment
     if rail:
         rail_work_dir = Path(
             child_environment.get(
@@ -126,17 +126,23 @@ def _backend_environment(environment: str, *, rail: bool) -> dict[str, str]:
         )
         child_environment.update(
             {
-                "TRANSIT2FOG_RAIL_ENABLED": "true",
-                "TRANSIT2FOG_RAIL_SIDECAR_MANAGED": "true",
-                "TRANSIT2FOG_RAIL_GRAPH_VERSION": "active",
-                "TRANSIT2FOG_RAIL_GRAPH_ROOT": child_environment.get(
+                "TRANSIT2GPX_RAIL_ENABLED": "true",
+                "TRANSIT2GPX_RAIL_SIDECAR_MANAGED": "true",
+                "TRANSIT2GPX_RAIL_GRAPH_VERSION": "active",
+                "TRANSIT2GPX_RAIL_GRAPH_ROOT": child_environment.get(
                     "RAIL_GRAPH_ROOT", str(rail_work_dir / "graphs")
                 ),
-                "TRANSIT2FOG_RAIL_SIDECAR_JAR": child_environment.get(
-                    "TRANSIT2FOG_RAIL_SIDECAR_JAR",
-                    str(rail_work_dir / "dist" / "openrailrouting.jar"),
+                "TRANSIT2GPX_RAIL_SIDECAR_JAR": child_environment.get(
+                    "TRANSIT2GPX_RAIL_SIDECAR_JAR",
+                    child_environment.get(
+                        "TRANSIT2FOG_RAIL_SIDECAR_JAR",
+                        child_environment.get(
+                            "METRO2FOG_RAIL_SIDECAR_JAR",
+                            str(rail_work_dir / "dist" / "openrailrouting.jar"),
+                        ),
+                    ),
                 ),
-                "TRANSIT2FOG_RAIL_SIDECAR_URL": "http://127.0.0.1:8989",
+                "TRANSIT2GPX_RAIL_SIDECAR_URL": "http://127.0.0.1:8989",
             }
         )
     return child_environment
@@ -241,7 +247,7 @@ def _parser_error(parser: argparse.ArgumentParser, message: str) -> NoReturn:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Transit2Fog cross-platform tasks")
+    parser = argparse.ArgumentParser(description="Transit2GPX cross-platform tasks")
     parser.add_argument(
         "command",
         choices=(
@@ -286,7 +292,7 @@ def main() -> None:
             args.sidecar_jar.resolve() if args.sidecar_jar else None,
         )
     elif args.command == "backup":
-        backup((args.output or Path("transit2fog-backup.zip")).resolve())
+        backup((args.output or Path("transit2gpx-backup.zip")).resolve())
     elif args.command == "validate-real-data":
         if args.cptond_dir is None:
             _parser_error(parser, "validate-real-data 需要 --cptond-dir")

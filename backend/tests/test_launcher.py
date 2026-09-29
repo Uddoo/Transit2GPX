@@ -14,10 +14,36 @@ import pytest
 from app.core.config import Settings, get_settings
 from app.launcher import (
     _configure_environment,
+    _set_environment_default,
     main,
     package_smoke_test,
     upgrade_database,
 )
+
+
+@pytest.mark.parametrize("prefix", ["TRANSIT2GPX", "TRANSIT2FOG", "METRO2FOG"])
+def test_launcher_defaults_preserve_configured_aliases(
+    monkeypatch: pytest.MonkeyPatch, prefix: str
+) -> None:
+    for name in ("TRANSIT2GPX", "TRANSIT2FOG", "METRO2FOG"):
+        monkeypatch.delenv(f"{name}_RAIL_GRAPH_VERSION", raising=False)
+    monkeypatch.setenv(f"{prefix}_RAIL_GRAPH_VERSION", "existing-graph")
+    _set_environment_default("RAIL_GRAPH_VERSION", "active")
+    assert Settings(_env_file=None).rail_graph_version == "existing-graph"
+
+
+@pytest.mark.parametrize("prefix", ["TRANSIT2GPX", "TRANSIT2FOG", "METRO2FOG"])
+def test_launcher_defaults_preserve_dotenv_aliases(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, prefix: str
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    for name in ("TRANSIT2GPX", "TRANSIT2FOG", "METRO2FOG"):
+        monkeypatch.delenv(f"{name}_RAIL_GRAPH_VERSION", raising=False)
+    (tmp_path / ".env").write_text(
+        f"{prefix}_RAIL_GRAPH_VERSION=existing-graph\n", encoding="utf-8"
+    )
+    _set_environment_default("RAIL_GRAPH_VERSION", "active")
+    assert Settings().rail_graph_version == "existing-graph"
 
 
 def test_packaged_launcher_upgrades_an_isolated_database(tmp_path: Path) -> None:
@@ -44,17 +70,17 @@ def test_packaged_launcher_upgrades_an_isolated_database(tmp_path: Path) -> None
 
 def test_launcher_configures_all_runtime_overrides(tmp_path: Path) -> None:
     environment_names = (
-        "TRANSIT2FOG_ENVIRONMENT",
-        "TRANSIT2FOG_FRONTEND_DIST",
-        "TRANSIT2FOG_DATA_DIR",
-        "TRANSIT2FOG_HOST",
-        "TRANSIT2FOG_PORT",
-        "TRANSIT2FOG_RAIL_ENABLED",
-        "TRANSIT2FOG_RAIL_SIDECAR_MANAGED",
-        "TRANSIT2FOG_RAIL_GRAPH_VERSION",
-        "TRANSIT2FOG_RAIL_GRAPH_ROOT",
-        "TRANSIT2FOG_RAIL_PBF_PATH",
-        "TRANSIT2FOG_RAIL_SIDECAR_JAR",
+        "TRANSIT2GPX_ENVIRONMENT",
+        "TRANSIT2GPX_FRONTEND_DIST",
+        "TRANSIT2GPX_DATA_DIR",
+        "TRANSIT2GPX_HOST",
+        "TRANSIT2GPX_PORT",
+        "TRANSIT2GPX_RAIL_ENABLED",
+        "TRANSIT2GPX_RAIL_SIDECAR_MANAGED",
+        "TRANSIT2GPX_RAIL_GRAPH_VERSION",
+        "TRANSIT2GPX_RAIL_GRAPH_ROOT",
+        "TRANSIT2GPX_RAIL_PBF_PATH",
+        "TRANSIT2GPX_RAIL_SIDECAR_JAR",
     )
     original_environment = {name: os.environ.get(name) for name in environment_names}
     for name in environment_names:
@@ -121,7 +147,7 @@ def test_launcher_smoke_mode_migrates_without_starting_server(
         _env_file=None,
     )
     calls: list[str] = []
-    monkeypatch.setattr(sys, "argv", ["Transit2Fog", "--smoke-test", "--no-browser"])
+    monkeypatch.setattr(sys, "argv", ["Transit2GPX", "--smoke-test", "--no-browser"])
     monkeypatch.setattr("app.launcher._configure_environment", lambda args: settings)
     monkeypatch.setattr(
         "app.launcher.upgrade_database", lambda value: calls.append("upgrade")

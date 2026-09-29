@@ -310,7 +310,7 @@ def _resolve_pbf_path(settings: Settings, metadata: dict[str, Any]) -> Path:
     if len(existing) != 1:
         raise RailSidecarError(
             "rail_pbf_missing",
-            "无法唯一定位铁路图对应的 PBF；请设置 TRANSIT2FOG_RAIL_PBF_PATH。",
+            "无法唯一定位铁路图对应的 PBF；请设置 TRANSIT2GPX_RAIL_PBF_PATH。",
         )
     return existing[0]
 

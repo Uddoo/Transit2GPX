@@ -85,7 +85,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings)
     app = FastAPI(
-        title="Transit2Fog API",
+        title="Transit2GPX API",
         version=__version__,
         license_info={
             "name": "Apache License 2.0",

@@ -65,11 +65,12 @@ test("creates, persists, and exports a metro journey through the real stack", as
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(
-    /^transit2fog_\d{4}-\d{2}-\d{2}\.gpx$/,
+    /^transit2gpx_\d{4}-\d{2}-\d{2}\.gpx$/,
   );
   const downloadPath = await download.path();
   expect(downloadPath).not.toBeNull();
   const content = await readFile(downloadPath, "utf-8");
   expect(content).toContain('<gpx xmlns="http://www.topografix.com/GPX/1/1"');
+  expect(content).toContain('creator="Transit2GPX"');
   expect(content).toContain("<trkseg>");
 });

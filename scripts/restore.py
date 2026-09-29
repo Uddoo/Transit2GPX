@@ -27,7 +27,7 @@ def database_path() -> Path:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Restore a Transit2Fog local backup")
+    parser = argparse.ArgumentParser(description="Restore a Transit2GPX local backup")
     parser.add_argument("backup", type=Path, help="Backup .zip path")
     parser.add_argument("--yes", action="store_true", help="Confirm replacement")
     args = parser.parse_args()
@@ -38,23 +38,25 @@ def main() -> None:
         raise SystemExit(f"备份不存在：{backup}")
     target = database_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="transit2fog-restore-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="transit2gpx-restore-") as temp_dir:
         temp_path = Path(temp_dir)
         with zipfile.ZipFile(backup) as archive:
             members = set(archive.namelist())
-            current_members = {"transit2fog.sqlite3", "manifest.json"}
-            legacy_members = {"metro2fog.sqlite3", "manifest.json"}
-            if members != current_members and members != legacy_members:
-                raise SystemExit("备份内容不符合 Transit2Fog 格式。")
+            supported_snapshots = (
+                "transit2gpx.sqlite3",
+                "transit2fog.sqlite3",
+                "metro2fog.sqlite3",
+            )
+            if not any(
+                members == {name, "manifest.json"} for name in supported_snapshots
+            ):
+                raise SystemExit("备份内容不符合 Transit2GPX 格式。")
             archive.extractall(temp_path)
-        snapshot_name = (
-            "transit2fog.sqlite3"
-            if "transit2fog.sqlite3" in members
-            else "metro2fog.sqlite3"
-        )
+        snapshot_name = next(name for name in supported_snapshots if name in members)
         snapshot = temp_path / snapshot_name
         manifest = json.loads((temp_path / "manifest.json").read_text(encoding="utf-8"))
         if manifest.get("format") not in {
+            "transit2gpx-backup-v1",
             "transit2fog-backup-v1",
             "metro2fog-backup-v1",
         }:

@@ -1,6 +1,6 @@
 # 数据与 API 契约
 
-本文件描述已经实现的 Transit2Fog v1.0 地铁契约和 R0–R3 铁路契约。完整铁路设计、运行约束和验收状态见 [`RAILWAY.md`](RAILWAY.md)。
+本文件描述已经实现的 Transit2GPX v1.0 地铁契约和 R0–R3 铁路契约。完整铁路设计、运行约束和验收状态见 [`RAILWAY.md`](RAILWAY.md)。
 
 ## 1. 数据源策略
 
@@ -395,14 +395,14 @@ POST /api/v1/journeys/{journey_id}/rail-recompute
 
 ## 6. GPX 契约
 
-- 根元素为 GPX 1.1 命名空间，`creator="Transit2Fog"`。
+- 根元素为 GPX 1.1 命名空间，`creator="Transit2GPX"`。
 - 普通模式：每个 journey 一个 `trk`，每个 leg 一个 `trkseg`。
 - 覆盖模式：相同 edge 只出现一次；只把端点一致且拓扑连续的 edge 放入同一 `trkseg`。
 - 坐标保留足够精度（建议 7 位小数），相邻重复点去重。
 - 加密在米制 CRS 中完成，再转回 WGS‑84。
 - 默认不含 `<time>`、虚构海拔或速度。
 - 生成后依次执行 XSD、坐标范围、每段至少两个不同点和跳跃距离检查。
-- 响应使用安全文件名，例如 `transit2fog_2026-08-20.gpx`。
+- 响应使用安全文件名，例如 `transit2gpx_2026-08-20.gpx`。
 
 铁路和混合行程扩展：
 
@@ -410,7 +410,7 @@ POST /api/v1/journeys/{journey_id}/rail-recompute
 - 混合行程按 leg 的 `transport_mode` 分别加密，不能把一个全局点间距强加给所有模式。
 - 铁路 metadata 包含 `© OpenStreetMap contributors`、OSM 数据时间、graph/Profile 版本和用户确认状态。
 - 铁路 coverage 去重第一版限定在同一数据/图版本；跨版本几何差异显示警告，不静默合并。
-- 新导出统一使用 `creator="Transit2Fog"` 和 `transit2fog_YYYY-MM-DD.gpx`；旧 GPX 无需改写。
+- 新导出统一使用 `creator="Transit2GPX"` 和 `transit2gpx_YYYY-MM-DD.gpx`；旧 GPX 无需改写。
 
 ## 7. 数据版本与迁移
 

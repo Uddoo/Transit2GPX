@@ -535,7 +535,7 @@ export async function downloadGpx(input: ExportOptions & { preview_token: string
     throw new RequestError(response.status, body?.error?.code, body?.error?.message);
   }
   const disposition = response.headers.get("Content-Disposition") ?? "";
-  const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? "transit2fog.gpx";
+  const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? "transit2gpx.gpx";
   return { blob: await response.blob(), filename };
 }
 

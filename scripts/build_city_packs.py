@@ -17,7 +17,7 @@ def main() -> None:
     )
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument(
-        "--database", type=Path, help="Read-only validated Transit2Fog database"
+        "--database", type=Path, help="Read-only validated Transit2GPX database"
     )
     source.add_argument(
         "--raw-directory",
@@ -36,10 +36,10 @@ def main() -> None:
         help="Original attribution text; defaults to source name, license and URL",
     )
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix="transit2fog-city-builder-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="transit2gpx-city-builder-") as temporary:
         if args.raw_directory:
-            os.environ["TRANSIT2FOG_DATA_DIR"] = temporary
-            os.environ["TRANSIT2FOG_DATABASE_URL"] = (
+            os.environ["TRANSIT2GPX_DATA_DIR"] = temporary
+            os.environ["TRANSIT2GPX_DATABASE_URL"] = (
                 f"sqlite:///{Path(temporary) / 'build.sqlite3'}"
             )
             from app.db.base import Base

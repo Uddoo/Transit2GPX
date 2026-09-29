@@ -1,6 +1,6 @@
 # Railway routing sidecar
 
-This directory contains only the reproducible configuration for Transit2Fog's
+This directory contains only the reproducible configuration for Transit2GPX's
 optional OpenRailRouting sidecar. PBF files, Maven, the upstream checkout, the
 built JAR, graph caches, and responses stay under the ignored `data/` tree.
 
@@ -17,13 +17,13 @@ Set `RAIL_JAVA_HOME` when the system default Java is not the version intended
 for a reproducible build; Java 21 is the currently verified runtime.
 
 The commands below use the macOS Makefile form. On Windows PowerShell 7, use
-the same target name after `.\transit2fog.ps1`; for example,
-`.\transit2fog.ps1 doctor-rail` and `.\transit2fog.ps1 rail-bootstrap`.
+the same target name after `.\transit2gpx.ps1`; for example,
+`.\transit2gpx.ps1 doctor-rail` and `.\transit2gpx.ps1 rail-bootstrap`.
 The Windows bootstrap uses `mvn.cmd`, `git apply`, native archive/hash APIs,
 and does not require WSL, Git Bash, GNU Make, `patch`, or `shasum`.
-`.\transit2fog.ps1 setup-java` installs the pinned project-local Temurin 21
+`.\transit2gpx.ps1 setup-java` installs the pinned project-local Temurin 21
 archive after SHA-256 verification without changing system environment
-variables. `.\transit2fog.ps1 rail-fixture-verify` starts the fixture sidecar,
+variables. `.\transit2gpx.ps1 rail-fixture-verify` starts the fixture sidecar,
 checks routing and both metadata endpoints, and then verifies port cleanup.
 
 Run the preflight check before downloading or building anything:
@@ -92,7 +92,7 @@ build it into a new immutable graph directory:
 Windows equivalent:
 
 ```powershell
-.\transit2fog.ps1 rail-build-graph `
+.\transit2gpx.ps1 rail-build-graph `
   -PbfPath 'D:\Rail\region.osm.pbf' `
   -GraphVersion 'region-YYYYMMDD'
 ```
@@ -131,7 +131,7 @@ symlink privilege requirements. Roll back to the previously validated graph with
 make rail-rollback
 ```
 
-Run FastAPI with `TRANSIT2FOG_RAIL_GRAPH_VERSION=active`; the resolver follows
+Run FastAPI with `TRANSIT2GPX_RAIL_GRAPH_VERSION=active`; the resolver follows
 the selector to the immutable graph version and verifies the running sidecar's
 four-part identity before every route calculation. Old journey snapshots do
 not require the old sidecar to reopen or export.

@@ -10,15 +10,17 @@ import zipfile
 from contextlib import closing
 from pathlib import Path
 
+import pytest
+
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 
 def _environment(database: Path) -> dict[str, str]:
     return {
         **os.environ,
-        "TRANSIT2FOG_ENVIRONMENT": "test",
-        "TRANSIT2FOG_DATA_DIR": str(database.parent),
-        "TRANSIT2FOG_DATABASE_URL": f"sqlite:///{database}",
+        "TRANSIT2GPX_ENVIRONMENT": "test",
+        "TRANSIT2GPX_DATA_DIR": str(database.parent),
+        "TRANSIT2GPX_DATABASE_URL": f"sqlite:///{database}",
     }
 
 
@@ -84,7 +86,7 @@ def test_restore_rejects_checksum_tampering(tmp_path: Path) -> None:
     with zipfile.ZipFile(backup) as source_archive:
         manifest = json.loads(source_archive.read("manifest.json"))
     with zipfile.ZipFile(tampered, "w") as archive:
-        archive.writestr("transit2fog.sqlite3", b"not the original database")
+        archive.writestr("transit2gpx.sqlite3", b"not the original database")
         archive.writestr("manifest.json", json.dumps(manifest))
 
     target = tmp_path / "target.sqlite3"
@@ -109,7 +111,8 @@ def test_backup_refuses_to_overwrite_existing_archive(tmp_path: Path) -> None:
     assert backup.read_bytes() == b"keep-me"
 
 
-def test_restore_accepts_legacy_metro2fog_backup(tmp_path: Path) -> None:
+@pytest.mark.parametrize("prefix", ["transit2fog", "metro2fog"])
+def test_restore_accepts_legacy_backup(tmp_path: Path, prefix: str) -> None:
     source = tmp_path / "legacy.sqlite3"
     with closing(sqlite3.connect(source)) as connection, connection:
         connection.execute("CREATE TABLE legacy_proof (value TEXT)")
@@ -117,12 +120,12 @@ def test_restore_accepts_legacy_metro2fog_backup(tmp_path: Path) -> None:
     checksum = hashlib.sha256(source.read_bytes()).hexdigest()
     backup = tmp_path / "legacy-backup.zip"
     with zipfile.ZipFile(backup, "w") as archive:
-        archive.writestr("metro2fog.sqlite3", source.read_bytes())
+        archive.writestr(f"{prefix}.sqlite3", source.read_bytes())
         archive.writestr(
             "manifest.json",
             json.dumps(
                 {
-                    "format": "metro2fog-backup-v1",
+                    "format": f"{prefix}-backup-v1",
                     "database_sha256": checksum,
                 }
             ),

@@ -2,6 +2,11 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## [Unreleased]
+
+- 项目改名为 Transit2GPX，同步应用、包名、命令入口、安装产物和 GPX 导出名称。
+- 保留 Transit2Fog / Metro2Fog 配置、数据库、备份和既有铁路协议兼容；详见 [改名迁移说明](docs/RENAMING.md)。
+
 ## [1.0.0] - 2026-08-31
 
 - 完成 CPTOND 地铁数据导入、路径候选、行程管理、CSV 审核与 GPX 1.1 导出。

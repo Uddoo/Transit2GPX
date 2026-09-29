@@ -29,7 +29,7 @@ def _identity() -> dict[str, str]:
     }
 
 
-def test_sidecar_identity_prefers_transit2fog_endpoint(
+def test_sidecar_identity_prefers_transit2gpx_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     requested_paths: list[str] = []

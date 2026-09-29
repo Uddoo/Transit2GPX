@@ -391,7 +391,7 @@ export function DataSettingsPage() {
         </div>
         <p className="settings-note">
           瓦片仅随交互视口加载，不做预取或离线批量下载；可通过
-          <code>TRANSIT2FOG_MAP_TILES_ENABLED</code> 关闭，或配置自托管瓦片 URL。
+          <code>TRANSIT2GPX_MAP_TILES_ENABLED</code> 关闭，或配置自托管瓦片 URL。
         </p>
       </section>
     </section>

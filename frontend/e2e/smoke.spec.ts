@@ -1050,9 +1050,9 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   });
   await page.route("**/api/v1/exports/gpx", (route) =>
     route.fulfill({
-      body: '<?xml version="1.0"?><gpx version="1.1" creator="Transit2Fog"/>',
+      body: '<?xml version="1.0"?><gpx version="1.1" creator="Transit2GPX"/>',
       contentType: "application/gpx+xml",
-      headers: { "Content-Disposition": 'attachment; filename="transit2fog.gpx"' },
+      headers: { "Content-Disposition": 'attachment; filename="transit2gpx.gpx"' },
     }),
   );
 
@@ -1065,14 +1065,14 @@ test("export filters saved journeys and downloads both GPX modes", async ({ page
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("transit2fog.gpx");
+  expect(download.suggestedFilename()).toBe("transit2gpx.gpx");
 
   await page.getByLabel("行程模式（保留每次行程）").check();
   await expect.poll(() => previewBody).toMatchObject({ mode: "journeys" });
   const journeyDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "生成 GPX" }).click();
   const journeyDownload = await journeyDownloadPromise;
-  expect(journeyDownload.suggestedFilename()).toBe("transit2fog.gpx");
+  expect(journeyDownload.suggestedFilename()).toBe("transit2gpx.gpx");
 });
 
 test("journey pagination and server search reach records beyond the first hundred", async ({ page }) => {

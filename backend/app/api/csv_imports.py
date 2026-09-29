@@ -680,7 +680,7 @@ def csv_template() -> Response:
         content="\ufeff" + content,
         media_type="text/csv; charset=utf-8",
         headers={
-            "Content-Disposition": 'attachment; filename="transit2fog_template.csv"'
+            "Content-Disposition": 'attachment; filename="transit2gpx_template.csv"'
         },
     )
 

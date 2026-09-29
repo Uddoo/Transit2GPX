@@ -18,9 +18,9 @@ def _alembic(
     runtime_dir = database.parent
     environment = {
         **os.environ,
-        "TRANSIT2FOG_ENVIRONMENT": "test",
-        "TRANSIT2FOG_DATA_DIR": str(runtime_dir),
-        "TRANSIT2FOG_DATABASE_URL": f"sqlite:///{database}",
+        "TRANSIT2GPX_ENVIRONMENT": "test",
+        "TRANSIT2GPX_DATA_DIR": str(runtime_dir),
+        "TRANSIT2GPX_DATABASE_URL": f"sqlite:///{database}",
     }
     return subprocess.run(
         [sys.executable, "-m", "alembic", "-c", "alembic.ini", *arguments],

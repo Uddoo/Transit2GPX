@@ -12,8 +12,8 @@
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 doctor
-.\transit2fog.ps1 setup
+.\transit2gpx.ps1 doctor
+.\transit2gpx.ps1 setup
 ```
 
 macOS：
@@ -33,7 +33,7 @@ make setup
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 dev
+.\transit2gpx.ps1 dev
 ```
 
 macOS：
@@ -53,7 +53,7 @@ make dev
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 start
+.\transit2gpx.ps1 start
 ```
 
 macOS：
@@ -67,7 +67,7 @@ make start
 ## 安装包
 
 ```powershell
-.\transit2fog.ps1 package
+.\transit2gpx.ps1 package
 ```
 
 ```bash
@@ -81,8 +81,8 @@ make package
 Windows PowerShell 7：
 
 ```powershell
-.\transit2fog.ps1 check
-.\transit2fog.ps1 e2e
+.\transit2gpx.ps1 check
+.\transit2gpx.ps1 e2e
 ```
 
 macOS：
@@ -112,7 +112,7 @@ npm run api:generate --prefix frontend
 
 `api:generate` 使用隔离临时数据目录导出 schema，不会连接现有应用数据库。`make check` 中的 `api:check` 会同时检查 OpenAPI 快照和 TypeScript 产物；任一文件未重新生成都会使质量门禁失败。业务侧需要额外约束 GeoJSON 或判别联合时，在 `frontend/src/api/client.ts` 中基于生成的 schema 做窄化，不再重复手写整个响应结构。
 
-下文为简洁起见主要使用 Make target；Windows 的命令名保持一致，写作 `.\transit2fog.ps1 <target>`。完整 Windows 路径、环境变量和铁路说明见 [`WINDOWS.md`](WINDOWS.md)。`validate-real-data` 在 Windows 使用 `-CptondDir`，自定义铁路建图使用 `-PbfPath` 与 `-GraphVersion`。
+下文为简洁起见主要使用 Make target；Windows 的命令名保持一致，写作 `.\transit2gpx.ps1 <target>`。完整 Windows 路径、环境变量和铁路说明见 [`WINDOWS.md`](WINDOWS.md)。`validate-real-data` 在 Windows 使用 `-CptondDir`，自定义铁路建图使用 `-PbfPath` 与 `-GraphVersion`。
 
 ## 应用数据
 
@@ -121,33 +121,33 @@ npm run api:generate --prefix frontend
 Windows PowerShell 7：
 
 ```powershell
-$env:TRANSIT2FOG_DATA_DIR = 'D:\Transit2Fog\app-data'
-$env:TRANSIT2FOG_DATABASE_URL = 'sqlite:///D:/Transit2Fog/app-data/transit2fog.sqlite3'
+$env:TRANSIT2GPX_DATA_DIR = 'D:\Transit2GPX\app-data'
+$env:TRANSIT2GPX_DATABASE_URL = 'sqlite:///D:/Transit2GPX/app-data/transit2gpx.sqlite3'
 ```
 
 macOS：
 
 ```bash
-TRANSIT2FOG_DATA_DIR=/absolute/path/to/app-data
-TRANSIT2FOG_DATABASE_URL=sqlite:////absolute/path/to/transit2fog.sqlite3
+TRANSIT2GPX_DATA_DIR=/absolute/path/to/app-data
+TRANSIT2GPX_DATABASE_URL=sqlite:////absolute/path/to/transit2gpx.sqlite3
 ```
 
 本地数据库、完整 CPTOND 数据、导出 GPX 和用户行程都不提交到仓库。
 
 既有安装可继续使用 `METRO2FOG_*` 环境变量和 `metro2fog.sqlite3`；新名称优先，检测到旧数据库时会原位使用，不自动复制或删除用户数据。
 
-生产模式会在应用数据目录的 `logs/transit2fog.log` 写入应用级诊断日志；单个文件上限 5 MiB，最多保留 3 个轮转副本。日志只记录任务编号、错误类型等运行信息，不记录 CSV 内容、完整乘车历史或用户填写的数据目录路径。
+生产模式会在应用数据目录的 `logs/transit2gpx.log` 写入应用级诊断日志；单个文件上限 5 MiB，最多保留 3 个轮转副本。日志只记录任务编号、错误类型等运行信息，不记录 CSV 内容、完整乘车历史或用户填写的数据目录路径。
 
 ### 地图配置与隐私
 
 ```bash
-TRANSIT2FOG_MAP_TILES_ENABLED=true
-TRANSIT2FOG_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
-TRANSIT2FOG_MAP_TILE_ATTRIBUTION='&copy; OpenStreetMap contributors'
-TRANSIT2FOG_MAP_MAX_ZOOM=19
+TRANSIT2GPX_MAP_TILES_ENABLED=true
+TRANSIT2GPX_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+TRANSIT2GPX_MAP_TILE_ATTRIBUTION='&copy; OpenStreetMap contributors'
+TRANSIT2GPX_MAP_MAX_ZOOM=19
 ```
 
-默认 OpenStreetMap Standard 瓦片仅随当前交互视口加载，不预取、不批量下载。瓦片请求会把视口范围和常规网络信息发送给外部服务，但不会附带行程记录。离线或严格本地模式可设置 `TRANSIT2FOG_MAP_TILES_ENABLED=false`；此时已导入的 CPTOND 线路和站点仍会显示在无底图画布上。
+默认 OpenStreetMap Standard 瓦片仅随当前交互视口加载，不预取、不批量下载。瓦片请求会把视口范围和常规网络信息发送给外部服务，但不会附带行程记录。离线或严格本地模式可设置 `TRANSIT2GPX_MAP_TILES_ENABLED=false`；此时已导入的 CPTOND 线路和站点仍会显示在无底图画布上。
 
 ## 导入真实地铁数据
 
@@ -215,7 +215,7 @@ make validate-real-data CPTOND_DIR=/absolute/path/to/extracted-dataset
 Windows 等价命令为：
 
 ```powershell
-.\transit2fog.ps1 validate-real-data -CptondDir 'D:\Datasets\CPTOND-2025'
+.\transit2gpx.ps1 validate-real-data -CptondDir 'D:\Datasets\CPTOND-2025'
 ```
 
 命令会重复审计 checksum、完整导入，并要求至少找到一座普通线路城市和另一座含环线/支线的城市，输出后续人工地图抽检应使用的城市。若需保留验证库以供排查，可直接运行 `scripts/validate_cptond.py ... --runtime /absolute/path/to/validation-runtime`。
@@ -227,15 +227,15 @@ Windows 等价命令为：
 Windows 可以使用仓库固定版本与 SHA-256 的项目内便携 Temurin JDK 21，不修改系统环境变量：
 
 ```powershell
-.\transit2fog.ps1 setup-java
-.\transit2fog.ps1 doctor-rail
+.\transit2gpx.ps1 setup-java
+.\transit2gpx.ps1 doctor-rail
 ```
 
 完成 bootstrap 后可用最小 fixture 一次性验证 JAR、graph、路由、metadata 双端点和进程清理：
 
 ```powershell
-.\transit2fog.ps1 rail-fixture
-.\transit2fog.ps1 rail-fixture-verify
+.\transit2gpx.ps1 rail-fixture
+.\transit2gpx.ps1 rail-fixture-verify
 ```
 
 先运行附加检查：
@@ -310,9 +310,9 @@ make doctor-rail
 Windows PowerShell 7：
 
 ```powershell
-$env:RAIL_WORK_DIR = 'D:\Transit2Fog\rail-work'
-$env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
-.\transit2fog.ps1 doctor-rail
+$env:RAIL_WORK_DIR = 'D:\Transit2GPX\rail-work'
+$env:RAIL_GRAPH_ROOT = 'D:\Transit2GPX\graphs'
+.\transit2gpx.ps1 doctor-rail
 ```
 
 `RAIL_WORK_DIR` 控制下载工具、sidecar JAR 和默认 graph 工作目录；`RAIL_GRAPH_ROOT` 单独指定不可变图与 `active`/`previous` selector 所在目录。
@@ -320,10 +320,10 @@ $env:RAIL_GRAPH_ROOT = 'D:\Transit2Fog\graphs'
 FastAPI 使用以下配置读取原子 selector：
 
 ```bash
-TRANSIT2FOG_RAIL_ENABLED=true
-TRANSIT2FOG_RAIL_GRAPH_VERSION=active
-TRANSIT2FOG_RAIL_GRAPH_ROOT=/absolute/path/to/graphs
-TRANSIT2FOG_RAIL_SIDECAR_URL=http://127.0.0.1:8989
+TRANSIT2GPX_RAIL_ENABLED=true
+TRANSIT2GPX_RAIL_GRAPH_VERSION=active
+TRANSIT2GPX_RAIL_GRAPH_ROOT=/absolute/path/to/graphs
+TRANSIT2GPX_RAIL_SIDECAR_URL=http://127.0.0.1:8989
 ```
 
 切换异常时执行 `make rail-rollback`，然后重启与 `active` 指向版本一致的 sidecar。激活脚本会拒绝不匹配的验证报告，resolver 也会在算路前复核 graph/PBF/Profile/commit 身份。更完整的构建和资源基线见 [`rail-routing/README.md`](../rail-routing/README.md)。
@@ -354,9 +354,9 @@ uv run alembic revision --autogenerate -m "describe change"
 ```bash
 migration_runtime="$(mktemp -d)"
 cd backend
-TRANSIT2FOG_ENVIRONMENT=test \
-TRANSIT2FOG_DATA_DIR="$migration_runtime/data" \
-TRANSIT2FOG_DATABASE_URL="sqlite:///$migration_runtime/data/transit2fog.sqlite3" \
+TRANSIT2GPX_ENVIRONMENT=test \
+TRANSIT2GPX_DATA_DIR="$migration_runtime/data" \
+TRANSIT2GPX_DATABASE_URL="sqlite:///$migration_runtime/data/transit2gpx.sqlite3" \
 uv run alembic upgrade head
 ```
 
@@ -369,13 +369,13 @@ Windows 应使用 `New-Item` 创建明确的临时目录，并使用正斜杠构
 服务运行时也可使用 SQLite 在线备份：
 
 ```bash
-uv run --project backend python scripts/backup.py /absolute/path/transit2fog-backup.zip
+uv run --project backend python scripts/backup.py /absolute/path/transit2gpx-backup.zip
 ```
 
-备份 ZIP 只包含数据库快照和带 SHA-256 的 manifest。恢复前先停止 Transit2Fog，防止运行中连接继续写入：
+备份 ZIP 只包含数据库快照和带 SHA-256 的 manifest。恢复前先停止 Transit2GPX，防止运行中连接继续写入：
 
 ```bash
-uv run --project backend python scripts/restore.py /absolute/path/transit2fog-backup.zip --yes
+uv run --project backend python scripts/restore.py /absolute/path/transit2gpx-backup.zip --yes
 ```
 
 恢复流程会检查 ZIP 内容、checksum 和 SQLite `integrity_check`，并在替换前于数据库旁生成 `*.pre-restore-*.bak` 安全副本。不要在确认新数据库正常前删除该副本。
@@ -387,7 +387,7 @@ uv run --project backend python scripts/restore.py /absolute/path/transit2fog-ba
 3. 将文件传到目标设备，并通过目标应用的 GPX 轨迹导入入口选择该文件。
 4. 首次导入建议先用少量行程抽检线路位置和分段，再导入完整 coverage 文件。
 
-Transit2Fog 输出 WGS‑84 GPX 1.1 `<trk>` / `<trkseg>`，不伪造时间、高程或速度。原则上任何支持这一轨迹结构的应用都可导入；点数上限、自动简化、重复轨迹处理和菜单名称以目标应用说明为准。
+Transit2GPX 输出 WGS‑84 GPX 1.1 `<trk>` / `<trkseg>`，不伪造时间、高程或速度。原则上任何支持这一轨迹结构的应用都可导入；点数上限、自动简化、重复轨迹处理和菜单名称以目标应用说明为准。
 
 Fog of World 是已完成实机验证的兼容应用之一；若其菜单名称发生变化，请以其[官方说明](https://fogofworld.app/)为准。
 本项目的两份真实数据验收 GPX、安全准备、逐项通过标准和结果模板见 [`docs/FOG_ACCEPTANCE.md`](FOG_ACCEPTANCE.md)。
@@ -404,9 +404,9 @@ make start
 Windows 发布前等价命令：
 
 ```powershell
-.\transit2fog.ps1 check
-.\transit2fog.ps1 e2e
-.\transit2fog.ps1 start
+.\transit2gpx.ps1 check
+.\transit2gpx.ps1 e2e
+.\transit2gpx.ps1 start
 ```
 
 `make start` 后应验证 `/healthz`、首页及 `/journeys/new`、`/journeys`、`/imports/csv`、`/exports`、`/settings/data` 等 SPA 深链。数据库备份/恢复和 Alembic 升降级也必须至少演练一次。

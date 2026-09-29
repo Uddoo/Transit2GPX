@@ -50,14 +50,14 @@ require_command() {
   fi
 }
 
-echo "Transit2Fog 环境检查"
+echo "Transit2GPX 环境检查"
 echo "项目：$project_dir"
 echo
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
   pass "macOS：受支持的 POSIX 运行平台"
 else
-  warn "当前系统为 $(uname -s)；此脚本面向 macOS，Windows 请使用 transit2fog.ps1"
+  warn "当前系统为 $(uname -s)；此脚本面向 macOS，Windows 请使用 transit2gpx.ps1"
 fi
 
 if command -v uv >/dev/null 2>&1; then

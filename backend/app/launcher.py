@@ -28,27 +28,31 @@ def upgrade_database(settings: Settings) -> None:
     command.upgrade(config, "head")
 
 
+def _set_environment_default(name: str, value: str) -> None:
+    # Do not shadow explicitly configured legacy values with a new-name default.
+    if name.lower() not in Settings().model_fields_set:
+        os.environ[f"TRANSIT2GPX_{name}"] = value
+
+
 def _configure_environment(args: argparse.Namespace) -> Settings:
-    os.environ.setdefault("TRANSIT2FOG_ENVIRONMENT", "production")
-    os.environ.setdefault(
-        "TRANSIT2FOG_FRONTEND_DIST", str(resource_path("frontend", "dist"))
-    )
+    _set_environment_default("ENVIRONMENT", "production")
+    _set_environment_default("FRONTEND_DIST", str(resource_path("frontend", "dist")))
     if args.data_dir is not None:
-        os.environ["TRANSIT2FOG_DATA_DIR"] = str(args.data_dir.resolve())
+        os.environ["TRANSIT2GPX_DATA_DIR"] = str(args.data_dir.resolve())
     if args.host is not None:
-        os.environ["TRANSIT2FOG_HOST"] = args.host
+        os.environ["TRANSIT2GPX_HOST"] = args.host
     if args.port is not None:
-        os.environ["TRANSIT2FOG_PORT"] = str(args.port)
+        os.environ["TRANSIT2GPX_PORT"] = str(args.port)
     if args.rail:
-        os.environ["TRANSIT2FOG_RAIL_ENABLED"] = "true"
-        os.environ["TRANSIT2FOG_RAIL_SIDECAR_MANAGED"] = "true"
-        os.environ.setdefault("TRANSIT2FOG_RAIL_GRAPH_VERSION", "active")
+        os.environ["TRANSIT2GPX_RAIL_ENABLED"] = "true"
+        os.environ["TRANSIT2GPX_RAIL_SIDECAR_MANAGED"] = "true"
+        _set_environment_default("RAIL_GRAPH_VERSION", "active")
     if args.rail_graph_root is not None:
-        os.environ["TRANSIT2FOG_RAIL_GRAPH_ROOT"] = str(args.rail_graph_root.resolve())
+        os.environ["TRANSIT2GPX_RAIL_GRAPH_ROOT"] = str(args.rail_graph_root.resolve())
     if args.rail_pbf is not None:
-        os.environ["TRANSIT2FOG_RAIL_PBF_PATH"] = str(args.rail_pbf.resolve())
+        os.environ["TRANSIT2GPX_RAIL_PBF_PATH"] = str(args.rail_pbf.resolve())
     if args.rail_sidecar_jar is not None:
-        os.environ["TRANSIT2FOG_RAIL_SIDECAR_JAR"] = str(
+        os.environ["TRANSIT2GPX_RAIL_SIDECAR_JAR"] = str(
             args.rail_sidecar_jar.resolve()
         )
     get_settings.cache_clear()
@@ -90,7 +94,7 @@ def package_smoke_test(settings: Settings) -> None:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Transit2Fog local application")
+    parser = argparse.ArgumentParser(description="Transit2GPX local application")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--host", choices=("127.0.0.1", "localhost", "::1"))
@@ -113,14 +117,14 @@ def main() -> None:
     upgrade_database(settings)
     if args.smoke_test:
         package_smoke_test(settings)
-        print(f"Transit2Fog {__version__} package smoke test passed")
+        print(f"Transit2GPX {__version__} package smoke test passed")
         return
 
     if not args.no_browser:
         threading.Thread(
             target=_open_browser_when_ready,
             args=(settings.host, settings.port),
-            name="transit2fog-browser-launcher",
+            name="transit2gpx-browser-launcher",
             daemon=True,
         ).start()
 

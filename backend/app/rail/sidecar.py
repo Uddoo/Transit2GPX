@@ -158,7 +158,7 @@ def _fetch_sidecar_identity(base_url: str, timeout_seconds: float) -> Any:
 def _fetch_json(base_url: str, path: str, timeout_seconds: float) -> Any:
     request = Request(
         f"{base_url}{path}",
-        headers={"Accept": "application/json", "User-Agent": "Transit2Fog/rail-probe"},
+        headers={"Accept": "application/json", "User-Agent": "Transit2GPX/rail-probe"},
     )
     with urlopen(request, timeout=timeout_seconds) as response:
         return json.load(response)
@@ -194,7 +194,7 @@ def fetch_sidecar_route(
     safe_base_url = validate_loopback_url(base_url)
     request = Request(
         f"{safe_base_url}/route?{urlencode(parameters)}",
-        headers={"Accept": "application/json", "User-Agent": "Transit2Fog/rail-route"},
+        headers={"Accept": "application/json", "User-Agent": "Transit2GPX/rail-route"},
     )
     try:
         with urlopen(request, timeout=timeout_seconds) as response:

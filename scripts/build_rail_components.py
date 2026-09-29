@@ -52,7 +52,7 @@ def build_components(jar: Path, output: Path, release_tag: str) -> tuple[Path, P
         if sha256_file(partial) != pin["sha256"]:
             raise SystemExit("Java 运行时 SHA-256 校验失败。")
         partial.replace(java_archive)
-    filename = f"Transit2Fog-rail-components-{tag}.zip"
+    filename = f"Transit2GPX-rail-components-{tag}.zip"
     archive = output / filename
     with tempfile.TemporaryDirectory(prefix="rail-components-") as temporary:
         root = Path(temporary)

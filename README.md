@@ -1,8 +1,11 @@
 <div align="center">
 
 <a id="transit2fog"></a>
+<a id="transit2gpx"></a>
 
-![Transit2Fog：把坐过的地铁和火车，变成地图上的足迹。](docs/images/social-preview.png)
+# Transit2GPX
+
+![Transit2GPX：把坐过的地铁和火车，变成地图上的足迹。](docs/images/social-preview-transit2gpx.png)
 
 选择实际乘坐的起终点，预览并确认线路，导出 GPX。在世界迷雾等支持 GPX 的应用中，补上旅途中没能记录的轨迹。
 
@@ -12,11 +15,15 @@
 
 Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 
+原名 Transit2Fog（更早为 Metro2Fog）。升级兼容与命名说明见[改名迁移说明](docs/RENAMING.md)。
+
+现有 v1.0.0-rc.1 安装包仍使用 Transit2Fog 名称；本仓库源码已改为 Transit2GPX。
+
 </div>
 
 ![上海地铁 6 号线：选择实际乘坐区间，在地图上预览候选轨迹](docs/images/metro-route-preview-v2.png)
 
-*真实应用截图 · 上海地铁 6 号线 · 28 站 / 32.6 km。使用隔离演示数据，数据预处理与素材来源见[说明](docs/MEDIA.md)。*
+*改名前版本的真实应用截图 · 上海地铁 6 号线 · 28 站 / 32.6 km。使用隔离演示数据，数据预处理与素材来源见[说明](docs/MEDIA.md)。*
 
 首次打开会进入[首次使用向导](docs/ONBOARDING.md)，逐步检查环境、导入地铁数据并按需启动铁路服务；已有用户可从“数据与设置”重新进入。
 
@@ -128,7 +135,7 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 - [v1.0 验收审计](docs/V1_AUDIT.md)：逐条完成状态、测试证据与最后外部阻断项。
 - [Fog of World 实机验收](docs/FOG_ACCEPTANCE.md)：两份真实数据 GPX 的安全导入步骤、通过标准与结果记录模板。
 - [Fog of World 铁路实机验收](docs/RAIL_FOG_ACCEPTANCE.md)：北京南—上海虹桥全国铁路 GPX 的固定哈希、抽查步骤与关闭条件。
-- [Apache License 2.0](LICENSE)：Transit2Fog 项目代码许可证。
+- [Apache License 2.0](LICENSE)：Transit2GPX 项目代码许可证。
 - [数据与第三方署名](ATTRIBUTION.md)：CPTOND、Science Data Bank、OpenStreetMap、Geofabrik 与 OpenRailRouting 的署名边界。
 
 

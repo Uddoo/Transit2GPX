@@ -57,10 +57,10 @@ function StatusLabel() {
 
 function Brand() {
   return (
-    <NavLink className="brand" to="/journeys/new" aria-label="Transit2Fog 首页">
-      <span className="brand__name">Transit2Fog</span>
+    <NavLink className="brand" to="/journeys/new" aria-label="Transit2GPX 首页">
+      <span className="brand__name">Transit2GPX</span>
       <span className="brand__tagline">
-        记录真实地铁与铁路行程，导出 Fog of World 可用的 GPX
+        记录真实地铁与铁路行程，导出标准 GPX 轨迹
       </span>
     </NavLink>
   );
@@ -108,7 +108,7 @@ export function AppShell() {
   useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
   const mobileTitle =
     NAV_ITEMS.find((item) => location.pathname.startsWith(item.to))?.label ??
-    "Transit2Fog";
+    "Transit2GPX";
 
   return (
     <div className="app-shell">
@@ -118,7 +118,7 @@ export function AppShell() {
       </header>
 
       <header className="mobile-header">
-        <NavLink className="icon-button" to="/journeys/new" aria-label="Transit2Fog 首页">
+        <NavLink className="icon-button" to="/journeys/new" aria-label="Transit2GPX 首页">
           <Icon name="train" size={22} />
         </NavLink>
         <strong>{mobileTitle}</strong>

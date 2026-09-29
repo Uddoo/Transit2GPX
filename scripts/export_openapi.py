@@ -8,10 +8,10 @@ from pathlib import Path
 
 
 def _render_schema() -> str:
-    with tempfile.TemporaryDirectory(prefix="transit2fog-openapi-") as runtime:
-        os.environ["TRANSIT2FOG_ENVIRONMENT"] = "test"
-        os.environ["TRANSIT2FOG_DATA_DIR"] = runtime
-        os.environ["TRANSIT2FOG_DATABASE_URL"] = (
+    with tempfile.TemporaryDirectory(prefix="transit2gpx-openapi-") as runtime:
+        os.environ["TRANSIT2GPX_ENVIRONMENT"] = "test"
+        os.environ["TRANSIT2GPX_DATA_DIR"] = runtime
+        os.environ["TRANSIT2GPX_DATABASE_URL"] = (
             f"sqlite:///{Path(runtime, 'openapi.sqlite3').as_posix()}"
         )
 

@@ -148,7 +148,7 @@ def download_gpx(
             message="GPX 生成前校验未通过。",
             details={"errors": [str(exc)]},
         ) from exc
-    filename = f"transit2fog_{date.today().isoformat()}.gpx"
+    filename = f"transit2gpx_{date.today().isoformat()}.gpx"
     return Response(
         content=content,
         media_type="application/gpx+xml",
