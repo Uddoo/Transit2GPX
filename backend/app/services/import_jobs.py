@@ -8,11 +8,6 @@ from typing import Any
 
 from app.db.models import DatasetVersion, RailDatasetVersion
 from app.db.session import SessionLocal
-from app.importers.cptond import (
-    audit_dataset,
-    clear_dataset_cities,
-    run_dataset_import,
-)
 from app.rail.importer import execute_rail_import
 from app.tasks import task_executor
 
@@ -49,7 +44,13 @@ def cancel_cptond_import(dataset_id: int) -> None:
 
 
 def _run_cptond_import(dataset_id: int, payload: dict[str, Any]) -> None:
+    from app.importers.capabilities import require_raw_import
+    from app.importers.cleanup import clear_dataset_cities
+
     try:
+        require_raw_import()
+        from app.importers.cptond import audit_dataset, run_dataset_import
+
         audit = audit_dataset(Path(str(payload["root"])))
         if audit.checksum != payload.get("expected_checksum"):
             raise RuntimeError("CPTOND 数据目录在任务入队后发生了变化。")

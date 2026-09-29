@@ -10,6 +10,7 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import APIError
+from app.db.active_cities import current_city_ids
 from app.db.models import City, DatasetVersion, Line, RouteStop, RouteVariant, Station
 from app.db.session import get_db
 from app.services.spatial_queries import (
@@ -66,7 +67,7 @@ def _ready_city(db: Session, city_id: int) -> City:
         .join(DatasetVersion)
         .where(
             City.id == city_id,
-            City.status == "ready",
+            City.id.in_(current_city_ids()),
             DatasetVersion.status == "ready",
         )
     )

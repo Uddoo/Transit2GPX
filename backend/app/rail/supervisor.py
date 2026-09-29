@@ -327,6 +327,10 @@ def _java_executable(settings: Settings) -> Path:
         raise RailSidecarError(
             "rail_java_missing", "指定的铁路 Java 目录不包含可执行文件。"
         )
+    from app.rail.components import installed_runtime
+
+    if runtime := installed_runtime(settings.data_dir):
+        return runtime / "java" / "bin" / executable_name
     portable = (
         settings.data_dir.resolve()
         / "rail-routing"

@@ -16,6 +16,7 @@ export function OnboardingPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const title = useRef<HTMLDivElement>(null);
+  const preferredCity = useRef<number | null>(null);
   const mounted = useRef(true);
   const [actionBusy, setActionBusy] = useState(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -31,7 +32,7 @@ export function OnboardingPage() {
   const progress = useMutation({ mutationFn: updateSetupProgress, onSuccess: async (_, patch) => {
     if (mounted.current && patch.step) setParams({ step: patch.step });
     await refresh();
-    if (mounted.current && (patch.dismissed || patch.complete)) void navigate("/journeys/new");
+    if (mounted.current && (patch.dismissed || patch.complete)) void navigate(patch.complete && preferredCity.current ? `/journeys/new?city=${preferredCity.current}` : "/journeys/new");
   }});
   const save = (patch: SetupProgressPatch) => progress.mutateAsync(patch);
   useEffect(() => { title.current?.focus(); }, [step]);
@@ -41,7 +42,7 @@ export function OnboardingPage() {
   const complete = [checks.data?.can_continue, metroReady, railReady || state?.progress.rail_skipped, state?.progress.completed];
 
   return <section className="setup-shell" aria-labelledby="setup-title">
-    <header className="setup-header"><div><h1 id="setup-title">欢迎使用 Transit2Fog</h1><p>完成本地检查，导入线路数据，开始记录真实乘坐。</p></div><button className="setup-text-action" disabled={progress.isPending || actionBusy} onClick={() => progress.mutate({ dismissed: true })} type="button">稍后设置</button></header>
+    <header className="setup-header"><div><h1 id="setup-title">开始使用 Transit2Fog</h1><p>准备一个城市的数据，即可开始记录真实乘坐。</p></div><button className="setup-text-action" disabled={progress.isPending || actionBusy} onClick={() => progress.mutate({ dismissed: true })} type="button">稍后设置</button></header>
     <div className="setup-layout"><aside className="setup-rail"><nav aria-label="首次使用步骤"><ol>{STEPS.map((item, index) => <li key={item.id} className={step === item.id ? "is-active" : complete[index] ? "is-complete" : ""}>
       <button aria-current={step === item.id ? "step" : undefined} disabled={progress.isPending || actionBusy || !state} onClick={() => progress.mutate({ step: item.id })} type="button"><span className="setup-step-number">{step !== item.id && complete[index] ? <Icon name="check" size={21} /> : `0${index + 1}`}</span><span>{item.title}{item.id === "rail" ? <small>可选</small> : null}</span></button>
     </li>)}</ol></nav><p>进度会自动保存</p></aside>
@@ -55,11 +56,11 @@ export function OnboardingPage() {
           {checks.data ? <SetupCheckList checks={checks.data.checks} /> : null}
           <div className="setup-actions"><button className="button button--secondary" disabled={checks.isFetching} onClick={() => void checks.refetch()} type="button">{checks.isFetching ? "正在检查…" : "重新检查"}</button><button className="button button--primary" disabled={!checks.data?.can_continue || checks.isError || progress.isPending} onClick={() => progress.mutate({ step: "metro" })} type="button">下一步：导入地铁数据</button></div>
         </> : null}
-        {state && step === "metro" ? <MetroSetupStep state={state} refresh={refresh} save={save} busy={progress.isPending || actionBusy} onBusyChange={setActionBusy} next={() => progress.mutate({ step: "rail" })} /> : null}
+        {state && step === "metro" ? <MetroSetupStep state={state} refresh={refresh} save={save} busy={progress.isPending || actionBusy} onBusyChange={setActionBusy} begin={(cityId) => { preferredCity.current = cityId ?? null; progress.mutate({ rail_skipped: true, complete: true }); }} next={() => progress.mutate({ step: "rail" })} /> : null}
         {state && step === "rail" ? <RailSetupStep state={state} refresh={refresh} save={save} busy={progress.isPending || actionBusy} onBusyChange={setActionBusy} next={(skip) => progress.mutate({ step: "finish", rail_skipped: skip })} /> : null}
         {state && step === "finish" ? <>
           <h2>{metroReady || railReady ? "可以开始记录了" : "还差一份线路数据"}</h2><p className="setup-lead">设置会保存在本机，你可以随时回到向导继续准备。</p>
-          <ul className="setup-summary"><li><Icon name="train" /><div><strong>地铁</strong><p>{metroReady ? `${state.metro.cities} 个城市，${state.metro.ready_lines} 条可用线路` : "尚未准备，可在第二步导入数据"}</p></div><span>{metroReady ? "可使用" : "待准备"}</span></li><li><Icon name="train" /><div><strong>铁路 / 高铁</strong><p>{railReady ? `${state.rail.station_count.toLocaleString()} 个车站，服务已连接` : state.progress.rail_skipped ? "已跳过，可稍后准备" : "服务和车站索引尚未全部就绪"}</p></div><span>{railReady ? "可使用" : state.progress.rail_skipped ? "已跳过" : "待准备"}</span></li></ul>
+          <ul className="setup-summary"><li><Icon name="train" /><div><strong>地铁</strong><p>{metroReady ? "已安装城市数据，可开始选站" : "尚未准备，可在第二步导入数据"}</p></div><span>{metroReady ? "可使用" : "待准备"}</span></li><li><Icon name="train" /><div><strong>铁路 / 高铁</strong><p>{railReady ? `${state.rail.station_count.toLocaleString()} 个车站，服务已连接` : state.progress.rail_skipped ? "已跳过，可稍后准备" : "服务和车站索引尚未全部就绪"}</p></div><span>{railReady ? "可使用" : state.progress.rail_skipped ? "已跳过" : "待准备"}</span></li></ul>
           <p className="setup-caption">创建一段真实乘坐记录，确认候选路径后即可导出 GPX。</p>
           <div className="setup-actions"><button className="button button--secondary" disabled={progress.isPending || actionBusy} onClick={() => progress.mutate({ step: !metroReady ? "metro" : "rail" })} type="button">继续准备数据</button><button className="button button--primary" disabled={progress.isPending || !(metroReady || railReady) || !checks.data?.can_continue} onClick={() => progress.mutate({ complete: true })} type="button">开始记录行程</button></div>
         </> : null}

@@ -195,7 +195,7 @@ def test_cptond_import_job_restarts_partial_dataset(
     dataset.processed_cities = 1
     db.commit()
     audit = SimpleNamespace(checksum="expected")
-    monkeypatch.setattr(import_jobs, "audit_dataset", lambda root: audit)
+    monkeypatch.setattr("app.importers.cptond.audit_dataset", lambda root: audit)
 
     def complete_import(dataset_id: int, received_audit: object) -> None:
         assert received_audit is audit
@@ -206,7 +206,7 @@ def test_cptond_import_job_restarts_partial_dataset(
             worker_dataset.status = "ready"
             worker_db.commit()
 
-    monkeypatch.setattr(import_jobs, "run_dataset_import", complete_import)
+    monkeypatch.setattr("app.importers.cptond.run_dataset_import", complete_import)
 
     import_jobs._run_cptond_import(
         network.dataset_id,
@@ -243,7 +243,7 @@ def test_cptond_import_job_persists_audit_failure(
         del root
         raise OSError("dataset directory unavailable")
 
-    monkeypatch.setattr(import_jobs, "audit_dataset", fail_audit)
+    monkeypatch.setattr("app.importers.cptond.audit_dataset", fail_audit)
 
     with pytest.raises(OSError, match="directory unavailable"):
         import_jobs._run_cptond_import(

@@ -13,11 +13,13 @@ package_version = json.loads(
     (project_dir / "frontend" / "package.json").read_text(encoding="utf-8")
 )["version"]
 
-datas = collect_data_files(
+with_import_tools = os.environ.get("TRANSIT2FOG_PACKAGE_IMPORT_TOOLS") == "1"
+datas = (collect_data_files(
     "pyogrio",
     includes=["gdal_data/**", "proj_data/**"],
-) + [
+) if with_import_tools else []) + [
     (str(project_dir / "frontend" / "dist"), "frontend/dist"),
+    (str(project_dir / "city-data" / "catalog.json"), "city-data"),
     (str(backend_dir / "migrations"), "backend/migrations"),
     (str(backend_dir / "alembic.ini"), "backend"),
     (str(backend_dir / "app" / "exports" / "gpx.xsd"), "app/exports"),
@@ -29,6 +31,9 @@ datas = collect_data_files(
     (str(project_dir / "ATTRIBUTION.md"), "licenses"),
 ]
 sidecar_jar = os.environ.get("TRANSIT2FOG_PACKAGE_SIDECAR_JAR")
+component_manifest = os.environ.get("TRANSIT2FOG_PACKAGE_COMPONENT_MANIFEST")
+if component_manifest:
+    datas.append((component_manifest, "rail-routing"))
 if sidecar_jar:
     jar_path = Path(sidecar_jar).resolve()
     if not jar_path.is_file():
@@ -50,11 +55,11 @@ analysis = Analysis(
     pathex=[str(backend_dir)],
     binaries=[],
     datas=datas,
-    hiddenimports=collect_submodules("app") + ["pyogrio._geometry"],
+    hiddenimports=collect_submodules("app", filter=lambda name: with_import_tools or name != "app.importers.cptond") + (["pyogrio._geometry"] if with_import_tools else []),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["pytest", "mypy", "ruff"],
+    excludes=["pytest", "mypy", "ruff"] + ([] if with_import_tools else ["geopandas", "pandas", "pyogrio", "app.importers.cptond"]),
     noarchive=False,
     optimize=0,
 )

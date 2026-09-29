@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
@@ -14,6 +14,8 @@ from app.core.errors import APIError
 from app.db.base import AppMeta
 from app.db.models import Journey, RailDatasetVersion
 from app.db.session import get_db
+from app.importers.capabilities import raw_import_available
+from app.rail.components import ComponentError, ComponentInstaller, ComponentState
 from app.rail.service import RailServiceController, RailServiceState
 from app.rail.sidecar import RailSidecarError
 from app.services.onboarding import (
@@ -46,6 +48,8 @@ class SetupState(BaseModel):
     log_path: str
     locked_fields: list[str]
     rail_start_allowed: bool
+    components: ComponentState
+    raw_import_available: bool
 
 
 class SetupProgressPatch(BaseModel):
@@ -54,6 +58,10 @@ class SetupProgressPatch(BaseModel):
     rail_skipped: bool | None = None
     metro_directory: str | None = None
     complete: bool = False
+
+
+class ComponentPrepareRequest(BaseModel):
+    install: Literal[True]
 
 
 def service_controller(request: Request) -> RailServiceController:
@@ -97,6 +105,10 @@ def setup_state(request: Request, db: Session = Depends(get_db)) -> SetupState:
             name in controller.locked_fields and not getattr(settings, name)
             for name in ("rail_enabled", "rail_sidecar_managed")
         ),
+        components=cast(
+            ComponentInstaller, request.app.state.rail_components
+        ).snapshot(),
+        raw_import_available=raw_import_available(),
     )
 
 
@@ -156,6 +168,13 @@ def start_rail_service(
     controller = service_controller(request)
     # Configuration and launch reservation are serialized for this local service.
     with controller.configuration_lock:
+        components = cast(ComponentInstaller, request.app.state.rail_components)
+        if components.snapshot().status in {"downloading", "installing"}:
+            raise APIError(
+                status_code=409,
+                code="rail_components_installing",
+                message="铁路组件正在准备，请完成后再启动。",
+            )
         state = controller.snapshot()
         if state.status == "starting":
             raise APIError(
@@ -175,4 +194,25 @@ def start_rail_service(
         except RailSidecarError as error:
             raise APIError(
                 status_code=409, code=error.code, message=str(error)
+            ) from error
+
+
+@router.post("/rail/components", response_model=ComponentState, status_code=202)
+def prepare_rail_components(
+    payload: ComponentPrepareRequest, request: Request
+) -> ComponentState:
+    controller = service_controller(request)
+    with controller.configuration_lock:
+        if controller.snapshot().status in {"starting", "ready"}:
+            raise APIError(
+                status_code=409,
+                code="rail_service_running",
+                message="铁路服务正在运行，请关闭并重新打开应用后准备组件。",
+            )
+        installer = cast(ComponentInstaller, request.app.state.rail_components)
+        try:
+            return installer.start()
+        except ComponentError as error:
+            raise APIError(
+                status_code=409, code="rail_components_unavailable", message=str(error)
             ) from error

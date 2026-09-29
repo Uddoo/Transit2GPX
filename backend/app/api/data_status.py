@@ -10,13 +10,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import APIError
+from app.db.base import AppMeta
 from app.db.models import City, DatasetVersion, Line, RouteVariant
 from app.db.session import get_db
-from app.importers.cptond import (
-    DatasetAuditError,
-    audit_dataset,
-    create_dataset_import,
-)
+from app.importers.capabilities import require_raw_import
+from app.importers.city_pack import PackManifest
 from app.services.import_jobs import cancel_cptond_import, enqueue_cptond_import
 
 router = APIRouter(prefix="/data", tags=["data"])
@@ -94,6 +92,18 @@ def data_status(db: Session = Depends(get_db)) -> DataStatusResponse:
         .order_by(DatasetVersion.imported_at.desc(), DatasetVersion.id.desc())
     )
     if dataset is not None:
+        label = f"{dataset.source_name}-{dataset.source_version}"
+        if dataset.importer_schema_version == "citypack-v1":
+            label = f"城市数据包-{dataset.source_version}"
+            if saved := db.get(AppMeta, f"citypack.manifest.{dataset.id}"):
+                try:
+                    manifest = PackManifest.model_validate_json(saved.value)
+                    label = (
+                        f"{manifest.city_name} · "
+                        f"{manifest.source.name}-{manifest.source.version}"
+                    )
+                except ValueError:
+                    pass
         status_by_dataset: dict[str, DataStatus] = {
             "ready": "ready",
             "checking": "importing",
@@ -124,7 +134,7 @@ def data_status(db: Session = Depends(get_db)) -> DataStatusResponse:
             status=status_by_dataset[dataset.status],
             ready_available=ready_available,
             import_id=dataset.id,
-            dataset=f"{dataset.source_name}-{dataset.source_version}",
+            dataset=label,
             captured_at=dataset.captured_at,
             license=dataset.license,
             source_url=dataset.source_url,
@@ -177,6 +187,13 @@ def data_status(db: Session = Depends(get_db)) -> DataStatusResponse:
 def start_dataset_import(
     request: DatasetImportRequest,
 ) -> DatasetImportResponse:
+    require_raw_import()
+    from app.importers.cptond import (
+        DatasetAuditError,
+        audit_dataset,
+        create_dataset_import,
+    )
+
     try:
         audit = audit_dataset(Path(request.directory))
     except DatasetAuditError as error:

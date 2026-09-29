@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 
 import {
   downloadGpx,
@@ -22,7 +23,7 @@ import {
   useStations,
 } from "./useJourneyNetwork";
 import { usePublicConfig } from "./usePublicConfig";
-import { sortTransitLines } from "./lineSort";
+import { groupTransitLines, sortTransitLines } from "./lineSort";
 
 const RailJourneyEditorPage = lazy(() => import("./RailJourneyEditorPage").then((module) => ({ default: module.RailJourneyEditorPage })));
 const TransitPreviewMap = lazy(() => import("./TransitPreviewMap").then((module) => ({ default: module.TransitPreviewMap })));
@@ -43,8 +44,9 @@ function MetroJourneyEditorPage({
 }: {
   onModeChange: (mode: "metro" | "rail") => void;
 }) {
+  const [params] = useSearchParams();
   const [state, setState] = useState<CandidateState>("editing");
-  const [cityId, setCityId] = useState<number>();
+  const [cityId, setCityId] = useState<number | undefined>(() => Number(params.get("city")) || undefined);
   const [lineId, setLineId] = useState<number>();
   const [autoLine, setAutoLine] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -70,6 +72,8 @@ function MetroJourneyEditorPage({
     [lines.data],
   );
   const stations = useStations(cityId, lineId, autoLine);
+  const selectedCity = cities.data?.find((city) => city.id === cityId);
+  const lineGroups = useMemo(() => groupTransitLines(sortedLines), [sortedLines]);
   const pathPreview = usePathPreview();
   const createJourney = useCreateJourney();
   const directExport = useMutation({
@@ -120,10 +124,10 @@ function MetroJourneyEditorPage({
       return;
     }
     if (!stations.data.some((station) => station.id === startStationId)) {
-      setStartStationId(stations.data[0].id);
+      setStartStationId(undefined);
     }
     if (!stations.data.some((station) => station.id === endStationId)) {
-      setEndStationId(stations.data.at(-1)?.id);
+      setEndStationId(undefined);
     }
   }, [endStationId, startStationId, stations.data]);
 
@@ -324,12 +328,13 @@ function MetroJourneyEditorPage({
               >
                 <option disabled value="">选择线路</option>
                 <option value="auto">自动规划换乘（需确认）</option>
-                {sortedLines.map((line) => <option key={line.id} value={line.id}>{line.name_cn}</option>)}
+                {lineGroups.map((group) => <optgroup key={group.name} label={group.name}>{group.items.map((line) => <option key={line.id} value={line.id}>{line.name_cn}</option>)}</optgroup>)}
               </select>
             </label>
+          {selectedCity ? <p className="journey-data-source">当前数据：{selectedCity.name_cn} · {selectedCity.captured_at ?? "本地快照"}<span>{selectedCity.source_name ?? "已导入数据"}</span></p> : null}
           </div>
           <div className="journey-form__stations">
-            <StationCombobox
+          <StationCombobox
               cityId={cityId}
               disabled={!stations.data?.length}
               label="起点站"
@@ -361,6 +366,9 @@ function MetroJourneyEditorPage({
               stations={stations.data ?? []}
               value={endStationId}
             />
+          <div className="journey-station-help"><span>请选择实际乘坐的起点和终点。</span>{!autoLine ? <button type="button" className="button button--secondary" disabled={!stations.data || stations.data.length < 2} onClick={() => {
+            setStartStationId(stations.data?.[0].id); setEndStationId(stations.data?.at(-1)?.id); setViaStationId(undefined); setUsedMapSelection(false); resetCandidate();
+          }}>选择首末站</button> : null}</div>
           </div>
           <details
             className="journey-form__advanced"

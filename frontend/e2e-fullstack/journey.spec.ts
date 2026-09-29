@@ -27,6 +27,10 @@ test("creates, persists, and exports a metro journey through the real stack", as
   ).toBeVisible();
   await expect(page.getByRole("combobox", { name: "城市" })).toHaveValue("1");
   await expect(page.getByRole("combobox", { name: "线路" })).toHaveValue("1");
+  await expect(page.getByRole("combobox", { name: "起点站" })).toHaveValue("");
+  await expect(page.getByRole("combobox", { name: "终点站" })).toHaveValue("");
+  await expect(page.getByRole("button", { name: "预览路径" })).toBeDisabled();
+  await page.getByRole("button", { name: "选择首末站" }).click();
   await expect(page.getByRole("combobox", { name: "起点站" })).toHaveValue("甲站");
   await expect(page.getByRole("combobox", { name: "终点站" })).toHaveValue("丙站");
   await expect(

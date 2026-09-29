@@ -1,0 +1,1346 @@
+{
+  "format": "transit2fog-city-catalog-v1",
+  "release_tag": "metro-data-2025-06-r1",
+  "data_snapshot": "2025-06",
+  "source": "https://doi.org/10.6084/m9.figshare.29377427.v2",
+  "license": "CC BY 4.0",
+  "city_pack_format": "transit2fog-city-v1",
+  "minimum_reader_capability": "t2fcity-v1 (not present in application v1.0.0-rc.1)",
+  "scope_note": "City entries retain upstream grouping. Code 1886 is the upstream Taiwan province grouping, not a single city.",
+  "packages": [
+    {
+      "city_code": "010",
+      "city_name": "北京",
+      "city_name_en": "Beijing",
+      "file": "metro-010-beijing-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-010-beijing-2025-06-r1.t2fcity",
+      "size": 645333,
+      "sha256": "00d10db295883ce6d5f5ea1af58ba4b948fb2b485a7e6865986d45dbe7532a47",
+      "lines": 70,
+      "stations": 446,
+      "ready_variants": 70,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "010",
+        "city_name": "北京",
+        "network_sha256": "8656851327f958de6aff16708a7e87ab91521948ef509cb938a4598b7631588e",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "020",
+      "city_name": "广州",
+      "city_name_en": "Guangzhou",
+      "file": "metro-020-guangzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-020-guangzhou-2025-06-r1.t2fcity",
+      "size": 643020,
+      "sha256": "5358dadcad8d5d7b44327db2b35e6ecf931e48ec1132fa6234d50ea2d04b2aef",
+      "lines": 70,
+      "stations": 409,
+      "ready_variants": 70,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "020",
+        "city_name": "广州",
+        "network_sha256": "574e1dafd4763b7771c824bd8501e1e0baa20b7e997c2ddd01a356ef1fd0b635",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "021",
+      "city_name": "上海",
+      "city_name_en": "Shanghai",
+      "file": "metro-021-shanghai-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-021-shanghai-2025-06-r1.t2fcity",
+      "size": 692890,
+      "sha256": "d291d015005cb96df55a8cca1165d868e5ba9f4f7b988019b06227f5fa8ccc5b",
+      "lines": 66,
+      "stations": 448,
+      "ready_variants": 66,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "021",
+        "city_name": "上海",
+        "network_sha256": "5fcbd8da9ff85f6a86175c9628b75f246ddb8e2df25b28aa017437047ea611be",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "022",
+      "city_name": "天津",
+      "city_name_en": "Tianjin",
+      "file": "metro-022-tianjin-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-022-tianjin-2025-06-r1.t2fcity",
+      "size": 314550,
+      "sha256": "649649ae0bb9016556eae1f4d5d7892d5ec6467371bbde298afbeabb79181bd0",
+      "lines": 32,
+      "stations": 250,
+      "ready_variants": 32,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "022",
+        "city_name": "天津",
+        "network_sha256": "dfc29bf1f1ce174c256ebfa87de9138bff9edb9b5015dd7703fd5fe920e0bb2d",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "023",
+      "city_name": "重庆",
+      "city_name_en": "Chongqing",
+      "file": "metro-023-chongqing-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-023-chongqing-2025-06-r1.t2fcity",
+      "size": 574950,
+      "sha256": "bf4243b3dbf5fabc543905c10dd62003ba1d1af11b2046e8f691905779ea305c",
+      "lines": 40,
+      "stations": 299,
+      "ready_variants": 40,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "023",
+        "city_name": "重庆",
+        "network_sha256": "e446cee3efd1e9303ff7f425036ac264ce77eafe41cea462eb6c4bf4ba2a86bd",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "024",
+      "city_name": "沈阳",
+      "city_name_en": "Shenyang",
+      "file": "metro-024-shenyang-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-024-shenyang-2025-06-r1.t2fcity",
+      "size": 219844,
+      "sha256": "2c61e3423945a710bfcfe4a1d1e8846e59e69209319a8bb987d2578839139bcc",
+      "lines": 28,
+      "stations": 201,
+      "ready_variants": 28,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "024",
+        "city_name": "沈阳",
+        "network_sha256": "e3cad38e58e5cef78167c51efd1a990c8c7f0f34b9fb5390aee30c46343f7839",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "025",
+      "city_name": "南京",
+      "city_name_en": "nanking",
+      "file": "metro-025-nanking-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-025-nanking-2025-06-r1.t2fcity",
+      "size": 464937,
+      "sha256": "e368b41b03f5ec58cbb7c68bf7377d9aa0626754eaafa7b215e58d4cce680193",
+      "lines": 44,
+      "stations": 299,
+      "ready_variants": 44,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "025",
+        "city_name": "南京",
+        "network_sha256": "cc99f82187cbcc29b4af955a4b7f1f762fb3db8158664821df48323a1f6b8f03",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "027",
+      "city_name": "武汉",
+      "city_name_en": "Wuhan",
+      "file": "metro-027-wuhan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-027-wuhan-2025-06-r1.t2fcity",
+      "size": 510762,
+      "sha256": "12522472ad0b5444a3b744b226833ee6e8e80843441064d52595db1ca17a6eb9",
+      "lines": 44,
+      "stations": 352,
+      "ready_variants": 44,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "027",
+        "city_name": "武汉",
+        "network_sha256": "1cb2e195aa4216c266db586b48cafcedada13da05c44e3cb65e2e64ceb6eff7f",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "028",
+      "city_name": "成都",
+      "city_name_en": "Chengdu",
+      "file": "metro-028-chengdu-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-028-chengdu-2025-06-r1.t2fcity",
+      "size": 430982,
+      "sha256": "7952bd28073d673702ec3c7526aefd15d88c39f4538756a369d21115d83ecd0a",
+      "lines": 42,
+      "stations": 338,
+      "ready_variants": 42,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "028",
+        "city_name": "成都",
+        "network_sha256": "18311d029d16864d55b3bd979955c0eeb3f67d255d6f0dc95ce7c3c837e7cdcb",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "029",
+      "city_name": "西安",
+      "city_name_en": "sian",
+      "file": "metro-029-sian-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-029-sian-2025-06-r1.t2fcity",
+      "size": 212060,
+      "sha256": "2942e71b6b11214eb58442bf6655f5cbe6e84f5679d92841927efe58686288bd",
+      "lines": 22,
+      "stations": 216,
+      "ready_variants": 22,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "029",
+        "city_name": "西安",
+        "network_sha256": "5a4332279deac8c1a91e063be2a2a73d387684b8607342d390f3ac5e0ce66847",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0311",
+      "city_name": "石家庄",
+      "city_name_en": "Shijiazhuang",
+      "file": "metro-0311-shijiazhuang-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0311-shijiazhuang-2025-06-r1.t2fcity",
+      "size": 43248,
+      "sha256": "1a22a14ff31f2c7b6dea41f1beb6ab4d6713e20cc3847e6a230a7d97f93cd3a6",
+      "lines": 10,
+      "stations": 64,
+      "ready_variants": 10,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0311",
+        "city_name": "石家庄",
+        "network_sha256": "b518f26d6ba08d7558e86c0978ca97ddb9ab185f0d51f9c591a890217ea22475",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0351",
+      "city_name": "太原",
+      "city_name_en": "Taiyuan",
+      "file": "metro-0351-taiyuan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0351-taiyuan-2025-06-r1.t2fcity",
+      "size": 12645,
+      "sha256": "a876bdfd0a35e98c268410a62bbe5936aa38052ab8f741f4656c691b3e3d01b6",
+      "lines": 2,
+      "stations": 23,
+      "ready_variants": 2,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0351",
+        "city_name": "太原",
+        "network_sha256": "8514e5f3350ae59cc76064fa91369ea2086dcecf415423b4c7b857aa08a86c95",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0371",
+      "city_name": "郑州",
+      "city_name_en": "Zhengzhou",
+      "file": "metro-0371-zhengzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0371-zhengzhou-2025-06-r1.t2fcity",
+      "size": 245979,
+      "sha256": "94c2ab1efee7a01fe03629ed509fb21cc306a70ed591fc3c0c393e4065d4f062",
+      "lines": 24,
+      "stations": 214,
+      "ready_variants": 24,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0371",
+        "city_name": "郑州",
+        "network_sha256": "bf1a95474f238c69c67779b60972e219c041e31296f4274a25665c0325074fdb",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0379",
+      "city_name": "洛阳",
+      "city_name_en": "Luoyang",
+      "file": "metro-0379-luoyang-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0379-luoyang-2025-06-r1.t2fcity",
+      "size": 21548,
+      "sha256": "e486fcfbda58def1800db64fe5807fa950ef1da7dc2755b6ee3dfe3a0a3887a8",
+      "lines": 4,
+      "stations": 33,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0379",
+        "city_name": "洛阳",
+        "network_sha256": "1b0f5bedd24147015e37ba91c8b93d1812c8592131e8ed329e2fc5e7567b07f9",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0411",
+      "city_name": "大连",
+      "city_name_en": "Dalian",
+      "file": "metro-0411-dalian-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0411-dalian-2025-06-r1.t2fcity",
+      "size": 166279,
+      "sha256": "3f4cfe44ace145ff6bdea867ef11f3919c8512c6b63012a1a8cd346cc2d42346",
+      "lines": 14,
+      "stations": 94,
+      "ready_variants": 14,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0411",
+        "city_name": "大连",
+        "network_sha256": "47a48c1b4b633e3e608243c221207d95bdbf0a5a279f8b8bbd24e5767b23e89c",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0431",
+      "city_name": "长春",
+      "city_name_en": "Changchun",
+      "file": "metro-0431-changchun-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0431-changchun-2025-06-r1.t2fcity",
+      "size": 71787,
+      "sha256": "a8ccc0f5ddcb6b9a707ece5ec1992510873dbc5704663c102747e974d5c9c600",
+      "lines": 16,
+      "stations": 108,
+      "ready_variants": 16,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0431",
+        "city_name": "长春",
+        "network_sha256": "5263fdea2e8b350d366b86af2913e70cc5ca683c43d1d23fd00b39c5316c979d",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0451",
+      "city_name": "哈尔滨",
+      "city_name_en": "Harbin",
+      "file": "metro-0451-harbin-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0451-harbin-2025-06-r1.t2fcity",
+      "size": 82975,
+      "sha256": "4c623733ab7c406aaf510c6ee0f272601cfaba4474a1020dbdfc708ccb680b8b",
+      "lines": 9,
+      "stations": 83,
+      "ready_variants": 9,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0451",
+        "city_name": "哈尔滨",
+        "network_sha256": "797504b2aa5db3b7107346e9a05fe78c2ebc9fe62fd01476040eb1ad996ef52b",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0471",
+      "city_name": "呼和浩特",
+      "city_name_en": "Hohhot",
+      "file": "metro-0471-hohhot-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0471-hohhot-2025-06-r1.t2fcity",
+      "size": 25699,
+      "sha256": "d5da034b65156424a4c751f0bfea0fdf1da7692c2e980027c1692d8047bb59b0",
+      "lines": 4,
+      "stations": 43,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0471",
+        "city_name": "呼和浩特",
+        "network_sha256": "7b3aea4c4ce5fdf62c76f878c9aeea411a441921abf5c800cbc883ef6703ebe4",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0510",
+      "city_name": "无锡",
+      "city_name_en": "Wuxi",
+      "file": "metro-0510-wuxi-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0510-wuxi-2025-06-r1.t2fcity",
+      "size": 132638,
+      "sha256": "96f8df87620c300376bf462308abaa973a073a3b2d3499e8291a883987949356",
+      "lines": 20,
+      "stations": 125,
+      "ready_variants": 20,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0510",
+        "city_name": "无锡",
+        "network_sha256": "99bf21ecf7351898a518e53c89bc979647937b20ec2145ea433d9a17e23e344c",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0512",
+      "city_name": "苏州",
+      "city_name_en": "Suzhou",
+      "file": "metro-0512-suzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0512-suzhou-2025-06-r1.t2fcity",
+      "size": 414483,
+      "sha256": "fd8137914564ce5f7a7ff1e55a575e3f73a6b1138d6b04d673fc8787fda1367e",
+      "lines": 36,
+      "stations": 316,
+      "ready_variants": 36,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0512",
+        "city_name": "苏州",
+        "network_sha256": "45f7d066f40f40cb56233aff2a9b810015a6292823bef81e78e21cb9e321637a",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0513",
+      "city_name": "南通",
+      "city_name_en": "Nantong",
+      "file": "metro-0513-nantong-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0513-nantong-2025-06-r1.t2fcity",
+      "size": 44531,
+      "sha256": "888552a8ac839d9faa42568b726f37f740c10525afb90d2446bf8a2dcd9cb92b",
+      "lines": 6,
+      "stations": 49,
+      "ready_variants": 6,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0513",
+        "city_name": "南通",
+        "network_sha256": "b59d136aadc9961a30cdb724f48e695e57db83d8078859e1f12ff62948243c8d",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0516",
+      "city_name": "徐州",
+      "city_name_en": "Xuzhou",
+      "file": "metro-0516-xuzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0516-xuzhou-2025-06-r1.t2fcity",
+      "size": 43764,
+      "sha256": "3ec0d64401f583675206de9318582da5c0541c0798693fcf1b884bb01e62a885",
+      "lines": 6,
+      "stations": 57,
+      "ready_variants": 6,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0516",
+        "city_name": "徐州",
+        "network_sha256": "999fdb711c8e95fc2b0c12b10b89bd33f6dcac4ecf9cb6d0bb662846441ddd40",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0519",
+      "city_name": "常州",
+      "city_name_en": "Changzhou",
+      "file": "metro-0519-changzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0519-changzhou-2025-06-r1.t2fcity",
+      "size": 30098,
+      "sha256": "679be65687c3a414370bda188624c6bcff118fa0bde296e0862fae6cf9e1f561",
+      "lines": 4,
+      "stations": 43,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0519",
+        "city_name": "常州",
+        "network_sha256": "61987df55f33286539d5e12ba15959352be73e58c420d898b5b743dde2b9ad75",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0531",
+      "city_name": "济南",
+      "city_name_en": "Jinan",
+      "file": "metro-0531-jinan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0531-jinan-2025-06-r1.t2fcity",
+      "size": 104865,
+      "sha256": "bdaa875a0604a844170ef192b7f98f1198c08332aedbaedd6c1ce149a5c1a888",
+      "lines": 10,
+      "stations": 75,
+      "ready_variants": 10,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0531",
+        "city_name": "济南",
+        "network_sha256": "4ea52f81e6f97ba2b922c6dc8bca94c93dac391f02c2db2681483a47b714d554",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0532",
+      "city_name": "青岛",
+      "city_name_en": "Qingdao",
+      "file": "metro-0532-qingdao-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0532-qingdao-2025-06-r1.t2fcity",
+      "size": 263738,
+      "sha256": "9d04b9788ea0171c3e313c5b541b9fc66c2e6b3f81013bcf75f17d1eb401570b",
+      "lines": 28,
+      "stations": 205,
+      "ready_variants": 28,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0532",
+        "city_name": "青岛",
+        "network_sha256": "b0d5eb8e9c7df052bfe4d71423c27faa37914e7f927f11bbbbaf4fde5d3b0725",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0550",
+      "city_name": "滁州",
+      "city_name_en": "Chuzhou",
+      "file": "metro-0550-chuzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0550-chuzhou-2025-06-r1.t2fcity",
+      "size": 10955,
+      "sha256": "27d5e8e6f17684d2f634db2996b4b695e5d6c62343dfc3336cea76a71bb99980",
+      "lines": 4,
+      "stations": 17,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0550",
+        "city_name": "滁州",
+        "network_sha256": "ed14829b4cd8b6e62ecf838f5ecb4773dbd7eaf22cd9f316a2aac36a304f3f85",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0551",
+      "city_name": "合肥",
+      "city_name_en": "Hefei",
+      "file": "metro-0551-hefei-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0551-hefei-2025-06-r1.t2fcity",
+      "size": 177245,
+      "sha256": "ab05081aa9039ccd81f8f536252bcd644e54e62b1c326fc5d4dac8573ffb8a65",
+      "lines": 14,
+      "stations": 173,
+      "ready_variants": 14,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0551",
+        "city_name": "合肥",
+        "network_sha256": "125aa936fedcdd69b0c700db89e1a44fb3f66a960c1c1ad9a9df8ebebe2b4742",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0553",
+      "city_name": "芜湖",
+      "city_name_en": "Wuhu",
+      "file": "metro-0553-wuhu-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0553-wuhu-2025-06-r1.t2fcity",
+      "size": 30828,
+      "sha256": "dbc7a75f25afd2b109171f7d7c21569dff8d191af69ec867b78e59d403513e06",
+      "lines": 4,
+      "stations": 35,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0553",
+        "city_name": "芜湖",
+        "network_sha256": "18aba14288da990c8d773b0a0071310c8130e837caf03b82094667336bf5a968",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0571",
+      "city_name": "杭州",
+      "city_name_en": "Hangzhou",
+      "file": "metro-0571-hangzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0571-hangzhou-2025-06-r1.t2fcity",
+      "size": 462552,
+      "sha256": "2066ae24575e754049d5a1cf7002075fedb5c0eeb3854166f78f814dbf874813",
+      "lines": 44,
+      "stations": 325,
+      "ready_variants": 44,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0571",
+        "city_name": "杭州",
+        "network_sha256": "34a6eb20e23aeea174ada6b93ff4d879f48e6987e45b390a672778d84c7c82b1",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0574",
+      "city_name": "宁波",
+      "city_name_en": "ningbo",
+      "file": "metro-0574-ningbo-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0574-ningbo-2025-06-r1.t2fcity",
+      "size": 141687,
+      "sha256": "29b93e0ab74b18cbfcc5a19eeb9d33f57f7aaf789b697a644472a8279a7f37bb",
+      "lines": 12,
+      "stations": 124,
+      "ready_variants": 12,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0574",
+        "city_name": "宁波",
+        "network_sha256": "d03b44388346412f80e4362c09b5bc9830bb56a04253e3ca999b9335cf190cc5",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0575",
+      "city_name": "绍兴",
+      "city_name_en": "Shaoxing",
+      "file": "metro-0575-shaoxing-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0575-shaoxing-2025-06-r1.t2fcity",
+      "size": 71517,
+      "sha256": "16d01d1c0f61592663816ea599826b09688cdbb6317b790ea98ec1dae7e8861c",
+      "lines": 8,
+      "stations": 48,
+      "ready_variants": 8,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0575",
+        "city_name": "绍兴",
+        "network_sha256": "86ae4fad3bfd73e6231d65e1a6b6a6515fcd99fe978aa4c833ffd716c37f3b2e",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0577",
+      "city_name": "温州",
+      "city_name_en": "Wenzhou",
+      "file": "metro-0577-wenzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0577-wenzhou-2025-06-r1.t2fcity",
+      "size": 53944,
+      "sha256": "654a3c756f887c4fecf4f3436eef19654438dbc4cbb4f02cc895d07441a66346",
+      "lines": 6,
+      "stations": 47,
+      "ready_variants": 6,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0577",
+        "city_name": "温州",
+        "network_sha256": "de9973e871ac21125d7351290f597e288562cb884be3519e47e796027bb12f8e",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0591",
+      "city_name": "福州",
+      "city_name_en": "Fuzhou",
+      "file": "metro-0591-fuzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0591-fuzhou-2025-06-r1.t2fcity",
+      "size": 127796,
+      "sha256": "831d94cbc1cc17d83cafd675b08d97a05bdb7cd4630ccf1d5b65dc52b41a2bb8",
+      "lines": 18,
+      "stations": 119,
+      "ready_variants": 18,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0591",
+        "city_name": "福州",
+        "network_sha256": "67fdc6be616543fdd1fb4f09e54c84ff654b9f6b18223abfadf4b7486df9891f",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0592",
+      "city_name": "厦门",
+      "city_name_en": "Xiamen",
+      "file": "metro-0592-xiamen-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0592-xiamen-2025-06-r1.t2fcity",
+      "size": 133227,
+      "sha256": "ee3325c201fd1b01748fc7d9c218b140eb4d720cfe078b72d4178c9a0d7f58eb",
+      "lines": 22,
+      "stations": 131,
+      "ready_variants": 22,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0592",
+        "city_name": "厦门",
+        "network_sha256": "9184f882e9d4783ffbe58ba53ed834174cef34ea8f01dd7026119062b58eb8a4",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0731",
+      "city_name": "长沙",
+      "city_name_en": "Changsha",
+      "file": "metro-0731-changsha-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0731-changsha-2025-06-r1.t2fcity",
+      "size": 231948,
+      "sha256": "c5cd80f84b2972c59bdf3f670c9d223d78dd82ce70f953ab519c094040ee0287",
+      "lines": 24,
+      "stations": 172,
+      "ready_variants": 24,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0731",
+        "city_name": "长沙",
+        "network_sha256": "9a73a1945f253de241970fc345408ed56150df6b39ee193c47eee2d616bc7238",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0755",
+      "city_name": "深圳",
+      "city_name_en": "Shenzhen",
+      "file": "metro-0755-shenzhen-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0755-shenzhen-2025-06-r1.t2fcity",
+      "size": 556158,
+      "sha256": "1a27ad8f0d22cd0dc23db21e6a9128f69ec7b7cb703f25ec5738f42a8b32cb8b",
+      "lines": 53,
+      "stations": 372,
+      "ready_variants": 53,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0755",
+        "city_name": "深圳",
+        "network_sha256": "c8c4986f5f7e02fb15a2a5c69448f101279b580e2681f30b015c93358983ca88",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0757",
+      "city_name": "佛山",
+      "city_name_en": "Foshan",
+      "file": "metro-0757-foshan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0757-foshan-2025-06-r1.t2fcity",
+      "size": 103219,
+      "sha256": "39f4b9072939f288acc96608e9611dfa2149534a1cbc74d36218bd8e66a2a235",
+      "lines": 14,
+      "stations": 84,
+      "ready_variants": 14,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0757",
+        "city_name": "佛山",
+        "network_sha256": "c68c4b97a6a3d8a5ead7bf2f4ff719e6ac4c959beaa18449f44b2ef8c0b2ce3d",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0769",
+      "city_name": "东莞",
+      "city_name_en": "Dongguan",
+      "file": "metro-0769-dongguan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0769-dongguan-2025-06-r1.t2fcity",
+      "size": 18193,
+      "sha256": "af3eed2d0311e51b4cb7604e3e3cbd96eb59abdb132ff4452f4f977060f3e472",
+      "lines": 4,
+      "stations": 24,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0769",
+        "city_name": "东莞",
+        "network_sha256": "897234bcacfa995b1f5a88a5a6b7616951ebbb70941ceb98dff16aa393ebbd91",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0771",
+      "city_name": "南宁",
+      "city_name_en": "Nanning",
+      "file": "metro-0771-nanning-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0771-nanning-2025-06-r1.t2fcity",
+      "size": 78624,
+      "sha256": "37edeb566b6da5c1512d27d4a7b6bf4cc9fc3daee3e65e3386096e3fc583abf1",
+      "lines": 10,
+      "stations": 96,
+      "ready_variants": 10,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0771",
+        "city_name": "南宁",
+        "network_sha256": "71ea0311b15dd21bfe2327aa3d61cabba1b7c72e6fbab49048c14d6bef385793",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0791",
+      "city_name": "南昌",
+      "city_name_en": "Nanchang",
+      "file": "metro-0791-nanchang-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0791-nanchang-2025-06-r1.t2fcity",
+      "size": 158994,
+      "sha256": "d31238a9ef2640fcfe2d8038ee5dafef3947ede439b4fae9fad8e7f28ff64ddd",
+      "lines": 16,
+      "stations": 113,
+      "ready_variants": 16,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0791",
+        "city_name": "南昌",
+        "network_sha256": "5386e561f0e40f2be8a3a4e371dbce264114d072f5862b696d2deb022c5c7688",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0851",
+      "city_name": "贵阳",
+      "city_name_en": "Guiyang",
+      "file": "metro-0851-guiyang-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0851-guiyang-2025-06-r1.t2fcity",
+      "size": 101502,
+      "sha256": "8e9f65774aa8587d9953172210e34338e2db47f366261284a3c99f7f29e007b3",
+      "lines": 6,
+      "stations": 82,
+      "ready_variants": 6,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0851",
+        "city_name": "贵阳",
+        "network_sha256": "61f2a160b3c492337d4a316a85d7931dd882882b1d29d3e46428ba8d3c1e5171",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0871",
+      "city_name": "昆明",
+      "city_name_en": "Kunming",
+      "file": "metro-0871-kunming-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0871-kunming-2025-06-r1.t2fcity",
+      "size": 150609,
+      "sha256": "179db59697714920af6fbe18c95712e40047cb5d999839a84d46a9e90b1ba352",
+      "lines": 18,
+      "stations": 116,
+      "ready_variants": 18,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0871",
+        "city_name": "昆明",
+        "network_sha256": "434d5b7ada32dff93c56f472373b863914ff0a0094cce43b7483d417c5d7c4f3",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0931",
+      "city_name": "兰州",
+      "city_name_en": "Lanzhou",
+      "file": "metro-0931-lanzhou-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0931-lanzhou-2025-06-r1.t2fcity",
+      "size": 21900,
+      "sha256": "72dd89abb96f1ab081d95251f43c2b4ae4d5b88fa0a1ccabd4001565707334f2",
+      "lines": 4,
+      "stations": 27,
+      "ready_variants": 4,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0931",
+        "city_name": "兰州",
+        "network_sha256": "a9df36f658251046686e582e829bde487dbd2278cb58ebd1ff63ff5a2c71fd80",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "0991",
+      "city_name": "乌鲁木齐",
+      "city_name_en": "urumchi",
+      "file": "metro-0991-urumchi-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-0991-urumchi-2025-06-r1.t2fcity",
+      "size": 33462,
+      "sha256": "09072be60e92d8ecb9a2b4fadc26ada561b9f5c45fd47402be55f54b67fdd8dc",
+      "lines": 6,
+      "stations": 52,
+      "ready_variants": 6,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "0991",
+        "city_name": "乌鲁木齐",
+        "network_sha256": "dde5d5752d10a0653ab388f84643fba6beb2309da0696f7e8bd695341a7db0b0",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "1852",
+      "city_name": "香港",
+      "city_name_en": "Hong Kong",
+      "file": "metro-1852-hong-kong-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-1852-hong-kong-2025-06-r1.t2fcity",
+      "size": 141353,
+      "sha256": "5b5713ce9002cec63ec6fa38cc9d70b227e4f41c23869fca53c50149b78cdf24",
+      "lines": 24,
+      "stations": 97,
+      "ready_variants": 24,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "1852",
+        "city_name": "香港",
+        "network_sha256": "ee130a9e17a0859944a75344981c6699e35ed04cef00c3aa27ce240960903b10",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    },
+    {
+      "city_code": "1886",
+      "city_name": "台湾省",
+      "city_name_en": "Taiwan",
+      "file": "metro-1886-taiwan-2025-06-r1.t2fcity",
+      "url": "https://github.com/Uddoo/transit2fog/releases/download/metro-data-2025-06-r1/metro-1886-taiwan-2025-06-r1.t2fcity",
+      "size": 244341,
+      "sha256": "f94e84df00f807c9c1601ed1d67888438c374636a54b48b1b1920144bc90d956",
+      "lines": 30,
+      "stations": 223,
+      "ready_variants": 30,
+      "blocked_variants": 0,
+      "manifest": {
+        "format": "transit2fog-city-v1",
+        "city_code": "1886",
+        "city_name": "台湾省",
+        "network_sha256": "8c0d6bffa26e87656281cd4e48c5fec046f4524aea6217f0758434997b6cfea8",
+        "source": {
+          "name": "CPTOND",
+          "version": "CPTOND-2025-v2-2025-06-routeid-adapted-r1",
+          "url": "https://doi.org/10.6084/m9.figshare.29377427",
+          "license": "CC BY 4.0",
+          "captured_at": "2025-06",
+          "checksum": "1e29964bf93342aee1f3983df09ca147e4a5bb115ef4a528c572ff7ab30d1871",
+          "importer": "cptond-v2.3",
+          "attribution": "CPTOND-2025 v2; Liang Wang, He Wei, Yu Guan, Libin Ouyang, Dandan Xu, Xuehua Han, Min Zhang, Meng Chen, Daosheng Sun, Daqing Gong, Zhenji Zhang, Xinghua Zhang, Xiaodong Zhang; https://doi.org/10.6084/m9.figshare.29377427.v2; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/. Transit2Fog adaptations: exact (city_code, route_cn) join of original station-table route_id; raw route/station geometries unchanged before topology processing; validated station projection, route-edge construction and city packaging. Source checksum identifies the ten original national metro Shapefile components, not the full ZIP. Data snapshot: June 2025; this derivative is not an endorsement by the original authors."
+        }
+      }
+    }
+  ]
+}

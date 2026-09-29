@@ -95,6 +95,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/data/city-packs/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Capabilities */
+        get: operations["capabilities_api_v1_data_city_packs_capabilities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_api_v1_data_city_packs_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Status */
+        get: operations["download_status_api_v1_data_city_packs_download_get"];
+        put?: never;
+        /** Download City */
+        post: operations["download_city_api_v1_data_city_packs_download_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inspect Pack */
+        post: operations["inspect_pack_api_v1_data_city_packs_inspect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data/city-packs/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Install Pack */
+        post: operations["install_pack_api_v1_data_city_packs_install_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/data/imports": {
         parameters: {
             query?: never;
@@ -663,6 +749,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/setup/rail/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare Rail Components */
+        post: operations["prepare_rail_components_api_v1_setup_rail_components_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/setup/rail/start": {
         parameters: {
             query?: never;
@@ -723,6 +826,88 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_inspect_pack_api_v1_data_city_packs_inspect_post */
+        Body_inspect_pack_api_v1_data_city_packs_inspect_post: {
+            /** File */
+            file: string;
+        };
+        /** CatalogEntry */
+        CatalogEntry: {
+            /** Blocked Variants */
+            blocked_variants: number;
+            /** City Code */
+            city_code: string;
+            /** City Name */
+            city_name: string;
+            /** City Name En */
+            city_name_en?: string | null;
+            /** File */
+            file: string;
+            manifest: components["schemas"]["PackManifest"];
+            /** Ready Variants */
+            ready_variants: number;
+            /** Sha256 */
+            sha256: string;
+            /** Size */
+            size: number;
+            /** Stations */
+            stations: number;
+            /** Url */
+            url: string;
+        };
+        /** CatalogInstallRequest */
+        CatalogInstallRequest: {
+            /** City Code */
+            city_code: string;
+        };
+        /** CityCatalog */
+        CityCatalog: {
+            /** Data Snapshot */
+            data_snapshot: string;
+            /**
+             * Format
+             * @constant
+             */
+            format: "transit2fog-city-catalog-v1";
+            /** License */
+            license: string;
+            /** Packages */
+            packages: components["schemas"]["CatalogEntry"][];
+            /**
+             * Release Tag
+             * @constant
+             */
+            release_tag: "metro-data-2025-06-r1";
+            /** Scope Note */
+            scope_note: string;
+        };
+        /** CityDownloadState */
+        CityDownloadState: {
+            /** City Code */
+            city_code?: string | null;
+            /** City Name */
+            city_name?: string | null;
+            /** Dataset Id */
+            dataset_id?: number | null;
+            /**
+             * Downloaded Bytes
+             * @default 0
+             */
+            downloaded_bytes: number;
+            /** Message */
+            message?: string | null;
+            /**
+             * Status
+             * @default idle
+             * @enum {string}
+             */
+            status: "idle" | "downloading" | "installing" | "ready" | "failed";
+            /**
+             * Total Bytes
+             * @default 0
+             */
+            total_bytes: number;
+        };
         /** CityMapResponse */
         CityMapResponse: {
             /** Bbox */
@@ -748,17 +933,42 @@ export interface components {
                 number,
                 number
             ];
+            /** Captured At */
+            captured_at?: string | null;
             /** Center */
             center: [
                 number,
                 number
             ];
+            /** Checksum */
+            checksum?: string | null;
+            /**
+             * City Code
+             * @default
+             */
+            city_code: string;
+            /**
+             * Direction Count
+             * @default 0
+             */
+            direction_count: number;
             /** Id */
             id: number;
+            /** License */
+            license?: string | null;
             /** Name Cn */
             name_cn: string;
             /** Name En */
             name_en: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /** Source Version */
+            source_version?: string | null;
+            /**
+             * Station Count
+             * @default 0
+             */
+            station_count: number;
         };
         /** CommitRequest */
         CommitRequest: {
@@ -768,6 +978,39 @@ export interface components {
              * @enum {string}
              */
             strategy: "all" | "resolved_only";
+        };
+        /** ComponentPrepareRequest */
+        ComponentPrepareRequest: {
+            /**
+             * Install
+             * @constant
+             */
+            install: true;
+        };
+        /** ComponentState */
+        ComponentState: {
+            /**
+             * Downloaded Bytes
+             * @default 0
+             */
+            downloaded_bytes: number;
+            /** Jar Path */
+            jar_path?: string | null;
+            /** Java Home */
+            java_home?: string | null;
+            /** Message */
+            message?: string | null;
+            /**
+             * Status
+             * @default unavailable
+             * @enum {string}
+             */
+            status: "unavailable" | "idle" | "downloading" | "installing" | "ready" | "failed";
+            /**
+             * Total Bytes
+             * @default 0
+             */
+            total_bytes: number;
         };
         /** DatasetImportRequest */
         DatasetImportRequest: {
@@ -1016,6 +1259,16 @@ export interface components {
             status: string;
             /** Total Rows */
             total_rows: number;
+        };
+        /** ImportCapabilities */
+        ImportCapabilities: {
+            /**
+             * City Pack Format
+             * @default transit2fog-city-v1
+             */
+            city_pack_format: string;
+            /** Raw Import */
+            raw_import: boolean;
         };
         /** ImportRowPatch */
         ImportRowPatch: {
@@ -1377,6 +1630,70 @@ export interface components {
             start_station_id: number;
             /** Via Station Ids */
             via_station_ids?: number[];
+        };
+        /** PackInstallRequest */
+        PackInstallRequest: {
+            /** Package Id */
+            package_id: string;
+        };
+        /** PackInstallResult */
+        PackInstallResult: {
+            /** Dataset Id */
+            dataset_id: number;
+            /**
+             * Status
+             * @default ready
+             */
+            status: string;
+        };
+        /** PackManifest */
+        PackManifest: {
+            /** City Code */
+            city_code: string;
+            /** City Name */
+            city_name: string;
+            /**
+             * Format
+             * @default transit2fog-city-v1
+             * @constant
+             */
+            format: "transit2fog-city-v1";
+            /** Network Sha256 */
+            network_sha256: string;
+            source: components["schemas"]["PackSource"];
+        };
+        /** PackPreview */
+        PackPreview: {
+            /** Blocked Variants */
+            blocked_variants: number;
+            /** Lines */
+            lines: number;
+            manifest: components["schemas"]["PackManifest"];
+            /** Package Id */
+            package_id: string;
+            /** Ready Variants */
+            ready_variants: number;
+            /** Stations */
+            stations: number;
+        };
+        /** PackSource */
+        PackSource: {
+            /** Attribution */
+            attribution: string;
+            /** Captured At */
+            captured_at?: string | null;
+            /** Checksum */
+            checksum: string;
+            /** Importer */
+            importer: string;
+            /** License */
+            license: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+            /** Version */
+            version: string;
         };
         /** PathCandidateResponse */
         PathCandidateResponse: {
@@ -1904,6 +2221,7 @@ export interface components {
         };
         /** SetupState */
         SetupState: {
+            components: components["schemas"]["ComponentState"];
             /** Locked Fields */
             locked_fields: string[];
             /** Log Path */
@@ -1916,6 +2234,8 @@ export interface components {
             rail_config: components["schemas"]["RailSetupConfig"];
             /** Rail Start Allowed */
             rail_start_allowed: boolean;
+            /** Raw Import Available */
+            raw_import_available: boolean;
             service: components["schemas"]["RailServiceState"];
             /** Should Show */
             should_show: boolean;
@@ -2090,6 +2410,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfigResponse"];
+                };
+            };
+        };
+    };
+    capabilities_api_v1_data_city_packs_capabilities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCapabilities"];
+                };
+            };
+        };
+    };
+    catalog_api_v1_data_city_packs_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CityCatalog"];
+                };
+            };
+        };
+    };
+    download_status_api_v1_data_city_packs_download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CityDownloadState"];
+                };
+            };
+        };
+    };
+    download_city_api_v1_data_city_packs_download_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogInstallRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CityDownloadState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspect_pack_api_v1_data_city_packs_inspect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_inspect_pack_api_v1_data_city_packs_inspect_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    install_pack_api_v1_data_city_packs_install_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackInstallRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackInstallResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3198,6 +3677,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupChecks"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_rail_components_api_v1_setup_rail_components_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentPrepareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentState"];
                 };
             };
             /** @description Validation Error */

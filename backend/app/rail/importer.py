@@ -8,12 +8,11 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import geopandas as gpd
-import pandas as pd
-import pyogrio  # type: ignore[import-untyped]
-from pyogrio.errors import DataLayerError  # type: ignore[import-untyped]
+if TYPE_CHECKING:
+    import geopandas as gpd
+    import pandas as pd
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -210,6 +209,8 @@ def parse_hstore(value: object) -> dict[str, str]:
 
 
 def _text(value: object) -> str | None:
+    import pandas as pd
+
     if (
         value is None
         or value is pd.NA
@@ -324,14 +325,20 @@ def records_from_frame(
     return records
 
 
-FrameReader = Callable[..., gpd.GeoDataFrame]
+FrameReader = Callable[..., Any]
 
 
 def read_rail_station_records(
     pbf_path: Path,
     *,
-    frame_reader: FrameReader = pyogrio.read_dataframe,
+    frame_reader: FrameReader | None = None,
 ) -> list[RailStationRecord]:
+    if frame_reader is None:
+        from app.rail.osm_reader import read_station_records
+
+        return read_station_records(pbf_path)
+    from pyogrio.errors import DataLayerError  # type: ignore[import-untyped]
+
     by_identity: dict[tuple[str, int], RailStationRecord] = {}
     for layer, layer_kind in _OSM_LAYERS:
         try:
@@ -396,7 +403,7 @@ def execute_rail_import(
     *,
     dataset_id: int,
     pbf_path: Path,
-    frame_reader: FrameReader = pyogrio.read_dataframe,
+    frame_reader: FrameReader | None = None,
 ) -> int:
     dataset = db.get(RailDatasetVersion, dataset_id)
     if dataset is None:

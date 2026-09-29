@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.api.journeys import RailJourneyLegCreate, _save_rail_leg
 from app.core.errors import APIError
+from app.db.active_cities import current_city_ids
 from app.db.models import (
     City,
     ImportBatch,
@@ -391,7 +392,9 @@ def _resolve_row(db: Session, row: ImportRow) -> None:
     city_key = normalize_city_name(str(values.get("city", "")))
     cities = [
         city
-        for city in db.scalars(select(City).where(City.status == "ready")).all()
+        for city in db.scalars(
+            select(City).where(City.id.in_(current_city_ids()))
+        ).all()
         if city_key
         in {
             normalize_city_name(city.name_cn),

@@ -49,12 +49,19 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          .\transit2fog.ps1 package `
-            -SidecarJar .\data\rail-routing\dist\openrailrouting.jar
+          $iscc = .\scripts\setup_inno.ps1 -Destination "$env:RUNNER_TEMP\transit2fog-inno"
+          $releaseTag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "preview-$env:GITHUB_SHA" }
+          uv run --project backend python scripts/build_package.py `
+            --sidecar-jar data/rail-routing/dist/openrailrouting.jar `
+            --rail-components --release-tag $releaseTag --windows-installer --iscc $iscc
       - name: Build macOS install package
         if: runner.os == 'macOS'
         run: |
-          make package SIDECAR_JAR="$PWD/data/rail-routing/dist/openrailrouting.jar"
+          release_tag="${GITHUB_REF_NAME}"
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then release_tag="preview-${GITHUB_SHA}"; fi
+          uv run --project backend python scripts/build_package.py \
+            --sidecar-jar data/rail-routing/dist/openrailrouting.jar \
+            --rail-components --release-tag "$release_tag"
       - uses: actions/upload-artifact@v4
         with:
           name: transit2fog-${{ runner.os }}

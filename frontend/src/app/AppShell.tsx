@@ -1,7 +1,9 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 import { useDataStatus } from "../features/data-settings/useDataStatus";
 import { useRailDataStatus } from "../features/journey-editor/useJourneyNetwork";
+import { useCities } from "../features/journey-editor/useJourneyNetwork";
 import { Icon, type IconName } from "../components/Icon";
 
 type NavigationItem = {
@@ -21,6 +23,7 @@ const NAV_ITEMS: NavigationItem[] = [
 function StatusLabel() {
   const metro = useDataStatus();
   const rail = useRailDataStatus();
+  const cities = useCities(Boolean(metro.data?.ready_available));
   const railStatusLabel =
     rail.data?.status === "ready"
       ? (rail.data.graph_version ?? "铁路数据")
@@ -46,7 +49,7 @@ function StatusLabel() {
   }
   return (
     <span>
-      {metro.data.dataset ?? "地铁数据"} · 地铁就绪
+      {cities.data ? `${cities.data.length} 个城市条目可用` : "已有城市数据"} · 地铁就绪
       {railStatusLabel ? " · 铁路就绪" : ""}
     </span>
   );
@@ -102,6 +105,7 @@ function TodayLabel() {
 
 export function AppShell() {
   const location = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
   const mobileTitle =
     NAV_ITEMS.find((item) => location.pathname.startsWith(item.to))?.label ??
     "Transit2Fog";

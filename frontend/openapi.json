@@ -15,6 +15,229 @@
         "title": "Body_create_import_batch_api_v1_import_batches_post",
         "type": "object"
       },
+      "Body_inspect_pack_api_v1_data_city_packs_inspect_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_inspect_pack_api_v1_data_city_packs_inspect_post",
+        "type": "object"
+      },
+      "CatalogEntry": {
+        "properties": {
+          "blocked_variants": {
+            "minimum": 0.0,
+            "title": "Blocked Variants",
+            "type": "integer"
+          },
+          "city_code": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City Code",
+            "type": "string"
+          },
+          "city_name": {
+            "title": "City Name",
+            "type": "string"
+          },
+          "city_name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name En"
+          },
+          "file": {
+            "pattern": "^[A-Za-z0-9._-]+\\.t2fcity$",
+            "title": "File",
+            "type": "string"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/PackManifest"
+          },
+          "ready_variants": {
+            "minimum": 0.0,
+            "title": "Ready Variants",
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 33554432.0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "stations": {
+            "minimum": 0.0,
+            "title": "Stations",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "city_code",
+          "city_name",
+          "file",
+          "url",
+          "size",
+          "sha256",
+          "stations",
+          "ready_variants",
+          "blocked_variants",
+          "manifest"
+        ],
+        "title": "CatalogEntry",
+        "type": "object"
+      },
+      "CatalogInstallRequest": {
+        "properties": {
+          "city_code": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "city_code"
+        ],
+        "title": "CatalogInstallRequest",
+        "type": "object"
+      },
+      "CityCatalog": {
+        "properties": {
+          "data_snapshot": {
+            "title": "Data Snapshot",
+            "type": "string"
+          },
+          "format": {
+            "const": "transit2fog-city-catalog-v1",
+            "title": "Format",
+            "type": "string"
+          },
+          "license": {
+            "title": "License",
+            "type": "string"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Packages",
+            "type": "array"
+          },
+          "release_tag": {
+            "const": "metro-data-2025-06-r1",
+            "title": "Release Tag",
+            "type": "string"
+          },
+          "scope_note": {
+            "title": "Scope Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "format",
+          "release_tag",
+          "data_snapshot",
+          "license",
+          "scope_note",
+          "packages"
+        ],
+        "title": "CityCatalog",
+        "type": "object"
+      },
+      "CityDownloadState": {
+        "properties": {
+          "city_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Code"
+          },
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          },
+          "downloaded_bytes": {
+            "default": 0,
+            "title": "Downloaded Bytes",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "default": "idle",
+            "enum": [
+              "idle",
+              "downloading",
+              "installing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_bytes": {
+            "default": 0,
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "title": "CityDownloadState",
+        "type": "object"
+      },
       "CityMapResponse": {
         "properties": {
           "bbox": {
@@ -84,6 +307,17 @@
             "title": "Bbox",
             "type": "array"
           },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
           "center": {
             "maxItems": 2,
             "minItems": 2,
@@ -98,9 +332,41 @@
             "title": "Center",
             "type": "array"
           },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "city_code": {
+            "default": "",
+            "title": "City Code",
+            "type": "string"
+          },
+          "direction_count": {
+            "default": 0,
+            "title": "Direction Count",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
           },
           "name_cn": {
             "title": "Name Cn",
@@ -116,6 +382,33 @@
               }
             ],
             "title": "Name En"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "station_count": {
+            "default": 0,
+            "title": "Station Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -141,6 +434,82 @@
           }
         },
         "title": "CommitRequest",
+        "type": "object"
+      },
+      "ComponentPrepareRequest": {
+        "properties": {
+          "install": {
+            "const": true,
+            "title": "Install",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "install"
+        ],
+        "title": "ComponentPrepareRequest",
+        "type": "object"
+      },
+      "ComponentState": {
+        "properties": {
+          "downloaded_bytes": {
+            "default": 0,
+            "title": "Downloaded Bytes",
+            "type": "integer"
+          },
+          "jar_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jar Path"
+          },
+          "java_home": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Java Home"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "default": "unavailable",
+            "enum": [
+              "unavailable",
+              "idle",
+              "downloading",
+              "installing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_bytes": {
+            "default": 0,
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "title": "ComponentState",
         "type": "object"
       },
       "DataStatusResponse": {
@@ -913,6 +1282,24 @@
           "committed_at"
         ],
         "title": "ImportBatchResponse",
+        "type": "object"
+      },
+      "ImportCapabilities": {
+        "properties": {
+          "city_pack_format": {
+            "default": "transit2fog-city-v1",
+            "title": "City Pack Format",
+            "type": "string"
+          },
+          "raw_import": {
+            "title": "Raw Import",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "raw_import"
+        ],
+        "title": "ImportCapabilities",
         "type": "object"
       },
       "ImportRowPatch": {
@@ -2287,6 +2674,184 @@
           "end_station_id"
         ],
         "title": "MetroPathPreviewRequest",
+        "type": "object"
+      },
+      "PackInstallRequest": {
+        "properties": {
+          "package_id": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Package Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "package_id"
+        ],
+        "title": "PackInstallRequest",
+        "type": "object"
+      },
+      "PackInstallResult": {
+        "properties": {
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "integer"
+          },
+          "status": {
+            "default": "ready",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id"
+        ],
+        "title": "PackInstallResult",
+        "type": "object"
+      },
+      "PackManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "city_code": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City Code",
+            "type": "string"
+          },
+          "city_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "City Name",
+            "type": "string"
+          },
+          "format": {
+            "const": "transit2fog-city-v1",
+            "default": "transit2fog-city-v1",
+            "title": "Format",
+            "type": "string"
+          },
+          "network_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Network Sha256",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PackSource"
+          }
+        },
+        "required": [
+          "city_code",
+          "city_name",
+          "network_sha256",
+          "source"
+        ],
+        "title": "PackManifest",
+        "type": "object"
+      },
+      "PackPreview": {
+        "properties": {
+          "blocked_variants": {
+            "title": "Blocked Variants",
+            "type": "integer"
+          },
+          "lines": {
+            "title": "Lines",
+            "type": "integer"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/PackManifest"
+          },
+          "package_id": {
+            "title": "Package Id",
+            "type": "string"
+          },
+          "ready_variants": {
+            "title": "Ready Variants",
+            "type": "integer"
+          },
+          "stations": {
+            "title": "Stations",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "package_id",
+          "manifest",
+          "lines",
+          "stations",
+          "ready_variants",
+          "blocked_variants"
+        ],
+        "title": "PackPreview",
+        "type": "object"
+      },
+      "PackSource": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution": {
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Attribution",
+            "type": "string"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
+          "checksum": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Checksum",
+            "type": "string"
+          },
+          "importer": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Importer",
+            "type": "string"
+          },
+          "license": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "License",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "url",
+          "license",
+          "checksum",
+          "importer",
+          "attribution"
+        ],
+        "title": "PackSource",
         "type": "object"
       },
       "PathCandidateResponse": {
@@ -3885,6 +4450,9 @@
       },
       "SetupState": {
         "properties": {
+          "components": {
+            "$ref": "#/components/schemas/ComponentState"
+          },
           "locked_fields": {
             "items": {
               "type": "string"
@@ -3916,6 +4484,10 @@
             "title": "Rail Start Allowed",
             "type": "boolean"
           },
+          "raw_import_available": {
+            "title": "Raw Import Available",
+            "type": "boolean"
+          },
           "service": {
             "$ref": "#/components/schemas/RailServiceState"
           },
@@ -3934,7 +4506,9 @@
           "metro_directory",
           "log_path",
           "locked_fields",
-          "rail_start_allowed"
+          "rail_start_allowed",
+          "components",
+          "raw_import_available"
         ],
         "title": "SetupState",
         "type": "object"
@@ -4249,6 +4823,190 @@
         "summary": "Public Config",
         "tags": [
           "configuration"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/capabilities": {
+      "get": {
+        "operationId": "capabilities_api_v1_data_city_packs_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportCapabilities"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Capabilities",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/catalog": {
+      "get": {
+        "operationId": "catalog_api_v1_data_city_packs_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityCatalog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/download": {
+      "get": {
+        "operationId": "download_status_api_v1_data_city_packs_download_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityDownloadState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Download Status",
+        "tags": [
+          "city packages"
+        ]
+      },
+      "post": {
+        "operationId": "download_city_api_v1_data_city_packs_download_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogInstallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityDownloadState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download City",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/inspect": {
+      "post": {
+        "operationId": "inspect_pack_api_v1_data_city_packs_inspect_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_inspect_pack_api_v1_data_city_packs_inspect_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Inspect Pack",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/install": {
+      "post": {
+        "operationId": "install_pack_api_v1_data_city_packs_install_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackInstallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackInstallResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Install Pack",
+        "tags": [
+          "city packages"
         ]
       }
     },
@@ -5900,6 +6658,47 @@
           }
         },
         "summary": "Check Rail Setup",
+        "tags": [
+          "first-use setup"
+        ]
+      }
+    },
+    "/api/v1/setup/rail/components": {
+      "post": {
+        "operationId": "prepare_rail_components_api_v1_setup_rail_components_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentPrepareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Prepare Rail Components",
         "tags": [
           "first-use setup"
         ]

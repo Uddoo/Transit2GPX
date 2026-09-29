@@ -7,6 +7,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.db.active_cities import current_city_ids
 from app.db.models import (
     City,
     DatasetVersion,
@@ -100,7 +101,7 @@ def search_ready_stations(
         .join(DatasetVersion)
         .where(
             City.id == city_id,
-            City.status == "ready",
+            City.id.in_(current_city_ids()),
             DatasetVersion.status == "ready",
         )
     )
