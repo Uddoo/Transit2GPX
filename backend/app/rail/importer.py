@@ -21,7 +21,6 @@ from app.db.models import RailDatasetVersion, RailStation, RailStationAlias
 from app.matching.names import normalize_station_name, pinyin_keys
 
 _GRAPH_VERSION_RE = re.compile(r"^[A-Za-z0-9._-]+$")
-_HSTORE_ITEM_RE = re.compile(r'"((?:\\.|[^"])*)"=>"((?:\\.|[^"])*)"')
 _OSM_WHERE = (
     "name IS NOT NULL AND ("
     'other_tags LIKE \'%"railway"=>"station"%\' OR '
@@ -202,10 +201,35 @@ def _unescape_hstore(value: str) -> str:
 def parse_hstore(value: object) -> dict[str, str]:
     if not isinstance(value, str):
         return {}
-    return {
-        _unescape_hstore(key): _unescape_hstore(item)
-        for key, item in _HSTORE_ITEM_RE.findall(value)
-    }
+    # Consume each quoted token once, including malformed/unclosed input. A
+    # searching regex retries at embedded quotes and can backtrack exponentially.
+    tags: dict[str, str] = {}
+    cursor = 0
+
+    def quoted(start: int) -> tuple[str | None, int]:
+        end = start + 1
+        while end < len(value):
+            if value[end] == "\\":
+                end += 2
+            elif value[end] == '"':
+                return _unescape_hstore(value[start + 1 : end]), end + 1
+            else:
+                end += 1
+        return None, len(value)
+
+    while cursor < len(value):
+        if value[cursor] != '"':
+            cursor += 1
+            continue
+        key, cursor = quoted(cursor)
+        if key is None:
+            break
+        if not value.startswith('=>"', cursor):
+            continue
+        item, cursor = quoted(cursor + 2)
+        if item is not None:
+            tags[key] = item
+    return tags
 
 
 def _text(value: object) -> str | None:

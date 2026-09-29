@@ -52,6 +52,7 @@ def _valid_graph_version(value: object) -> str | None:
         not isinstance(value, str)
         or not _GRAPH_VERSION_RE.fullmatch(value)
         or value.startswith(".")
+        or value in {"active", "previous"}
     ):
         return None
     return value
@@ -83,6 +84,10 @@ def _selector_version(path: Path) -> str | None:
 def _replace_selector(path: Path, graph_version: str) -> None:
     if _valid_graph_version(graph_version) is None:
         raise ActivationError(f"Selector target is invalid: {graph_version}")
+    root = path.parent.resolve()
+    target = (root / graph_version).resolve()
+    if target.parent != root or not target.is_dir():
+        raise ActivationError("Selector target must remain inside the graph root.")
     selector_json = _selector_json_path(path)
     if path.exists() or path.is_symlink():
         if selector_json.exists():
@@ -120,7 +125,16 @@ def activate(
     graph_root: Path, graph_version: str, validation_report: Path
 ) -> dict[str, Any]:
     graph_root = graph_root.resolve()
-    target = graph_root / graph_version
+    if _valid_graph_version(graph_version) is None or graph_version in {
+        "active",
+        "previous",
+    }:
+        raise ActivationError(
+            "Graph version must be a plain, non-reserved directory name."
+        )
+    target = (graph_root / graph_version).resolve()
+    if target.parent != graph_root:
+        raise ActivationError("Graph version escapes the graph root.")
     metadata_path = _metadata_path(target)
     if graph_version in {"active", "previous"} or not target.is_dir():
         raise ActivationError(f"Graph version does not exist: {graph_version}")

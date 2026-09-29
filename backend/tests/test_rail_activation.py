@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "rail_activate_graph.py"
 
 
@@ -117,3 +119,42 @@ def test_graph_activation_accepts_legacy_metadata_filename(tmp_path: Path) -> No
 
     assert result.returncode == 0, result.stderr
     assert _selector(tmp_path, "active") == "china-v1"
+
+
+@pytest.mark.parametrize(
+    "version", ["../outside", "..", ".hidden", "active", "previous", "nested/version"]
+)
+def test_activation_rejects_untrusted_versions_before_reading_reports(
+    tmp_path: Path, version: str
+) -> None:
+    result = _run(
+        tmp_path,
+        "activate",
+        version,
+        "--validation-report",
+        str(tmp_path / "missing.json"),
+    )
+    assert result.returncode != 0
+    assert "plain, non-reserved directory name" in result.stderr
+    assert not (tmp_path / "active.json").exists()
+
+
+def test_activation_rejects_symlink_escaping_graph_root(tmp_path: Path) -> None:
+    root = tmp_path / "graphs"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    try:
+        (root / "version").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("Creating symlinks requires privileges on this Windows host")
+    result = _run(
+        root,
+        "activate",
+        "version",
+        "--validation-report",
+        str(tmp_path / "missing.json"),
+    )
+    assert result.returncode != 0
+    assert "escapes the graph root" in result.stderr
+    assert not (root / "active.json").exists()

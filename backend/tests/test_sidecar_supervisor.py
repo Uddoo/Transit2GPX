@@ -83,6 +83,22 @@ def test_managed_sidecar_command_is_loopback_and_identity_bound(
     assert runtime.command[-2:] == ["serve", str(tmp_path / "config.yml")]
 
 
+def test_custom_java_path_is_one_argument_without_shell_interpretation(
+    tmp_path: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    java_home = tmp_path / "custom Java & tools;"
+    executable = java_home / "bin" / ("java.exe" if os.name == "nt" else "java")
+    executable.parent.mkdir(parents=True)
+    executable.touch()
+    settings.rail_java_home = java_home
+
+    runtime = _sidecar_runtime(settings)
+
+    assert runtime.command[0] == str(executable)
+    assert runtime.command[-3] == str(settings.resolved_rail_sidecar_jar)
+
+
 def test_supervisor_reuses_matching_external_sidecar(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

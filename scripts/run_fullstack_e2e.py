@@ -9,6 +9,7 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 BACKEND_DIR = PROJECT_DIR / "backend"
+FRONTEND_DIST = PROJECT_DIR / "frontend" / "dist"
 RUNTIME_DIR = Path(tempfile.gettempdir()) / "transit2gpx-fullstack-e2e"
 DATABASE_PATH = RUNTIME_DIR / "transit2gpx.sqlite3"
 
@@ -23,7 +24,7 @@ def _configure_environment() -> None:
             "TRANSIT2GPX_PORT": "8765",
             "TRANSIT2GPX_DATA_DIR": str(RUNTIME_DIR),
             "TRANSIT2GPX_DATABASE_URL": f"sqlite:///{DATABASE_PATH.as_posix()}",
-            "TRANSIT2GPX_FRONTEND_DIST": str(PROJECT_DIR / "frontend" / "dist"),
+            "TRANSIT2GPX_FRONTEND_DIST": str(FRONTEND_DIST),
             "TRANSIT2GPX_MAP_TILES_ENABLED": "false",
             "TRANSIT2GPX_RAIL_ENABLED": "false",
         }
@@ -47,7 +48,7 @@ def _prepare_database() -> None:
 
 def main() -> None:
     _configure_environment()
-    frontend_dist = Path(os.environ["TRANSIT2GPX_FRONTEND_DIST"])
+    frontend_dist = FRONTEND_DIST
     if not (frontend_dist / "index.html").is_file():
         raise SystemExit("缺少 frontend/dist；请先运行前端生产构建。")
     _prepare_database()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import math
 import os
@@ -10,8 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.parse import urlencode, urlsplit
 
 EXPECTED_PROFILES = {
     "china_high_speed",
@@ -21,15 +21,43 @@ EXPECTED_PROFILES = {
 
 
 def _json_request(url: str) -> dict[str, Any]:
-    request = Request(
-        url,
-        headers={
-            "Accept": "application/json",
-            "User-Agent": "Transit2GPX/rail-acceptance",
-        },
-    )
-    with urlopen(request, timeout=30) as response:
-        payload: Any = json.load(response)
+    parsed = urlsplit(url)
+    # Use literals rather than DNS, environment proxies or redirect handling.
+    hosts = {"127.0.0.1": "127.0.0.1", "localhost": "127.0.0.1", "::1": "::1"}
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname not in hosts
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.fragment
+        or parsed.path
+        not in {"/info", "/route", "/transit2fog/metadata", "/metro2fog/metadata"}
+    ):
+        raise ValueError(
+            "Acceptance requests require a loopback HTTP sidecar endpoint."
+        )
+    port = parsed.port if parsed.port is not None else 80
+    if not 1 <= port <= 65535:
+        raise ValueError("Invalid sidecar port.")
+    connection = http.client.HTTPConnection(hosts[parsed.hostname], port, timeout=30)
+    try:
+        target = parsed.path + (f"?{parsed.query}" if parsed.query else "")
+        connection.request(
+            "GET",
+            target,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "Transit2GPX/rail-acceptance",
+            },
+        )
+        with connection.getresponse() as response:
+            if response.status != 200:
+                raise HTTPError(
+                    url, response.status, response.reason, response.headers, None
+                )
+            payload: Any = json.load(response)
+    finally:
+        connection.close()
     if not isinstance(payload, dict):
         raise TypeError(f"Expected an object response from {url}")
     return payload

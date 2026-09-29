@@ -15,6 +15,7 @@ from app.api.health import router as health_router
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
+from app.core.local_requests import LocalRequestMiddleware
 from app.core.logging import configure_logging
 from app.core.request_id import install_request_id_middleware
 from app.db.search import ensure_search_indexes
@@ -95,6 +96,7 @@ def create_app() -> FastAPI:
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url=None,
     )
+    app.add_middleware(LocalRequestMiddleware, testing=settings.environment == "test")
     install_request_id_middleware(app)
     install_error_handlers(app)
     app.include_router(health_router)
