@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/kbravh/skills",
+  "commit": "2b261f85a4e3262616b2de895ce6563701a61424",
+  "path": "tanstack-query/skills/tanstack-query",
+  "installed_on": "2026-09-29",
+  "license": "MIT",
+  "local_modifications": [
+    "Added Transit2Fog cache, confirmation, offline and scope boundaries."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/K-Dense-AI/scientific-agent-skills",
+  "commit": "065b734670d7d990627dbc06a05b5a99be33f1f1",
+  "path": "skills/geopandas",
+  "installed_on": "2026-09-29",
+  "license": "MIT",
+  "local_modifications": [
+    "Moved compatibility information into project integration guidance.",
+    "Added Transit2Fog environment, coordinate, persistence and authorization boundaries."
+  ]
+}
