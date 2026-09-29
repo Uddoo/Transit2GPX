@@ -21,9 +21,9 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 
 </div>
 
-![上海地铁 6 号线：选择实际乘坐区间，在地图上预览候选轨迹](docs/images/metro-route-preview-v2.png)
+![上海地铁 6 号线：选择实际乘坐区间，在地图上预览候选轨迹](docs/images/metro-route-preview-transit2gpx.png)
 
-*改名前版本的真实应用截图 · 上海地铁 6 号线 · 28 站 / 32.6 km。使用隔离演示数据，数据预处理与素材来源见[说明](docs/MEDIA.md)。*
+*Transit2GPX 当前界面实拍 · 上海地铁 6 号线 · 28 站 / 32.6 km。数据来源与拍摄说明见[素材说明](docs/MEDIA.md)。*
 
 首次打开会进入[首次使用向导](docs/ONBOARDING.md)，逐步检查环境、导入地铁数据并按需启动铁路服务；已有用户可从“数据与设置”重新进入。
 
@@ -32,7 +32,7 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 **选好起终点 → 确认候选线路 → 保存并导出 GPX。**
 
 <details>
-<summary><strong>播放 20 秒操作演示</strong>（动图，可折叠停止观看）</summary>
+<summary><strong>播放 20 秒操作演示</strong>（改名前版本，动图可折叠）</summary>
 
 ![真实操作演示：选择上海地铁6号线起终点，预览32.6公里候选，保存行程并生成GPX](docs/images/metro-demo.gif)
 
@@ -46,18 +46,20 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 - **每条路线由你确认。** 环线、支线与多条铁路候选都可预览，有歧义时明确提示。
 - **把轨迹带到自己的应用。** 输出标准 GPX 1.1；可用于世界迷雾等支持 GPX 轨迹导入的应用。
 
-### 多条铁路候选，确认自己坐过的路线
+### 从一个城市开始准备数据
 
-以下保留此前的真实验收截图，界面版本与本次地铁演示不同。北京南—上海虹桥示例：比较线路、距离与警告，再决定保存哪条候选。铁路候选不等于列车实际运行路径。
+首次使用向导集中展示环境检查、城市数据准备和可选的铁路服务配置。已有地铁数据就绪后，可以直接开始记录。
 
-![北京南至上海虹桥：在地图中比较铁路候选路径](docs/images/railway-candidates.jpg)
+![Transit2GPX 首次使用向导：地铁数据已就绪，可继续选择城市或开始记录](docs/images/city-setup-transit2gpx.png)
+
+铁路仍支持多条候选路线的预览与确认；[北京南—上海虹桥历史验收截图](docs/images/railway-candidates.jpg)保留供参考，该图展示改名前版本。
 
 <details>
 <summary><strong>查看 GPX 导出设置</strong>：逐次行程与去重覆盖两种方式</summary>
 
 保存每次乘坐记录可选 journey；汇总同一数据版本下走过的区间可选 coverage。地铁与铁路可分别设置采样间距。
 
-![本次上海地铁演示的 GPX 导出设置：1 条行程、27 个区间、32.6 公里](docs/images/gpx-export-v2.png)
+![本次上海地铁演示的 GPX 导出设置：1 条行程、27 个区间、32.6 公里](docs/images/gpx-export-transit2gpx.png)
 
 </details>
 

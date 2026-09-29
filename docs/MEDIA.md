@@ -10,12 +10,28 @@ README 现使用 [social-preview-transit2gpx.png](images/social-preview-transit2
 
 > Edit this existing project banner. Change ONLY the large English title Transit2Fog to Transit2GPX. Preserve original wide 2:1 aspect ratio, composition, white background, black typography, exact Chinese text, METRO + RAIL → GPX footer, abstract gray and teal network on right. Match title font and size as closely as possible while fitting new title. This is a precise brand rename, no redesign.
 
-## 本次素材（2026-09-08）
+## 当前界面截图（2026-09-29）
+
+基于提交 `47d45e1` 的 Transit2GPX 生产前端与真实 FastAPI 服务重拍，使用独立 Chromium、1440 × 1100 CSS 像素视口、1× 像素比，全页截图。没有修改页面文字、伪造接口响应或在截图后覆盖旧名称。
+
+| 文件 | 用途 | 实际状态 |
+|---|---|---|
+| [metro-route-preview-transit2gpx.png](images/metro-route-preview-transit2gpx.png) | README 主截图 | 上海地铁 6 号线，东方体育中心 → 港城路，28 站、32.6 km；底图已加载且保留署名 |
+| [gpx-export-transit2gpx.png](images/gpx-export-transit2gpx.png) | README 导出截图 | 1 条已保存行程、27 个区间、32.6 km；已实际生成并下载 GPX |
+| [city-setup-transit2gpx.png](images/city-setup-transit2gpx.png) | README 首次使用截图 | 地铁数据已就绪、城市选择与本地导入入口；本次没有另行测试在线城市包下载 |
+
+截图内备注留空，不添加“GitHub 演示”或拍摄用途标签。来源说明仅保留在本文。拍摄在既有上海演示数据库的 SQLite 一致性副本上进行，未修改个人数据和原始演示数据库。原副本由模型建表、没有 Alembic 版本记录；检查其表结构后，仅为拍摄副本补记 `20260831_0007`，再通过正常迁移升级到 `20260928_0009`。
+
+新版页面成功生成与原记录一致的候选，并从已保存行程下载 `transit2gpx_2026-09-29.gpx`，GPX creator 为 `Transit2GPX`。浏览器未发现运行时异常。记录和下载文件留在被忽略的 `data/github-refresh/rename-capture-20260929/`。
+
+本次本地仅有科隆铁路测试图，没有北京—上海正式铁路图，因此旧铁路候选图保留为历史文件，README 改为文字链接，不将其作为当前界面展示。原 GIF/MP4 仍为改名前录制，README 已明确标注；本次未重录视频。
+
+## 历史素材（2026-09-08）
 
 | 文件 | 用途 | 来源 |
 |---|---|---|
-| [metro-route-preview-v2.png](images/metro-route-preview-v2.png) | README 主截图 | 当前代码的真实 FastAPI + 生产前端，上海地铁 6 号线候选 |
-| [gpx-export-v2.png](images/gpx-export-v2.png) | 导出设置截图 | 同一隔离环境中实际保存的 1 条演示行程，27 个区间、32.6 km |
+| [metro-route-preview-v2.png](images/metro-route-preview-v2.png) | README 主截图 | 当时版本的真实 FastAPI + 生产前端，上海地铁 6 号线候选 |
+| [gpx-export-v2.png](images/gpx-export-v2.png) | 导出设置截图 | 当时隔离环境中实际保存的 1 条演示行程，27 个区间、32.6 km |
 | [metro-demo.gif](images/metro-demo.gif) | 可折叠的 20 秒演示 | Playwright 真实操作录像，经 FFmpeg 添加步骤字幕、转码并在结尾延长停留；3 fps、960px 宽 |
 | [metro-demo.mp4](images/metro-demo.mp4) | 较小体积的视频版本 | 同一真实录像；字幕位于新增的底部留白，不遮挡地图署名 |
 | [social-preview.png](images/social-preview.png) | README 顶部封面与 GitHub 分享封面 | 内置 ImageGen 生成的品牌示意图；抽象线路不是实际地理数据或产品截图 |
@@ -35,7 +51,7 @@ README 现使用 [social-preview-transit2gpx.png](images/social-preview-transit2
 
 该预处理不是本次新增的应用功能，也不表示原始 Figshare ZIP 已可直接导入。上海数据导入就绪后，通用验证脚本因需要两个不同城市的普通/复杂线路样本而未通过完整验收；本次只验证上述上海演示路径。用户入门的数据兼容提示见[首次使用指南](GETTING_STARTED.md#2-获取一份地铁数据)。
 
-演示行程备注明确为“GitHub 演示行程（非个人乘坐记录）”。原始数据、预处理结果、数据库和下载 GPX 均保存在被忽略的 `data/github-refresh/`，不提交到仓库。
+历史演示行程备注明确为“GitHub 演示行程（非个人乘坐记录）”；2026-09-29 拍摄副本中已清空备注。原始数据、预处理结果、数据库和下载 GPX 均保存在被忽略的 `data/github-refresh/`，不提交到仓库。
 
 ## 保留的历史素材
 
