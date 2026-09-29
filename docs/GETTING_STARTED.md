@@ -4,7 +4,7 @@
 
 ## 先从一条地铁行程开始
 
-可先下载 [v1.0.0-rc.1 预发布安装包](https://github.com/Uddoo/transit2fog/releases/tag/v1.0.0-rc.1)：Windows x64 解压后运行程序，macOS Apple Silicon 使用 PKG 或 TAR.GZ。安装包无需 Python、Node.js、npm 或 uv；当前尚未签名、公证，具体安装说明见[安装包文档](PACKAGING.md)。
+可先下载 [Transit2GPX v1.0.0 正式安装包](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.0)：Windows x64 使用 Setup.exe 安装或解压 ZIP 运行程序，macOS Apple Silicon 使用 PKG 或 TAR.GZ。安装包无需 Python、Node.js、npm 或 uv；当前尚未签名、公证，具体安装说明见[安装包文档](PACKAGING.md)。
 
 启动安装包会自动打开本地页面，首次使用向导会带你完成环境检查、地铁数据导入和可选的铁路服务准备。第三方数据仍需自行下载，可直接从下面第 2 步开始准备数据。
 

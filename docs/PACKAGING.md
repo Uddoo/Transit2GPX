@@ -2,11 +2,11 @@
 
 ## 当前获取状态
 
-首个 [v1.0.0-rc.1 预发布版](https://github.com/Uddoo/transit2fog/releases/tag/v1.0.0-rc.1)已提供 Windows x64 ZIP、macOS Apple Silicon PKG 与备用 TAR.GZ，以及各文件的 SHA-256。包内应用版本为 1.0.0；当前尚无 Intel Mac 安装包。
+[Transit2GPX v1.0.0 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.0)提供 Windows x64 Setup.exe / ZIP、macOS Apple Silicon PKG 与备用 TAR.GZ，以及各文件的 SHA-256。包内应用版本为 1.0.0；当前尚无 Intel Mac 安装包。
 
-安装包自带 Python 运行库与生产前端，不要求安装 Python、Node.js、npm 或 uv。Windows 安装脚本需要 PowerShell 7；铁路模式仍需 Java 和用户准备的图数据。文件选择、构建记录与验证范围见[发行说明](RELEASE_DRAFT.md)。请从 Release 下载，Actions artifact 仅用于构建验证且有保留期限。
+安装包自带 Python 运行库与生产前端，不要求安装 Python、Node.js、npm 或 uv。Windows Setup.exe 不要求 PowerShell；备用 ZIP 内的安装脚本需要 PowerShell 7。铁路组件按需下载，用户仍需准备铁路图数据。文件选择与验证范围见[正式版发行说明](RELEASE_1.0.0.md)。请从 Release 下载，Actions artifact 仅用于构建验证且有保留期限。
 
-## 1. 轻量安装包（下一次发布）
+## 1. v1.0.0 轻量安装包
 
 以下命名和命令针对改名后的源码构建。已发布的 `v1.0.0-rc.1` 仍使用 `Transit2Fog` 文件名、程序目录与快捷方式；使用该版本时，请遵循[对应发行说明](RELEASE_DRAFT.md)，并将下方安装路径中的 `Transit2GPX` 替换为 `Transit2Fog`。本次改名没有替换已有 Release 附件。
 
@@ -28,9 +28,9 @@
 
 这降低首次下载量；使用铁路时仍需下载相应组件。完整 JRE 是首轮可靠性选择，本轮未采用未经铁路验证的 jlink 裁剪。
 
-当前产物未做 Apple Developer ID 或 Windows Authenticode 签名，也不包含自动更新。正式向第三方分发前必须在受控发布环境完成签名、公证和恶意软件扫描。
+当前产物未做 Apple Developer ID 或 Windows Authenticode 签名，也不包含自动更新。本次正式版以未签名方式发布；正式版标记表示版本稳定性，不代表完成代码签名、公证或恶意软件扫描。
 
-预发布包可能触发系统的未识别开发者提示；本次发布不代表已完成签名、公证或恶意软件扫描，也不要求关闭系统安全防护。下载后用对应 `.sha256` 核对文件，例如 macOS 使用 `shasum -a 256 <文件>`，Windows PowerShell 使用 `Get-FileHash <文件> -Algorithm SHA256`。
+未签名包可能触发系统的未识别开发者提示；本次发布不代表已完成签名、公证或恶意软件扫描，也不要求关闭系统安全防护。下载后用对应 `.sha256` 核对文件，例如 macOS 使用 `shasum -a 256 <文件>`，Windows PowerShell 使用 `Get-FileHash <文件> -Algorithm SHA256`。
 
 ## 2. 本地构建
 
@@ -52,7 +52,7 @@ uv run --project backend python scripts/build_package.py \
   --rail-components --release-tag <待发布标签>
 ```
 
-JRE 下载地址和 SHA-256 锁定在 `packaging/java-runtimes.json`；构建时先验证官方归档，再保留完整 `legal` 和许可证目录。Windows 编译器由 `scripts/setup_inno.ps1` 固定为 Inno Setup 6.7.1，并校验 SHA-256 与发布者签名。CI 的手动构建使用 `preview-<commit>` 地址，仅供验证，不会自动发布；对应标签未发布前，不能宣称在线下载入口已经可用。
+JRE 下载地址和 SHA-256 锁定在 `packaging/java-runtimes.json`；构建时先验证官方归档，再保留完整 `legal` 和许可证目录。Windows 编译器由 `scripts/setup_inno.ps1` 固定为 Inno Setup 6.7.1，并校验 SHA-256 与发布者签名。CI 手动构建的 `release_tag` 留空时使用 `preview-<commit>` 地址，仅供验证。指定 `release_tag` 时，组件清单固定到该标签；双平台成功后先生成草稿 Release，核验附件与对应源码 CI 后再正式发布。草稿发布前，公开组件下载地址尚不可用。
 
 以下旧命令仍支持不带在线组件清单的本地/高级构建，以及内置 JAR 的兼容构建：
 

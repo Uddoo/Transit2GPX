@@ -107,7 +107,7 @@ def build_components(jar: Path, output: Path, release_tag: str) -> tuple[Path, P
     )
     manifest = RuntimeManifest(
         platform=tag,
-        url=f"https://github.com/Uddoo/transit2fog/releases/download/{quote(release_tag, safe='')}/{filename}",
+        url=f"https://github.com/Uddoo/Transit2GPX/releases/download/{quote(release_tag, safe='')}/{filename}",
         sha256=sha256_file(archive),
         size=archive.stat().st_size,
         unpacked_size=size,
