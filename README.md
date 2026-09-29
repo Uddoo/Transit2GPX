@@ -17,7 +17,7 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 
 原名 Transit2Fog（更早为 Metro2Fog）。升级兼容与命名说明见[改名迁移说明](docs/RENAMING.md)。
 
-[下载 Transit2GPX v1.0.0 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.0)。旧版 Transit2Fog 的数据与配置继续兼容。
+[下载 Transit2GPX v1.0.1 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.1)。旧版 Transit2Fog 的数据与配置继续兼容。
 
 </div>
 
@@ -76,7 +76,7 @@ Windows 10/11 x64 · macOS · 行程本地存储 · 标准 GPX 导出
 | 使用或构建桌面安装包 | [安装包说明与当前分发状态](docs/PACKAGING.md) |
 | 排查环境、数据或启动问题 | [Windows 指南](docs/WINDOWS.md) · [开发与运行](docs/DEVELOPMENT.md) |
 
-> **获取方式：** [v1.0.0 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.0)提供 **Windows x64 Setup.exe / ZIP** 和 **macOS Apple Silicon PKG / TAR.GZ**，附 SHA-256 校验文件。安装包自带 Python 运行库与前端，无需安装 Node.js、npm 或 uv。当前产物未签名、公证；安装方式和验证范围见[安装包说明](docs/PACKAGING.md)。
+> **获取方式：** [v1.0.1 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.1)提供 **Windows x64 Setup.exe / ZIP** 和 **macOS Apple Silicon PKG / TAR.GZ**，附 SHA-256 校验文件。安装包自带 Python 运行库与前端，无需安装 Node.js、npm 或 uv。当前产物未签名、公证；安装方式和验证范围见[安装包说明](docs/PACKAGING.md)。
 >
 > **数据准备：** 第三方地铁数据需自行下载；当前 Figshare v2 包存在字段兼容问题，已在[数据获取步骤](docs/GETTING_STARTED.md#2-获取一份地铁数据)说明。依赖与数据下载时间取决于网络，不承诺开箱即用。
 

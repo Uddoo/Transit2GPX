@@ -2,11 +2,11 @@
 
 ## 当前获取状态
 
-[Transit2GPX v1.0.0 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.0)提供 Windows x64 Setup.exe / ZIP、macOS Apple Silicon PKG 与备用 TAR.GZ，以及各文件的 SHA-256。包内应用版本为 1.0.0；当前尚无 Intel Mac 安装包。
+[Transit2GPX v1.0.1 正式版](https://github.com/Uddoo/Transit2GPX/releases/tag/v1.0.1)提供 Windows x64 Setup.exe / ZIP、macOS Apple Silicon PKG 与备用 TAR.GZ，以及各文件的 SHA-256。包内应用版本为 1.0.1；当前尚无 Intel Mac 安装包。
 
-安装包自带 Python 运行库与生产前端，不要求安装 Python、Node.js、npm 或 uv。Windows Setup.exe 不要求 PowerShell；备用 ZIP 内的安装脚本需要 PowerShell 7。铁路组件按需下载，用户仍需准备铁路图数据。文件选择与验证范围见[正式版发行说明](RELEASE_1.0.0.md)。请从 Release 下载，Actions artifact 仅用于构建验证且有保留期限。
+安装包自带 Python 运行库与生产前端，不要求安装 Python、Node.js、npm 或 uv。Windows Setup.exe 不要求 PowerShell；备用 ZIP 内的安装脚本需要 PowerShell 7。铁路组件按需下载，用户仍需准备铁路图数据。文件选择与验证范围见[正式版发行说明](RELEASE_1.0.1.md)。请从 Release 下载，Actions artifact 仅用于构建验证且有保留期限。
 
-## 1. v1.0.0 轻量安装包
+## 1. v1.0.1 轻量安装包
 
 以下命名和命令针对改名后的源码构建。已发布的 `v1.0.0-rc.1` 仍使用 `Transit2Fog` 文件名、程序目录与快捷方式；使用该版本时，请遵循[对应发行说明](RELEASE_DRAFT.md)，并将下方安装路径中的 `Transit2GPX` 替换为 `Transit2Fog`。本次改名没有替换已有 Release 附件。
 

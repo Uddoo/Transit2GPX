@@ -10,7 +10,7 @@ def test_healthcheck_reports_database(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "database": "ok",
     }
     assert response.headers["x-request-id"].startswith("req_")

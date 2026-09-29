@@ -82,6 +82,18 @@ jobs:
     needs: package
     runs-on: ubuntu-latest
     steps:
+      - name: Create or verify the exact release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          existing_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null || true)"
+          if [ -n "$existing_sha" ]; then
+            test "$existing_sha" = "$GITHUB_SHA" || { echo 'Refusing to move an existing release tag'; exit 1; }
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$RELEASE_TAG" -f sha="$GITHUB_SHA"
+          fi
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: transit2gpx-*

@@ -2,6 +2,15 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## [1.0.1] - 2026-09-29
+
+- 为本地服务增加 Host、Origin 和 Fetch Metadata 校验，拒绝外站与 DNS rebinding 请求，保留同源和本地 CLI 访问。
+- 将铁路 HSTORE 标签解析改为线性扫描，修复畸形反斜杠输入导致的正则回溯风险。
+- 铁路验收脚本限制 loopback 端点、禁用环境代理与自动重定向，保留旧 metadata 回退。
+- 加固铁路图激活与回滚的版本名和目录边界校验。
+- 固定 GitHub Actions 完整提交 SHA，记录 19 条 CodeQL 告警的逐条审阅依据。
+- 保留既有数据、备份与显式本地 Java/目录配置兼容；不移动或替换 v1.0.0 产物。
+
 ## [1.0.0] - 2026-09-29
 
 - 项目改名为 Transit2GPX，同步应用、包名、命令入口、安装产物和 GPX 导出名称。

@@ -9,7 +9,7 @@ test("creates, persists, and exports a metro journey through the real stack", as
   expect(health.ok()).toBeTruthy();
   await expect(health.json()).resolves.toMatchObject({
     status: "ok",
-    version: "1.0.0",
+    version: "1.0.1",
     database: "ok",
   });
 
