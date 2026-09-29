@@ -356,6 +356,9 @@ describe("Transit2Fog app shell", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "添加一段真实乘坐记录" })).toBeInTheDocument();
     const previewButton = screen.getByRole("button", { name: "预览路径" });
+    expect(previewButton).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "选择首末站" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "选择首末站" }));
     await waitFor(() => expect(previewButton).toBeEnabled());
     await user.click(previewButton);
 
@@ -478,6 +481,9 @@ describe("Transit2Fog app shell", () => {
     await screen.findByRole("button", { name: "预览路径" });
 
     const previewButton = await screen.findByRole("button", { name: "预览路径" });
+    expect(previewButton).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "选择首末站" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "选择首末站" }));
     await waitFor(() => expect(previewButton).toBeEnabled());
     await user.click(previewButton);
     await user.click(screen.getByRole("button", { name: "导出 GPX" }));
@@ -640,9 +646,7 @@ describe("Transit2Fog app shell", () => {
     renderApp(<App />);
     await screen.findByRole("button", { name: "预览路径" });
 
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "预览路径" })).toBeEnabled(),
-    );
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "城市" })).toBeEnabled());
     await user.click(screen.getAllByRole("link", { name: "CSV 导入" })[0]);
 
     expect(await screen.findByRole("heading", { name: "CSV 导入" })).toBeInTheDocument();

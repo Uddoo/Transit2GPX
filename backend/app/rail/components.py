@@ -18,7 +18,7 @@ import zipfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Protocol
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, field_validator
@@ -109,8 +109,14 @@ class HTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+class DownloadSpec(Protocol):
+    url: str
+    sha256: str
+    size: int
+
+
 def download_archive(
-    manifest: RuntimeManifest,
+    manifest: DownloadSpec,
     cache: Path,
     progress: Callable[[int], None],
     cancel: threading.Event,

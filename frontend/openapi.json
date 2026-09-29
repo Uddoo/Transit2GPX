@@ -29,6 +29,215 @@
         "title": "Body_inspect_pack_api_v1_data_city_packs_inspect_post",
         "type": "object"
       },
+      "CatalogEntry": {
+        "properties": {
+          "blocked_variants": {
+            "minimum": 0.0,
+            "title": "Blocked Variants",
+            "type": "integer"
+          },
+          "city_code": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City Code",
+            "type": "string"
+          },
+          "city_name": {
+            "title": "City Name",
+            "type": "string"
+          },
+          "city_name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name En"
+          },
+          "file": {
+            "pattern": "^[A-Za-z0-9._-]+\\.t2fcity$",
+            "title": "File",
+            "type": "string"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/PackManifest"
+          },
+          "ready_variants": {
+            "minimum": 0.0,
+            "title": "Ready Variants",
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 33554432.0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "stations": {
+            "minimum": 0.0,
+            "title": "Stations",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "city_code",
+          "city_name",
+          "file",
+          "url",
+          "size",
+          "sha256",
+          "stations",
+          "ready_variants",
+          "blocked_variants",
+          "manifest"
+        ],
+        "title": "CatalogEntry",
+        "type": "object"
+      },
+      "CatalogInstallRequest": {
+        "properties": {
+          "city_code": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "city_code"
+        ],
+        "title": "CatalogInstallRequest",
+        "type": "object"
+      },
+      "CityCatalog": {
+        "properties": {
+          "data_snapshot": {
+            "title": "Data Snapshot",
+            "type": "string"
+          },
+          "format": {
+            "const": "transit2fog-city-catalog-v1",
+            "title": "Format",
+            "type": "string"
+          },
+          "license": {
+            "title": "License",
+            "type": "string"
+          },
+          "packages": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Packages",
+            "type": "array"
+          },
+          "release_tag": {
+            "const": "metro-data-2025-06-r1",
+            "title": "Release Tag",
+            "type": "string"
+          },
+          "scope_note": {
+            "title": "Scope Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "format",
+          "release_tag",
+          "data_snapshot",
+          "license",
+          "scope_note",
+          "packages"
+        ],
+        "title": "CityCatalog",
+        "type": "object"
+      },
+      "CityDownloadState": {
+        "properties": {
+          "city_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Code"
+          },
+          "city_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City Name"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          },
+          "downloaded_bytes": {
+            "default": 0,
+            "title": "Downloaded Bytes",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "default": "idle",
+            "enum": [
+              "idle",
+              "downloading",
+              "installing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_bytes": {
+            "default": 0,
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "title": "CityDownloadState",
+        "type": "object"
+      },
       "CityMapResponse": {
         "properties": {
           "bbox": {
@@ -98,6 +307,17 @@
             "title": "Bbox",
             "type": "array"
           },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
           "center": {
             "maxItems": 2,
             "minItems": 2,
@@ -112,9 +332,41 @@
             "title": "Center",
             "type": "array"
           },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "city_code": {
+            "default": "",
+            "title": "City Code",
+            "type": "string"
+          },
+          "direction_count": {
+            "default": 0,
+            "title": "Direction Count",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
           },
           "name_cn": {
             "title": "Name Cn",
@@ -130,6 +382,33 @@
               }
             ],
             "title": "Name En"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "station_count": {
+            "default": 0,
+            "title": "Station Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -4563,6 +4842,87 @@
           }
         },
         "summary": "Capabilities",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/catalog": {
+      "get": {
+        "operationId": "catalog_api_v1_data_city_packs_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityCatalog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "city packages"
+        ]
+      }
+    },
+    "/api/v1/data/city-packs/download": {
+      "get": {
+        "operationId": "download_status_api_v1_data_city_packs_download_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityDownloadState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Download Status",
+        "tags": [
+          "city packages"
+        ]
+      },
+      "post": {
+        "operationId": "download_city_api_v1_data_city_packs_download_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogInstallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityDownloadState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download City",
         "tags": [
           "city packages"
         ]

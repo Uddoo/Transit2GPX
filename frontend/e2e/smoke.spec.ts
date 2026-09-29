@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { catalogFixture, idleCityDownload, initialSetupState } from "../src/test/setupFixtures";
 
 const journey = {
   id: 7,
@@ -135,6 +136,14 @@ const railRecomputeCandidate = {
 };
 
 async function mockReadyShell(page: Page) {
+  // Never let mocked tests reach another Transit2Fog process on the default port.
+  await page.route("**/api/v1/**", route => route.fulfill({ status: 404, json: { error: { message: "Unmocked test API request" } } }));
+  const setup = initialSetupState();
+  setup.should_show = false;
+  setup.progress.completed = true;
+  await page.route("**/api/v1/setup", route => route.fulfill({ json: setup }));
+  await page.route("**/api/v1/data/city-packs/catalog", route => route.fulfill({ json: catalogFixture }));
+  await page.route("**/api/v1/data/city-packs/download", route => route.fulfill({ json: idleCityDownload }));
   await page.route("**/api/v1/cities", route => route.fulfill({ json: [] }));
   await page.route("**/api/v1/config/public", (route) =>
     route.fulfill({
@@ -572,6 +581,12 @@ test("unspecified line transfer candidate is confirmed and saved as two legs", a
 
   await page.goto("/journeys/new");
   await page.locator('select[name="line"]').selectOption("auto");
+  const startInput = page.getByRole("combobox", { name: "起点站", exact: true });
+  await startInput.fill("虹桥");
+  await page.getByRole("listbox").getByRole("option", { name: /虹桥火车站/ }).click();
+  const endInput = page.getByRole("combobox", { name: "终点站", exact: true });
+  await endInput.fill("浦东");
+  await page.getByRole("listbox").getByRole("option", { name: /浦东机场/ }).click();
   const viaStation = page.getByRole("combobox", { name: "途经站（可选）" });
   await expect(viaStation).toBeEnabled();
   await viaStation.click();
@@ -878,7 +893,7 @@ test("first setup shows persistent import progress and can cancel after refresh"
   await page.goto("/settings/data");
   await expect(
     page
-      .getByRole("region", { name: "CPTOND 地铁数据" })
+      .getByRole("region", { name: "最近一次数据导入" })
       .getByText("尚未导入地铁数据"),
   ).toBeVisible();
   await page.getByLabel("地铁数据目录（本机绝对路径）").fill("/data/cptond");

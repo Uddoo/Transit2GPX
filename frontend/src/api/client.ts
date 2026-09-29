@@ -619,6 +619,8 @@ export type RailSetupConfig = ApiSchema<"RailSetupConfig">;
 export type RailServiceState = ApiSchema<"RailServiceState">;
 export type ComponentState = ApiSchema<"ComponentState">;
 export type PackPreview = ApiSchema<"PackPreview">;
+export type CityCatalog = ApiSchema<"CityCatalog">;
+export type CityDownloadState = ApiSchema<"CityDownloadState">;
 export type SetupStep = NonNullable<SetupProgress["step"]>;
 
 export function fetchSetup(signal?: AbortSignal) {
@@ -649,4 +651,16 @@ export function inspectCityPack(file: File) {
 
 export function installCityPack(packageId: string) {
   return requestJson<ApiSchema<"PackInstallResult">>("/api/v1/data/city-packs/install", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: packageId }) });
+}
+
+export function fetchCityCatalog(signal?: AbortSignal) {
+  return requestJson<CityCatalog>("/api/v1/data/city-packs/catalog", { signal });
+}
+
+export function fetchCityDownload(signal?: AbortSignal) {
+  return requestJson<CityDownloadState>("/api/v1/data/city-packs/download", { signal });
+}
+
+export function downloadCityPackage(cityCode: string) {
+  return requestJson<CityDownloadState>("/api/v1/data/city-packs/download", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ city_code: cityCode }) });
 }

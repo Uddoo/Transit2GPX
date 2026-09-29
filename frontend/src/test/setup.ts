@@ -18,3 +18,6 @@ if (typeof HTMLDialogElement !== "undefined") {
     });
   }
 }
+
+// JSDOM has no layout/scrolling implementation; browser E2E covers navigation.
+window.scrollTo = () => undefined;

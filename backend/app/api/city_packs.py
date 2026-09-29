@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import cast
 
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -18,6 +19,12 @@ from app.importers.city_pack import (
     PackPreview,
     install_city_pack,
     read_city_pack,
+)
+from app.services.city_catalog import (
+    CityCatalog,
+    CityCatalogInstaller,
+    CityDownloadState,
+    load_catalog,
 )
 
 router = APIRouter(prefix="/data/city-packs", tags=["city packages"])
@@ -35,6 +42,45 @@ class PackInstallRequest(BaseModel):
 class PackInstallResult(BaseModel):
     dataset_id: int
     status: str = "ready"
+
+
+class CatalogInstallRequest(BaseModel):
+    city_code: str = Field(min_length=1, max_length=100)
+
+
+@router.get("/catalog", response_model=CityCatalog)
+def catalog() -> CityCatalog:
+    try:
+        return load_catalog()
+    except (OSError, ValueError) as error:
+        raise APIError(
+            status_code=503,
+            code="city_catalog_unavailable",
+            message="城市目录暂不可用，请从数据发布页下载城市包并使用本地导入。",
+        ) from error
+
+
+@router.get("/download", response_model=CityDownloadState)
+def download_status(request: Request) -> CityDownloadState:
+    return cast(CityCatalogInstaller, request.app.state.city_catalog).snapshot()
+
+
+@router.post("/download", response_model=CityDownloadState, status_code=202)
+def download_city(
+    payload: CatalogInstallRequest, request: Request
+) -> CityDownloadState:
+    try:
+        return cast(CityCatalogInstaller, request.app.state.city_catalog).start(
+            payload.city_code
+        )
+    except (CityPackError, OSError, ValueError) as error:
+        raise APIError(
+            status_code=409,
+            code="city_download_unavailable",
+            message=str(error)
+            if isinstance(error, CityPackError)
+            else "城市目录暂不可用，请重试或导入本地城市包。",
+        ) from error
 
 
 @router.get("/capabilities", response_model=ImportCapabilities)

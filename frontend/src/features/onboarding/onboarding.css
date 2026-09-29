@@ -1,6 +1,6 @@
-.setup-shell { max-width: 1440px; margin: 0 auto; padding: 54px 30px 32px; }
+.setup-shell { max-width: 1440px; margin: 0 auto; padding: 32px 30px; }
 .setup-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 38px; }
-.setup-header h1 { margin: 0 0 12px; font-size: clamp(28px, 3.2vw, 48px); line-height: 1.2; letter-spacing: -.04em; }
+.setup-header h1 { margin: 0 0 10px; font-size: 32px; line-height: 1.25; letter-spacing: -.03em; }
 .setup-header p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.65; }
 .setup-text-action { padding: 7px 0; border: 0; background: transparent; white-space: nowrap; text-decoration: underline; color: var(--muted); font-size: 14px; }
 .setup-layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 46px; }
@@ -92,7 +92,7 @@
   .setup-rail li:not(:last-child)::after { display: none; }
   .setup-rail button { width: 100%; flex-direction: column; gap: 8px; text-align: center; font-size: 12px; }
   .setup-step-number { width: 34px; height: 34px; font-size: 13px; }
-  .setup-rail small { display: none; }
+  .setup-rail small { display: inline-block; margin-left: 3px; padding: 1px 4px; font-size: 10px; }
   .setup-rail > p { display: none; }
   .setup-panel { padding: 22px 18px; border-radius: 12px; }
   .setup-panel h2 { font-size: 23px; }
@@ -114,4 +114,45 @@
   .setup-notice { flex-wrap: wrap; }
   .setup-notice__copy { flex-basis: calc(100% - 40px); }
   .setup-notice__action { margin-left: 34px; width: calc(100% - 34px); }
+}
+
+.city-manager { min-width: 0; }
+.city-manager h2, .city-manager h3 { margin: 0 0 12px; font-size: 20px; line-height: 1.4; }
+.city-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+.city-picker .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.city-picker input, .city-picker select { text-align: left; width: 100%; min-height: 46px; font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); color: var(--text); }
+.city-selection { padding: 16px 0; border-top: 1px solid var(--border); }
+.city-selection > strong { font-size: 18px; }
+.city-selection p, .installed-cities p { margin: 8px 0; line-height: 1.6; }
+.city-source { margin: 12px 0 18px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.city-source summary, .installed-cities summary { cursor: pointer; padding: 6px 0; }
+.city-local { margin-top: 20px; }
+.city-local .setup-city-pack { padding-top: 14px; }
+.city-local input[type=file] { max-width: 100%; min-height: 44px; }
+.city-error { margin: 16px 0; padding: 12px 16px; border-left: 3px solid #a85f16; background: #fff8ed; color: #5d3c15; overflow-wrap: anywhere; }
+.city-error p { margin: 0 0 10px; line-height: 1.6; }
+.city-download-result:focus-visible, .metro-ready-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.city-installed-label { display: flex; flex-wrap: wrap; gap: 12px; color: var(--accent-strong); }
+.metro-ready-action { margin: 0 0 24px; padding: 18px; border: 1px solid var(--accent); border-radius: 10px; background: var(--subtle); }
+.metro-ready-action strong { font-size: 18px; }
+.metro-ready-action p { margin: 6px 0 14px; }
+.installed-cities { margin: 24px 0; padding: 20px; border: 1px solid var(--border); border-radius: 12px; }
+.installed-cities h2 { font-size: 20px; margin: 0 0 12px; }
+.installed-cities ul { list-style: none; padding: 0; margin: 0; }
+.installed-cities li { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 16px 0; border-top: 1px solid var(--border); }
+.installed-cities li > div { min-width: 0; overflow-wrap: anywhere; }
+.installed-cities li > a { flex-shrink: 0; }
+.installed-cities details { font-size: 13px; color: var(--muted); }
+.rail-existing-data { margin: 22px 0; }
+@media (max-width: 719px) {
+  .setup-header { margin-bottom: 16px; }
+  .setup-header h1 { font-size: 24px; }
+  .setup-header p { font-size: 14px; }
+  .setup-panel { padding: 18px; }
+  .setup-panel h2 { font-size: 22px; }
+  .city-picker { grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
+  .city-manager h3 { font-size: 18px; }
+  .city-manager .field { flex-direction: column; align-items: stretch; }
+  .city-manager .field__label { text-align: left; }
+  .installed-cities li { align-items: flex-start; flex-direction: column; gap: 8px; }
 }

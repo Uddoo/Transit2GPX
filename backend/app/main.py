@@ -22,6 +22,7 @@ from app.db.session import SessionLocal, engine
 from app.importers.recovery import recover_interrupted_imports
 from app.rail.components import ComponentInstaller
 from app.rail.service import RailServiceController
+from app.services.city_catalog import CityCatalogInstaller
 from app.services.onboarding import restore_rail_preferences
 from app.tasks import task_executor
 
@@ -65,6 +66,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     controller = RailServiceController(settings)
     app.state.rail_service = controller
     app.state.rail_components = ComponentInstaller(settings)
+    app.state.city_catalog = CityCatalogInstaller(settings)
     with SessionLocal() as db:
         restore_rail_preferences(db, settings)
     if settings.rail_enabled and settings.rail_sidecar_managed:
@@ -73,6 +75,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        app.state.city_catalog.stop()
         app.state.rail_components.stop()
         task_executor.stop()
         controller.stop()

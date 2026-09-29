@@ -4,3 +4,4 @@
 uv.lock text eol=lf
 frontend/openapi.json text eol=lf
 frontend/src/api/generated.ts text eol=lf
+city-data/catalog.json text eol=lf

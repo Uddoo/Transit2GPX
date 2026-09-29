@@ -19,6 +19,7 @@ datas = (collect_data_files(
     includes=["gdal_data/**", "proj_data/**"],
 ) if with_import_tools else []) + [
     (str(project_dir / "frontend" / "dist"), "frontend/dist"),
+    (str(project_dir / "city-data" / "catalog.json"), "city-data"),
     (str(backend_dir / "migrations"), "backend/migrations"),
     (str(backend_dir / "alembic.ini"), "backend"),
     (str(backend_dir / "app" / "exports" / "gpx.xsd"), "app/exports"),

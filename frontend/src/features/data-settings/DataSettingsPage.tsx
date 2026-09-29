@@ -13,7 +13,7 @@ import {
 } from "../../api/client";
 import { useRailDataStatus } from "../journey-editor/useJourneyNetwork";
 import { useDataStatus } from "./useDataStatus";
-import { CityPackImport } from "../onboarding/CityPackImport";
+import { CityDataManager, InstalledCities } from "../onboarding/CityDataManager";
 import "../onboarding/onboarding.css";
 
 function datasetStatusLabel(status?: string) {
@@ -84,14 +84,15 @@ export function DataSettingsPage() {
         <Link className="button button--secondary" to="/setup?step=check">打开首次使用向导</Link>
       </header>
       <section className="settings-section settings-section--stacked">
-        <CityPackImport disabled={isImporting} refresh={async () => {
+        <CityDataManager headingLevel={2} disabled={isImporting} refresh={async () => {
           await Promise.all(["data-status", "data-quality", "setup", "cities"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
         }} />
       </section>
+      <InstalledCities />
       <section className="settings-section settings-section--stacked" aria-labelledby="dataset-title">
         <div className="settings-section__heading">
           <div>
-            <h2 id="dataset-title">CPTOND 地铁数据</h2>
+            <h2 id="dataset-title">最近一次数据导入</h2>
             <p>{status}</p>
           </div>
           {query.data?.dataset ? <strong>{query.data.dataset}</strong> : null}
@@ -106,7 +107,7 @@ export function DataSettingsPage() {
         {query.data?.status === "ready" ? (
           <>
             <dl className="dataset-facts">
-              <div><dt>城市</dt><dd>{query.data.cities}</dd></div>
+              <div><dt>本次导入城市条目</dt><dd>{query.data.cities}</dd></div>
               <div><dt>采集时间</dt><dd>{query.data.captured_at ?? "未知"}</dd></div>
               <div><dt>许可</dt><dd>{query.data.license ?? "未知"}</dd></div>
               <div><dt>导入时间</dt><dd>{query.data.completed_at ? new Date(query.data.completed_at).toLocaleString() : "未知"}</dd></div>
@@ -115,7 +116,7 @@ export function DataSettingsPage() {
             </dl>
             {quality.data ? (
               <dl className="dataset-facts">
-                <div><dt>可用线路</dt><dd>{quality.data.ready_lines}</dd></div>
+                <div><dt>可用线路方向</dt><dd>{quality.data.ready_variants}</dd></div>
                 <div><dt>阻断线路</dt><dd>{quality.data.blocked_lines}</dd></div>
                 <div><dt>阻断方向</dt><dd>{quality.data.blocked_variants}</dd></div>
               </dl>
@@ -184,7 +185,7 @@ export function DataSettingsPage() {
                   max={Math.max(query.data.total_cities, 1)}
                   value={query.data.processed_cities}
                 />
-                <span>{query.data.ready_lines} 条线路可用，{query.data.blocked_lines} 条被阻断</span>
+                <span>{query.data.ready_lines} 条线路记录可用，{query.data.blocked_lines} 条被阻断</span>
               </div>
             ) : null}
             {isImporting && query.data?.import_id ? (
@@ -315,8 +316,8 @@ export function DataSettingsPage() {
           </>
         ) : railStatus.data?.status === "disabled" ? (
           <p className="settings-note">
-            设置 <code>TRANSIT2FOG_RAIL_ENABLED=true</code>、
-            <code>TRANSIT2FOG_RAIL_GRAPH_VERSION</code> 与图目录后重启本地服务；地铁功能不受影响。
+            铁路尚未准备，可以在向导中下载组件并配置铁路数据。地铁功能可继续使用。
+            <Link className="button button--primary" to="/setup?step=rail">准备铁路功能</Link>
           </p>
         ) : (
           <form

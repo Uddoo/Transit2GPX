@@ -6,7 +6,7 @@ import { renderApp } from "../../test/renderApp";
 import { type SetupState } from "../../api/client";
 import { OnboardingPage } from "./OnboardingPage";
 import { SetupEntry } from "./SetupEntry";
-import { initialSetupState, readyChecks } from "../../test/setupFixtures";
+import { initialSetupState, readyChecks, catalogFixture, idleCityDownload } from "../../test/setupFixtures";
 
 function response(body: unknown, status = 200) { return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }); }
 function Location() { return <output data-testid="location">{useLocation().pathname}{useLocation().search}</output>; }
@@ -23,6 +23,9 @@ beforeEach(() => {
   state = initialSetupState(); uploads = 0; railChecks = 0; offline = false; environmentFailed = false; saveFailed = false; railFailed = false;
   vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, "http://localhost");
+    if (url.pathname === "/api/v1/data/city-packs/catalog") return Promise.resolve(response(catalogFixture));
+    if (url.pathname === "/api/v1/data/city-packs/download") return Promise.resolve(response(idleCityDownload));
+    if (url.pathname === "/api/v1/cities") return Promise.resolve(response([]));
     if (url.pathname === "/api/v1/setup") return Promise.resolve(offline ? response({ error: { message: "offline" } }, 503) : response(state));
     if (url.pathname === "/api/v1/setup/checks") return Promise.resolve(response(environmentFailed ? { can_continue: false, checks: [{ id: "database", title: "本地数据库", status: "failed", detail: "数据库需要升级", remedy: "重新启动安装包" }] } : readyChecks));
     if (url.pathname === "/api/v1/setup/progress") {
@@ -64,6 +67,7 @@ describe("first-use setup", () => {
     const user = userEvent.setup(); show();
     await user.click(await screen.findByRole("button", { name: "下一步：导入地铁数据" }));
     await screen.findByRole("heading", { name: "导入地铁线路数据" });
+    await user.click(screen.getByText("高级：导入原始数据目录"));
     await user.type(screen.getByLabelText("地铁数据目录（本机绝对路径）"), "/tmp/data");
     await user.click(screen.getByRole("button", { name: "导入地铁数据" }));
     expect(await screen.findByText("目录不存在，请核对路径")).toBeInTheDocument();
@@ -73,10 +77,8 @@ describe("first-use setup", () => {
     expect(await screen.findByText("导入已取消")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "导入地铁数据" }));
     await screen.findByText("地铁数据已就绪");
-    await user.click(screen.getByRole("button", { name: "只用地铁，完成设置" }));
-    expect(await screen.findByRole("heading", { name: "可以开始记录了" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "开始记录地铁行程" }));
     expect(state.metro_directory).toBe("/tmp/data");
-    await user.click(screen.getByRole("button", { name: "开始记录行程" }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/journeys/new"));
     expect(state.progress.completed).toBe(true);
   });
